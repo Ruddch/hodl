@@ -46,6 +46,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isLoggingInRef = useRef(false);
   // Отслеживаем адрес, для которого пользователь отменил подпись
   const declinedAddressRef = useRef<string | null>(null);
+  // Отслеживаем предыдущее состояние подключения для предотвращения циклов
+  const prevIsConnectedRef = useRef<boolean | undefined>(undefined);
+  const prevAddressRef = useRef<string | undefined>(undefined);
+  // Отслеживаем, для какого адреса мы уже пытались автоматически залогиниться
+  const autoLoginAttemptedRef = useRef<string | null>(null);
 
   // Загружаем сохраненный адрес кошелька при монтировании
   useEffect(() => {
@@ -69,6 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setError(null);
     setSignedWalletAddress(null);
+    // Сбрасываем флаг попытки автоматического логина
+    autoLoginAttemptedRef.current = null;
     if (typeof window !== "undefined") {
       localStorage.removeItem(SIGNED_WALLET_KEY);
       // При logout не удаляем информацию об отмене подписи,
@@ -153,6 +160,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem(DECLINED_SIGNATURE_KEY);
       }
       declinedAddressRef.current = null;
+      // Сбрасываем флаг попытки автоматического логина при успешной авторизации
+      autoLoginAttemptedRef.current = null;
 
       // 5. Получаем полный профиль пользователя после авторизации
       const userData = await getCurrentUser();
@@ -195,6 +204,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check for existing auth on mount and when wallet connects
   useEffect(() => {
+    // Проверяем, изменилось ли состояние подключения или адрес
+    const isConnectedChanged = prevIsConnectedRef.current !== isConnected;
+    const addressChanged = prevAddressRef.current !== address;
+    
+    // Обновляем refs
+    prevIsConnectedRef.current = isConnected;
+    prevAddressRef.current = address;
+    
+    // Выполняем проверку только если изменилось состояние подключения или адрес
+    if (!isConnectedChanged && !addressChanged && prevIsConnectedRef.current !== undefined) {
+      return;
+    }
+
     const checkAuth = async () => {
       setIsLoading(true);
       
@@ -251,7 +273,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         // Кошелек отключен - делаем logout если был авторизован
-        if (isAuthenticated || signedWalletAddress) {
+        const savedAddress = typeof window !== "undefined" 
+          ? localStorage.getItem(SIGNED_WALLET_KEY) 
+          : null;
+        if (savedAddress) {
           logout().catch(console.error);
         } else {
           setIsAuthenticated(false);
@@ -263,7 +288,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     
     checkAuth();
-  }, [isConnected, address, logout, isAuthenticated, signedWalletAddress]);
+  }, [isConnected, address, logout]);
 
   // Автоматически запрашиваем подпись, если кошелек подключен, но пользователь не авторизован
   // НЕ предлагаем автоматически, если пользователь уже отменил подпись для этого адреса
@@ -275,7 +300,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 3. Идет загрузка (проверка авторизации)
     // 4. Уже идет процесс логина
     if (!isConnected || !address || isAuthenticated || isLoading || isLoggingInRef.current) {
+      // Сбрасываем флаг попытки, если кошелек отключен или адрес изменился
+      if (!isConnected || !address) {
+        autoLoginAttemptedRef.current = null;
+      }
       return;
+    }
+
+    // Проверяем, не пытались ли мы уже автоматически залогиниться для этого адреса
+    if (autoLoginAttemptedRef.current && 
+        autoLoginAttemptedRef.current.toLowerCase() === address.toLowerCase()) {
+      return; // Уже пытались для этого адреса
     }
 
     // Проверяем, не отменил ли пользователь подпись для этого адреса
@@ -310,15 +345,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    login().catch(console.error);
+    // Отмечаем, что мы пытаемся залогиниться для этого адреса
+    autoLoginAttemptedRef.current = address;
+    
+    login().catch((error) => {
+      // При ошибке сбрасываем флаг, чтобы можно было попробовать снова
+      if (error && typeof error === 'object' && 'code' in error) {
+        const errorCode = (error as { code?: string | number }).code;
+        // Если это не отмена пользователем, сбрасываем флаг
+        if (errorCode !== 4001 && errorCode !== 'ACTION_REJECTED' && errorCode !== 'USER_REJECTED') {
+          autoLoginAttemptedRef.current = null;
+        }
+      }
+      console.error("Auto login error:", error);
+    });
   }, [isConnected, address, isAuthenticated, isLoading, login]);
 
   // Auto-logout when wallet disconnects
-  useEffect(() => {
-    if (!isConnected && (isAuthenticated || signedWalletAddress)) {
-      logout().catch(console.error);
-    }
-  }, [isConnected, isAuthenticated, signedWalletAddress, logout]);
+  // Эта логика уже обрабатывается в checkAuth, поэтому этот useEffect можно убрать
+  // чтобы избежать дублирования и циклов
 
   const closeAlphaTestModal = useCallback(() => {
     setShowAlphaTestModal(false);
