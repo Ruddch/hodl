@@ -3,7 +3,7 @@
 import { MainLayout } from "@/components/MainLayout";
 import { useAvailablePacks, useOpenPack } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import type { OpenPackResponse } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
@@ -14,6 +14,13 @@ export default function PacksPage() {
   const { data: packsData, refetch } = useAvailablePacks(isAuthenticated);
   const openPackMutation = useOpenPack();
   const [openedPack, setOpenedPack] = useState<OpenPackResponse | null>(null);
+
+  // Очищаем состояние паков при дисконекте
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setOpenedPack(null);
+    }
+  }, [isAuthenticated]);
 
   const totalPacks = packsData?.available_packs || 0;
 

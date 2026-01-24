@@ -81,7 +81,7 @@ export function UserInfo() {
               return (
                 <button
                   onClick={show}
-                  className="w-full py-3 bg-[#2200EF] hover:opacity-90 text-white text-base font-medium rounded-[15px] transition-colors"
+                  className="cursor-pointer w-full py-3 bg-[#2200EF] hover:opacity-90 text-white text-base font-medium rounded-[15px] transition-colors"
                   style={{
                     boxShadow: "0px 4px 12px 0px rgba(74, 106, 255, 0.3), 0px 2px 4px 0px rgba(74, 106, 255, 0.2)"
                   }}

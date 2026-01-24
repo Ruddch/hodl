@@ -86,8 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryClient.invalidateQueries({ queryKey: ["myProfile"] });
     queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-    queryClient.invalidateQueries({ queryKey: ["availablePacks"] });
-    queryClient.invalidateQueries({ queryKey: ["packHistory"] });
+    // Полностью удаляем данные паков из кэша при logout
+    queryClient.removeQueries({ queryKey: ["availablePacks"] });
+    queryClient.removeQueries({ queryKey: ["packHistory"] });
+    queryClient.removeQueries({ queryKey: ["packOpening"] });
     queryClient.invalidateQueries({ queryKey: ["tournaments"] });
     queryClient.invalidateQueries({ queryKey: ["tournament"] });
     queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
