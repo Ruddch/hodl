@@ -138,13 +138,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // 1. Проверяем доступ к альфа-тесту
-      // const alphaTestCheck = await checkAlphaTestAccess(address);
-      // if (!alphaTestCheck.has_access) {
-      //   setShowAlphaTestModal(true);
-      //   setIsLoading(false);
-      //   isLoggingInRef.current = false;
-      //   return;
-      // }
+      const alphaTestCheck = await checkAlphaTestAccess(address);
+      if (!alphaTestCheck.has_access) {
+        setShowAlphaTestModal(true);
+        setIsLoading(false);
+        isLoggingInRef.current = false;
+        return;
+      }
 
       // 2. Запрашиваем nonce
       console.log('🔴 Requesting nonce')
