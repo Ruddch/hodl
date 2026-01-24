@@ -152,7 +152,7 @@ function TournamentPageContent() {
   // Открытие модального окна выбора колоды
   const handleOpenDeckModal = () => {
     if (!isAuthenticated) {
-      login(true);
+      login();
       return;
     }
     setShowDeckModal(true);

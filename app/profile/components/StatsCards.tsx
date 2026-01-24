@@ -7,16 +7,33 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ profile }: StatsCardsProps) {
-  // TODO: Получить реальные данные из API
+  // Получаем данные из stats объекта
+  const statsData = profile.stats;
+  
+  // Получаем баланс - берем первый доступный баланс из balances
+  const getBalance = () => {
+    if (!statsData?.balances) return "0 ph";
+    const balanceEntries = Object.entries(statsData.balances);
+    if (balanceEntries.length === 0) return "0 ph";
+    const [symbol, amount] = balanceEntries[0];
+    return `${amount} ${symbol}`;
+  };
+
+  // Форматируем best_position для отображения
+  const formatBestPosition = (position: number) => {
+    if (position === 0) return "—";
+    const suffix = position === 1 ? "st" : position === 2 ? "nd" : position === 3 ? "rd" : "th";
+    return `${position}${suffix} place`;
+  };
+
   const stats = {
-    balance: "65 Ph", // Пока заглушка
-    bestScore: "5,874", // Пока заглушка
-    cards: profile.total_cards || 0,
+    balance: getBalance(),
+    bestScore: statsData?.best_score ? statsData.best_score.toLocaleString() : "0",
+    cards: statsData?.total_cards ?? 0,
     bestResult: {
-      place: "4 place",
-      date: "on 12 Jan, 2025"
+      place: statsData?.best_position ? formatBestPosition(statsData.best_position) : "—",
     },
-    tournaments: profile.total_tournaments || 0,
+    tournaments: statsData?.tournaments_participated ?? 0,
   };
 
   return (

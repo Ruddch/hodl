@@ -121,11 +121,6 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
                         </div>
                       )}
                     </div>
-
-                    {/* Количество карт в правом нижнем углу */}
-                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-semibold px-2 py-1 rounded">
-                      {group.count}
-                    </div>
                   </div>
                 ))}
               </div>

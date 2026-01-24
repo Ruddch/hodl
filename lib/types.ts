@@ -344,6 +344,14 @@ export interface UserCard {
   is_locked: boolean;
 }
 
+export interface UserStats {
+  total_cards: number;
+  tournaments_participated: number;
+  best_position: number;
+  best_score: number;
+  balances: Record<string, number>;
+}
+
 export interface UserProfileResponse {
   id: number;
   wallet_address: string;
@@ -352,6 +360,7 @@ export interface UserProfileResponse {
   total_tournaments: number;
   total_wins: number;
   cards?: UserCard[];
+  stats?: UserStats;
 }
 
 // ==================== Alpha Test ====================

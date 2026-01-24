@@ -1,8 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
-import { useAccount, useSignMessage } from "wagmi";
+import { useSignMessage, useDisconnect, useConnectionEffect, useConnections } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 import { 
   getNonce, 
   verifySignature, 
@@ -17,8 +18,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: UserProfileResponse | null;
-  login: (force?: boolean) => Promise<void>;
+  login: () => Promise<void>;
   logout: () => Promise<void>;
+  disconnect: () => Promise<void>;
   error: string | null;
   signedWalletAddress: string | null;
   showAlphaTestModal: boolean;
@@ -28,32 +30,40 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const SIGNED_WALLET_KEY = "hodleague_signed_wallet";
-const DECLINED_SIGNATURE_KEY = "hodleague_declined_signature";
-const AUTO_LOGIN_ATTEMPTED_KEY = "hodleague_auto_login_attempted";
+
+// Функция для инвалидации всех запросов, которые зависят от пользователя
+function invalidateUserQueries(queryClient: QueryClient) {
+  queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+  queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+  queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+  queryClient.invalidateQueries({ queryKey: ["packHistory"] });
+  queryClient.invalidateQueries({ queryKey: ["tournaments"] });
+  queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+  // Удаляем кэш для паков и колоды (не инвалидируем, а полностью удаляем)
+  queryClient.removeQueries({ queryKey: ["availablePacks"] });
+  queryClient.removeQueries({ queryKey: ["packOpening"] });
+  // Удаляем данные о колоде пользователя (my deck) для всех турниров
+  // Query key: ["tournament", tournamentId, includeDeck]
+  queryClient.removeQueries({ queryKey: ["tournament"] });
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { address, isConnected } = useAccount();
+  // const { address, isConnected } = useAccount();
+  const connections = useConnections();
   const { mutateAsync } = useSignMessage();
+  const { disconnect } = useDisconnect();
   const queryClient = useQueryClient();
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<UserProfileResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [signedWalletAddress, setSignedWalletAddress] = useState<string | null>(null);
   const [showAlphaTestModal, setShowAlphaTestModal] = useState(false);
   
-  // Используем ref для предотвращения множественных одновременных попыток авторизации
-  const isLoggingInRef = useRef(false);
-  // Отслеживаем адрес, для которого пользователь отменил подпись
-  const declinedAddressRef = useRef<string | null>(null);
-  // Отслеживаем предыдущее состояние подключения для предотвращения циклов
-  const prevIsConnectedRef = useRef<boolean | undefined>(undefined);
+  // Отслеживаем предыдущий адрес для определения смены кошелька
   const prevAddressRef = useRef<string | undefined>(undefined);
-  // Отслеживаем, для какого адреса мы уже пытались автоматически залогиниться
-  const autoLoginAttemptedRef = useRef<string | null>(null);
-  // Флаг первой инициализации - чтобы не делать logout при перезагрузке, пока wagmi восстанавливает подключение
-  const isInitialMountRef = useRef(true);
+  const isLoggingInRef = useRef(false);
 
   // Загружаем сохраненный адрес кошелька при монтировании
   useEffect(() => {
@@ -62,79 +72,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (savedAddress) {
         setSignedWalletAddress(savedAddress);
       }
-      // Восстанавливаем флаг попытки автоматического логина
-      const attemptedAddress = localStorage.getItem(AUTO_LOGIN_ATTEMPTED_KEY);
-      if (attemptedAddress) {
-        autoLoginAttemptedRef.current = attemptedAddress;
-      }
     }
   }, []);
 
+  useConnectionEffect({
+    onConnect({ address }) {
+      console.log('🟢 Wallet connected:', address)
+      login(address);
+    },
+    onDisconnect() {
+      console.log('🔴 Wallet disconnected')
+      logout();
+    },
+  })
+
   const logout = useCallback(async () => {
+    // 1. Вызываем API для очистки кук на бэкенде
     try {
-      // Вызываем API для очистки кук на бэкенде
       await logoutApi();
     } catch (error) {
-      console.error("Logout error:", error);
-      // Продолжаем logout даже если API вызов не удался
+      console.error("Logout API error:", error);
     }
+    
+    // 2. Очищаем состояния
     setIsAuthenticated(false);
     setUser(null);
     setError(null);
     setSignedWalletAddress(null);
-    // Сбрасываем флаг попытки автоматического логина
-    autoLoginAttemptedRef.current = null;
+    
     if (typeof window !== "undefined") {
       localStorage.removeItem(SIGNED_WALLET_KEY);
-      localStorage.removeItem(AUTO_LOGIN_ATTEMPTED_KEY);
-      // При logout не удаляем информацию об отмене подписи,
-      // чтобы не предлагать подпись снова автоматически
     }
     
-    // Инвалидируем все пользовательские данные при logout
-    queryClient.invalidateQueries({ queryKey: ["myProfile"] });
-    queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-    // Полностью удаляем данные паков из кэша при logout
-    queryClient.removeQueries({ queryKey: ["availablePacks"] });
-    queryClient.removeQueries({ queryKey: ["packHistory"] });
-    queryClient.removeQueries({ queryKey: ["packOpening"] });
-    queryClient.invalidateQueries({ queryKey: ["tournaments"] });
-    queryClient.invalidateQueries({ queryKey: ["tournament"] });
-    queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+    // 3. Инвалидируем все запросы, которые зависят от пользователя
+    invalidateUserQueries(queryClient);
   }, [queryClient]);
 
-  const login = useCallback(async (force: boolean = false) => {
-    if (!address || !isConnected) {
-      setError("Кошелек не подключен");
+  // Функция disconnect: отключает кошелек и делает logout
+  const handleDisconnect = useCallback(async () => {
+    // 1. Отключаем кошелек
+    disconnect();
+    
+    // 2. Делаем logout (очистка авторизации)
+    await logout();
+  }, [disconnect, logout]);
+
+  const login = useCallback(async (manualAddress?: `0x${string}`) => {
+    console.log('🔴 Login')
+    console.log('🟢 Connections:', connections)
+    const address = manualAddress || connections[0]?.accounts[0];
+    if (!address) {
+      console.log('🔴 Wallet not connected')
       return;
     }
 
     // Предотвращаем множественные одновременные попытки
     if (isLoggingInRef.current) {
+      console.log('🔴 Already logging in')
       return;
-    }
-
-    // Если это ручной вызов (force = true), сбрасываем информацию об отмене
-    if (force) {
-      declinedAddressRef.current = null;
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(DECLINED_SIGNATURE_KEY);
-      }
-    } else {
-      // Проверяем, не отменил ли пользователь подпись для этого адреса (только для автоматических вызовов)
-      if (typeof window !== "undefined") {
-        const declinedAddress = localStorage.getItem(DECLINED_SIGNATURE_KEY);
-        if (declinedAddress && declinedAddress.toLowerCase() === address.toLowerCase()) {
-          // Пользователь уже отменил подпись для этого адреса
-          return;
-        }
-      }
-
-      // Проверяем ref для текущей сессии
-      if (declinedAddressRef.current && declinedAddressRef.current.toLowerCase() === address.toLowerCase()) {
-        return;
-      }
     }
 
     isLoggingInRef.current = true;
@@ -142,287 +137,115 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
-      // 0. Проверяем доступ к альфа-тесту перед началом авторизации
-      const alphaTestCheck = await checkAlphaTestAccess(address);
-      if (!alphaTestCheck.has_access) {
-        setShowAlphaTestModal(true);
-        setIsLoading(false);
-        isLoggingInRef.current = false;
-        return;
-      }
+      // 1. Проверяем доступ к альфа-тесту
+      // const alphaTestCheck = await checkAlphaTestAccess(address);
+      // if (!alphaTestCheck.has_access) {
+      //   setShowAlphaTestModal(true);
+      //   setIsLoading(false);
+      //   isLoggingInRef.current = false;
+      //   return;
+      // }
 
-      // 1. Get nonce from server
+      // 2. Запрашиваем nonce
+      console.log('🔴 Requesting nonce')
       const { message } = await getNonce(address);
 
-      // 2. Sign message with wallet
+      // 3. Подписываем сообщение
       const signature = await mutateAsync({ account: address, message });
 
-      // 3. Verify signature (токен устанавливается в куки на бэкенде)
+      // 4. Верифицируем подпись (токен устанавливается в куки на бэкенде)
       await verifySignature({
         wallet_address: address,
         signature,
       });
 
-      // 4. Сохраняем адрес кошелька, на который подписывали
+      // 5. Сохраняем адрес кошелька
       setSignedWalletAddress(address);
       if (typeof window !== "undefined") {
         localStorage.setItem(SIGNED_WALLET_KEY, address);
-        // Удаляем отметку об отмене, так как подпись прошла успешно
-        localStorage.removeItem(DECLINED_SIGNATURE_KEY);
-        // Удаляем флаг попытки автоматического логина при успешной авторизации
-        localStorage.removeItem(AUTO_LOGIN_ATTEMPTED_KEY);
       }
-      declinedAddressRef.current = null;
-      // Сбрасываем флаг попытки автоматического логина при успешной авторизации
-      autoLoginAttemptedRef.current = null;
 
-      // 5. Получаем полный профиль пользователя после авторизации
+      // 6. Получаем пользователя
       const userData = await getCurrentUser();
       setUser(userData);
       setIsAuthenticated(true);
       
-      // Инвалидируем все пользовательские данные после успешной подписи
-      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      queryClient.invalidateQueries({ queryKey: ["availablePacks"] });
-      queryClient.invalidateQueries({ queryKey: ["packHistory"] });
-      queryClient.invalidateQueries({ queryKey: ["tournaments"] });
-      queryClient.invalidateQueries({ queryKey: ["tournament"] });
-      queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+      // 7. Инвалидируем все запросы, которые зависят от пользователя
+      // При обновлении пользователя произойдут перезапросы всех зависимых ручек
+     
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Ошибка авторизации";
       setError(errorMessage);
+      setIsAuthenticated(false);
+      setUser(null);
       console.error("Auth error:", err);
-      
-      // Если пользователь отменил подпись (UserRejectedRequestError или подобная ошибка)
-      // Сохраняем это, чтобы не предлагать подпись снова автоматически
-      if (err && typeof err === 'object' && 'code' in err) {
-        const errorCode = (err as { code?: string | number }).code;
-        // Коды ошибок для отмены пользователем: 4001, 'ACTION_REJECTED', 'USER_REJECTED'
-        if (errorCode === 4001 || errorCode === 'ACTION_REJECTED' || errorCode === 'USER_REJECTED' || 
-            errorMessage.toLowerCase().includes('reject') || errorMessage.toLowerCase().includes('denied') ||
-            errorMessage.toLowerCase().includes('cancel')) {
-          declinedAddressRef.current = address;
-          if (typeof window !== "undefined") {
-            localStorage.setItem(DECLINED_SIGNATURE_KEY, address);
-          }
-        }
-      }
     } finally {
       setIsLoading(false);
+      invalidateUserQueries(queryClient);
       isLoggingInRef.current = false;
     }
-  }, [address, isConnected, mutateAsync, queryClient]);
+  }, [connections, mutateAsync, queryClient]);
 
-  // Check for existing auth on mount and when wallet connects
+  // Проверка авторизации при монтировании и при подключении кошелька
   useEffect(() => {
-      // Проверяем, изменилось ли состояние подключения или адрес
-      const isConnectedChanged = prevIsConnectedRef.current !== isConnected;
-      const addressChanged = prevAddressRef.current !== address;
-      const isInitialMount = isInitialMountRef.current;
-      
-      // После первого выполнения снимаем флаг первой инициализации
-      if (isInitialMount) {
-        isInitialMountRef.current = false;
-      }
-      
-      // Обновляем refs
-      prevIsConnectedRef.current = isConnected;
-      prevAddressRef.current = address;
-      
-      // Выполняем проверку только если изменилось состояние подключения или адрес
-      // ИЛИ если это первая инициализация (prevIsConnectedRef.current === undefined)
-      if (!isConnectedChanged && !addressChanged && prevIsConnectedRef.current !== undefined) {
-        return;
-      }
-
-    const checkAuth = async () => {
-      setIsLoading(true);
-      
-      if (isConnected && address) {
-        // Загружаем информацию об отмененной подписи
-        if (typeof window !== "undefined") {
-          const declinedAddress = localStorage.getItem(DECLINED_SIGNATURE_KEY);
-          if (declinedAddress && declinedAddress.toLowerCase() === address.toLowerCase()) {
-            declinedAddressRef.current = declinedAddress;
-          } else {
-            declinedAddressRef.current = null;
-          }
-        }
-
-        try {
-          // Проверяем авторизацию через API (куки отправляются автоматически)
-          const userData = await getCurrentUser();
-          setUser(userData);
-          setIsAuthenticated(true);
-          
-          // Загружаем сохраненный адрес кошелька, на который подписывали
-          const savedAddress = typeof window !== "undefined" 
-            ? localStorage.getItem(SIGNED_WALLET_KEY) 
-            : null;
-          setSignedWalletAddress(savedAddress);
-          
-          // Если текущий адрес не совпадает с подписанным, это означает смену кошелька
-          // В этом случае нужно будет переподписать
-          if (savedAddress && savedAddress.toLowerCase() !== address.toLowerCase()) {
-           
-            logout()
-              .then(() => {
-                console.log("[Wallet Switch] Logout  ");
-              })
-              .catch((error) => {
-                console.error("[Wallet Switch] Error when logout:", error);
-              });
-            
-            // Сбрасываем информацию об отмене при смене кошелька
-            declinedAddressRef.current = null;
-            if (typeof window !== "undefined") {
-              localStorage.removeItem(DECLINED_SIGNATURE_KEY);
-              console.log("[Wallet Switch] Signature information reset");
-            }
-          } else {
-            // Если адреса совпадают и авторизация успешна, значит все в порядке
-            console.log("[Auth Check] Authentication successful, cookie is valid");
-            // Очищаем флаг попытки автоматического логина, так как авторизация успешна
-            autoLoginAttemptedRef.current = null;
-            if (typeof window !== "undefined") {
-              localStorage.removeItem(AUTO_LOGIN_ATTEMPTED_KEY);
-            }
-          }
-        } catch (error) {
-          // Не авторизован или токен истек
-          console.log("[Auth Check] Authentication failed:", error);
-          setIsAuthenticated(false);
-          setUser(null);
-        }
-      } else {
-        // Кошелек отключен
-        const savedAddress = typeof window !== "undefined" 
-          ? localStorage.getItem(SIGNED_WALLET_KEY) 
-          : null;
-        
-        // ВАЖНО: При первой инициализации (перезагрузка страницы) wagmi может еще не восстановить подключение
-        // Не делаем logout сразу, если есть сохраненный адрес - даем время wagmi восстановить состояние
-        // Если wagmi восстановит подключение, checkAuth сработает снова с isConnected=true
-        if (isInitialMount && savedAddress) {
-          // Это первая инициализация и есть сохраненный адрес - не делаем logout
-          // Ждем, пока wagmi восстановит подключение (если оно было)
-          console.log("[Auth Check] Initial mount with saved address, waiting for wagmi to restore connection...");
-          setIsAuthenticated(false);
-          setUser(null);
-          // Не делаем logout - если wagmi восстановит подключение, checkAuth сработает снова
-        } else if (!isInitialMount) {
-          // Это не первая инициализация - кошелек действительно отключен пользователем
-          if (savedAddress) {
-            console.log("[Auth Check] Wallet disconnected by user, logging out");
-            logout().catch(console.error);
-          } else {
-            setIsAuthenticated(false);
-            setUser(null);
-          }
-          declinedAddressRef.current = null;
-        } else {
-          // Первая инициализация, но нет сохраненного адреса
-          setIsAuthenticated(false);
-          setUser(null);
-        }
-      }
-      setIsLoading(false);
-    };
-    
-    checkAuth();
-  }, [isConnected, address, logout]);
-
-  // Автоматически запрашиваем подпись, если кошелек подключен, но пользователь не авторизован
-  // НЕ предлагаем автоматически, если пользователь уже отменил подпись для этого адреса
-  // НЕ предлагаем, если авторизация еще проверяется или уже успешна
-  useEffect(() => {
-    // Не запрашиваем подпись, если:
-    // 1. Кошелек не подключен
-    // 2. Пользователь уже авторизован
-    // 3. Идет загрузка (проверка авторизации)
-    // 4. Уже идет процесс логина
-    if (!isConnected || !address || isAuthenticated || isLoading || isLoggingInRef.current) {
-      // Сбрасываем флаг попытки, если кошелек отключен или адрес изменился
-      if (!isConnected || !address) {
-        autoLoginAttemptedRef.current = null;
-        if (typeof window !== "undefined") {
-          localStorage.removeItem(AUTO_LOGIN_ATTEMPTED_KEY);
-        }
-      }
+    const address = connections[0]?.accounts[0];
+    if (!address) {
+      setIsAuthenticated(false);
+      setUser(null);
       return;
     }
 
-      // Проверяем, не пытались ли мы уже автоматически залогиниться для этого адреса
-      // Проверяем и ref (для текущей сессии) и localStorage (для перезагрузок)
-      const attemptedAddress = autoLoginAttemptedRef.current || 
-        (typeof window !== "undefined" ? localStorage.getItem(AUTO_LOGIN_ATTEMPTED_KEY) : null);
-      
-      if (attemptedAddress && attemptedAddress.toLowerCase() === address.toLowerCase()) {
-        return; // Уже пытались для этого адреса
+    const checkAuth = async () => {
+      setIsLoading(true);
+      try {
+        // Проверяем авторизацию через API (куки отправляются автоматически)
+        const userData = await getCurrentUser();
+        setUser(userData);
+        setIsAuthenticated(true);
+        
+        // Загружаем сохраненный адрес
+        const savedAddress = typeof window !== "undefined" 
+          ? localStorage.getItem(SIGNED_WALLET_KEY) 
+          : null;
+        setSignedWalletAddress(savedAddress);
+      } catch {
+        // Не авторизован или токен истек
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-
-      // Проверяем, не отменил ли пользователь подпись для этого адреса
-      const isDeclined = declinedAddressRef.current && 
-        declinedAddressRef.current.toLowerCase() === address.toLowerCase();
-      
-      if (isDeclined) {
-        return;
-      }
-
-      // Также проверяем localStorage
-      if (typeof window !== "undefined") {
-        const declinedAddress = localStorage.getItem(DECLINED_SIGNATURE_KEY);
-        if (declinedAddress && declinedAddress.toLowerCase() === address.toLowerCase()) {
-          return; // Не предлагаем автоматически
-        }
-      }
-
-      // Проверяем, есть ли сохраненный адрес - если есть и он совпадает, значит пользователь уже подписывал
-      const savedAddress = typeof window !== "undefined" 
-        ? localStorage.getItem(SIGNED_WALLET_KEY) 
-        : null;
-      
-      // ВАЖНО: Если адрес совпадает с сохраненным, но авторизация не прошла - значит кука протухла
-      // В этом случае НЕ предлагаем автоматическую подпись, пользователь должен нажать кнопку вручную
-      // Это предотвращает назойливые запросы подписи при каждой перезагрузке
-      if (savedAddress && savedAddress.toLowerCase() === address.toLowerCase()) {
-        // Адрес совпадает, но авторизация не прошла - кука протухла
-        // НЕ предлагаем автоматическую подпись, пользователь должен подписать вручную
-        return;
-      } else if (!savedAddress) {
-        // Первый раз подключаем этот кошелек - можно предложить автоматическую подпись
-      } else {
-        // Адрес изменился - это обрабатывается в checkAuth через logout
-        return;
-      }
+    };
     
-    // Отмечаем, что мы пытаемся залогиниться для этого адреса
-    autoLoginAttemptedRef.current = address;
-    if (typeof window !== "undefined") {
-      localStorage.setItem(AUTO_LOGIN_ATTEMPTED_KEY, address);
+    checkAuth();
+  }, [connections]);
+
+  // Обработчик смены кошелька
+  useEffect(() => {
+    const address = connections[0]?.accounts[0];
+    if (!address) {
+      prevAddressRef.current = address;
+      return;
     }
-    
-    login().catch((error) => {
-      // При ошибке сбрасываем флаг, чтобы можно было попробовать снова
-      if (error && typeof error === 'object' && 'code' in error) {
-        const errorCode = (error as { code?: string | number }).code;
-        // Если это не отмена пользователем, сбрасываем флаг
-        if (errorCode !== 4001 && errorCode !== 'ACTION_REJECTED' && errorCode !== 'USER_REJECTED') {
-          autoLoginAttemptedRef.current = null;
-          if (typeof window !== "undefined") {
-            localStorage.removeItem(AUTO_LOGIN_ATTEMPTED_KEY);
-          }
-        }
-      }
-      console.error("Auto login error:", error);
-    });
-  }, [isConnected, address, isAuthenticated, isLoading, login]);
 
-  // Auto-logout when wallet disconnects
-  // Эта логика уже обрабатывается в checkAuth, поэтому этот useEffect можно убрать
-  // чтобы избежать дублирования и циклов
+    const savedAddress = typeof window !== "undefined" 
+      ? localStorage.getItem(SIGNED_WALLET_KEY) 
+      : null;
+
+    // Если адрес изменился и есть сохраненный адрес - это смена кошелька
+    if (prevAddressRef.current && 
+        prevAddressRef.current !== address && 
+        savedAddress && 
+        savedAddress.toLowerCase() === prevAddressRef.current.toLowerCase()) {
+      // Смена кошелька: делаем logout и запрашиваем новую подпись
+      logout().then(() => {
+        // После logout запрашиваем новую подпись
+        login();
+      }).catch(console.error);
+    }
+
+    prevAddressRef.current = address;
+  }, [connections, logout, login]);
 
   const closeAlphaTestModal = useCallback(() => {
     setShowAlphaTestModal(false);
@@ -436,6 +259,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         login,
         logout,
+        disconnect: handleDisconnect,
         error,
         signedWalletAddress,
         showAlphaTestModal,

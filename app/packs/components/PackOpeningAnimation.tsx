@@ -374,7 +374,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
             const isFlipping = flippingCards.has(index);
             const isFlipped = flippedCards.has(index);
             
-            const cardImageUrl = 'card1.png'; 
+            const cardImageUrl = '/card1.png'; 
             const cardBackImageUrl = cardData?.rendered_image_url;
             
             return (

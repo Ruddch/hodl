@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useAuth } from "@/lib/auth-context";
 import { useMyProfile } from "@/lib/api";
@@ -9,14 +9,8 @@ import { Avatar } from "./Avatar";
 
 export function UserInfo() {
   const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
-  const { isAuthenticated, isLoading, login, logout } = useAuth();
+  const { isAuthenticated, isLoading, login, disconnect } = useAuth();
   const { data: profile } = useMyProfile(isAuthenticated);
-
-  const handleDisconnect = () => {
-    logout();
-    disconnect();
-  };
 
   // Генерируем короткое имя из адреса
   const displayName = address
@@ -52,7 +46,7 @@ export function UserInfo() {
           {/* Auth button if not authenticated */}
           {!isAuthenticated && !isLoading && (
             <button
-              onClick={() => login(true)}
+              onClick={() => login()}
               className="w-full mt-3 py-2 px-4 text-sm rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             >
               Sign In
@@ -67,7 +61,7 @@ export function UserInfo() {
 
           {/* Disconnect button */}
           <button
-            onClick={handleDisconnect}
+            onClick={() => disconnect()}
             className="w-full mt-3 py-2 px-4 text-sm rounded-xl border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-colors"
           >
             Disconnect
@@ -77,7 +71,7 @@ export function UserInfo() {
         <div className="rounded-[30px] bg-[#efeff0] border border-[rgba(255,255,255,0.09)] backdrop-blur-[150px] p-4">
           
           <ConnectKitButton.Custom>
-            {({ isConnected, show, hide, address, ensName, chain }) => {
+            {({ show }) => {
               return (
                 <button
                   onClick={show}
