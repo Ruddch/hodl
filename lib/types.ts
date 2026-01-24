@@ -354,6 +354,13 @@ export interface UserProfileResponse {
   cards?: UserCard[];
 }
 
+// ==================== Alpha Test ====================
+export interface AlphaTestCheckResponse {
+  wallet_address: string;
+  has_access: boolean;
+  added_at: string;
+}
+
 // ==================== API Error ====================
 export interface ApiError {
   detail: string | ValidationError[];

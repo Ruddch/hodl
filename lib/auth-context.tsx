@@ -7,9 +7,11 @@ import {
   getNonce, 
   verifySignature, 
   getCurrentUser,
-  logout as logoutApi
+  logout as logoutApi,
+  checkAlphaTestAccess
 } from "./api";
 import type { UserProfileResponse } from "./types";
+import { AlphaTestAccessModal } from "@/components/AlphaTestAccessModal";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -19,6 +21,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   error: string | null;
   signedWalletAddress: string | null;
+  showAlphaTestModal: boolean;
+  closeAlphaTestModal: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfileResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [signedWalletAddress, setSignedWalletAddress] = useState<string | null>(null);
+  const [showAlphaTestModal, setShowAlphaTestModal] = useState(false);
   
   // Используем ref для предотвращения множественных одновременных попыток авторизации
   const isLoggingInRef = useRef(false);
@@ -119,6 +124,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
+      // 0. Проверяем доступ к альфа-тесту перед началом авторизации
+      const alphaTestCheck = await checkAlphaTestAccess(address);
+      if (!alphaTestCheck.has_access) {
+        setShowAlphaTestModal(true);
+        setIsLoading(false);
+        isLoggingInRef.current = false;
+        return;
+      }
+
       // 1. Get nonce from server
       const { message } = await getNonce(address);
 
@@ -236,15 +250,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
         }
       } else {
-        setIsAuthenticated(false);
-        setUser(null);
+        // Кошелек отключен - делаем logout если был авторизован
+        if (isAuthenticated || signedWalletAddress) {
+          logout().catch(console.error);
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+        }
         declinedAddressRef.current = null;
       }
       setIsLoading(false);
     };
     
     checkAuth();
-  }, [isConnected, address, logout]);
+  }, [isConnected, address, logout, isAuthenticated, signedWalletAddress]);
 
   // Автоматически запрашиваем подпись, если кошелек подключен, но пользователь не авторизован
   // НЕ предлагаем автоматически, если пользователь уже отменил подпись для этого адреса
@@ -296,10 +315,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Auto-logout when wallet disconnects
   useEffect(() => {
-    if (!isConnected && isAuthenticated) {
+    if (!isConnected && (isAuthenticated || signedWalletAddress)) {
       logout().catch(console.error);
     }
-  }, [isConnected, isAuthenticated, logout]);
+  }, [isConnected, isAuthenticated, signedWalletAddress, logout]);
+
+  const closeAlphaTestModal = useCallback(() => {
+    setShowAlphaTestModal(false);
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -311,9 +334,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         error,
         signedWalletAddress,
+        showAlphaTestModal,
+        closeAlphaTestModal,
       }}
     >
       {children}
+      {showAlphaTestModal && (
+        <AlphaTestAccessModal onClose={closeAlphaTestModal} />
+      )}
     </AuthContext.Provider>
   );
 }

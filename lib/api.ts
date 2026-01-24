@@ -26,6 +26,7 @@ import type {
   OpenPackRequest,
   OpenPackResponse,
   PackHistoryResponse,
+  AlphaTestCheckResponse,
 } from "./types";
 
 const API_BASE_URL = process.env.NODE_ENV === "development" 
@@ -300,6 +301,11 @@ export async function getPackHistory(params: GetPackHistoryParams = {}): Promise
   return fetchApi(`/api/packs/history${query ? `?${query}` : ""}`);
 }
 
+// ==================== Alpha Test API ====================
+export async function checkAlphaTestAccess(walletAddress: string): Promise<AlphaTestCheckResponse> {
+  return fetchApi(`/api/alpha-test/check/${walletAddress}`);
+}
+
 // ==================== React Query Hooks ====================
 
 // Auth Hooks
@@ -550,5 +556,14 @@ export function useSessionResults(sessionId: string | undefined) {
     queryKey: ["sessionResults", sessionId],
     queryFn: () => getSessionResults(sessionId!),
     enabled: !!sessionId,
+  });
+}
+
+// Alpha Test Hooks
+export function useAlphaTestAccess(walletAddress: string | undefined, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ["alphaTestAccess", walletAddress],
+    queryFn: () => checkAlphaTestAccess(walletAddress!),
+    enabled: !!walletAddress && enabled,
   });
 }
