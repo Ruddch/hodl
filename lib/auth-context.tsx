@@ -52,6 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const prevAddressRef = useRef<string | undefined>(undefined);
   // Отслеживаем, для какого адреса мы уже пытались автоматически залогиниться
   const autoLoginAttemptedRef = useRef<string | null>(null);
+  // Флаг первой инициализации - чтобы не делать logout при перезагрузке, пока wagmi восстанавливает подключение
+  const isInitialMountRef = useRef(true);
 
   // Загружаем сохраненный адрес кошелька при монтировании
   useEffect(() => {
@@ -218,6 +220,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Проверяем, изменилось ли состояние подключения или адрес
       const isConnectedChanged = prevIsConnectedRef.current !== isConnected;
       const addressChanged = prevAddressRef.current !== address;
+      const isInitialMount = isInitialMountRef.current;
+      
+      // После первого выполнения снимаем флаг первой инициализации
+      if (isInitialMount) {
+        isInitialMountRef.current = false;
+      }
       
       // Обновляем refs
       prevIsConnectedRef.current = isConnected;
@@ -289,17 +297,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
         }
       } else {
-        // Кошелек отключен - делаем logout если был авторизован
+        // Кошелек отключен
         const savedAddress = typeof window !== "undefined" 
           ? localStorage.getItem(SIGNED_WALLET_KEY) 
           : null;
-        if (savedAddress) {
-          logout().catch(console.error);
+        
+        // ВАЖНО: При первой инициализации (перезагрузка страницы) wagmi может еще не восстановить подключение
+        // Не делаем logout сразу, если есть сохраненный адрес - даем время wagmi восстановить состояние
+        // Если wagmi восстановит подключение, checkAuth сработает снова с isConnected=true
+        if (isInitialMount && savedAddress) {
+          // Это первая инициализация и есть сохраненный адрес - не делаем logout
+          // Ждем, пока wagmi восстановит подключение (если оно было)
+          console.log("[Auth Check] Initial mount with saved address, waiting for wagmi to restore connection...");
+          setIsAuthenticated(false);
+          setUser(null);
+          // Не делаем logout - если wagmi восстановит подключение, checkAuth сработает снова
+        } else if (!isInitialMount) {
+          // Это не первая инициализация - кошелек действительно отключен пользователем
+          if (savedAddress) {
+            console.log("[Auth Check] Wallet disconnected by user, logging out");
+            logout().catch(console.error);
+          } else {
+            setIsAuthenticated(false);
+            setUser(null);
+          }
+          declinedAddressRef.current = null;
         } else {
+          // Первая инициализация, но нет сохраненного адреса
           setIsAuthenticated(false);
           setUser(null);
         }
-        declinedAddressRef.current = null;
       }
       setIsLoading(false);
     };
