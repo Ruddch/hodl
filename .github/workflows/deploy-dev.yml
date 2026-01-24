@@ -45,11 +45,19 @@ jobs:
           ls -la out/ || echo "out directory not found!"
           if [ -f "out/index.html" ]; then
             echo "✓ index.html found"
-            head -20 out/index.html
+            echo "--- First 30 lines of index.html ---"
+            head -30 out/index.html
+            echo ""
+            echo "--- Checking for static files ---"
+            ls -la out/_next/static/ 2>/dev/null || echo "No _next/static directory"
+            find out -name "*.css" -o -name "*.js" | head -5
           else
             echo "✗ index.html NOT found!"
             find out -name "*.html" | head -5
           fi
+
+      - name: Create .nojekyll file
+        run: touch out/.nojekyll
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
