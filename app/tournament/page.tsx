@@ -6,7 +6,7 @@ import { useTournaments, useTournamentDetails, useValidateDeck, useRegisterForTo
 import { useAuth } from "@/lib/auth-context";
 import { useRegisterDeckOnChain } from "@/lib/contracts/tournament-registry";
 import { useAccount } from "wagmi";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { Tournament } from "@/lib/types";
 
@@ -39,7 +39,7 @@ function groupTournamentsByEpoch(tournaments: Tournament[]) {
   return epochs;
 }
 
-export default function TournamentPage() {
+function TournamentPageContent() {
   const { isAuthenticated, login, signedWalletAddress } = useAuth();
   const { address } = useAccount();
   const searchParams = useSearchParams();
@@ -300,5 +300,23 @@ export default function TournamentPage() {
         />
       )}
     </MainLayout>
+  );
+}
+
+export default function TournamentPage() {
+  return (
+    <Suspense fallback={
+      <MainLayout>
+        <div className="max-w-8xl mx-auto">
+          <div className="space-y-5">
+            <div className="h-48 bg-zinc-200 rounded-[30px] animate-pulse"></div>
+            <div className="h-64 bg-zinc-200 rounded-[30px] animate-pulse"></div>
+            <div className="h-64 bg-zinc-200 rounded-[30px] animate-pulse"></div>
+          </div>
+        </div>
+      </MainLayout>
+    }>
+      <TournamentPageContent />
+    </Suspense>
   );
 }
