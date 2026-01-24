@@ -29,6 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const SIGNED_WALLET_KEY = "hodleague_signed_wallet";
 const DECLINED_SIGNATURE_KEY = "hodleague_declined_signature";
+const AUTO_LOGIN_ATTEMPTED_KEY = "hodleague_auto_login_attempted";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { address, isConnected } = useAccount();
@@ -59,6 +60,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (savedAddress) {
         setSignedWalletAddress(savedAddress);
       }
+      // Восстанавливаем флаг попытки автоматического логина
+      const attemptedAddress = localStorage.getItem(AUTO_LOGIN_ATTEMPTED_KEY);
+      if (attemptedAddress) {
+        autoLoginAttemptedRef.current = attemptedAddress;
+      }
     }
   }, []);
 
@@ -78,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     autoLoginAttemptedRef.current = null;
     if (typeof window !== "undefined") {
       localStorage.removeItem(SIGNED_WALLET_KEY);
+      localStorage.removeItem(AUTO_LOGIN_ATTEMPTED_KEY);
       // При logout не удаляем информацию об отмене подписи,
       // чтобы не предлагать подпись снова автоматически
     }
@@ -160,6 +167,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(SIGNED_WALLET_KEY, address);
         // Удаляем отметку об отмене, так как подпись прошла успешно
         localStorage.removeItem(DECLINED_SIGNATURE_KEY);
+        // Удаляем флаг попытки автоматического логина при успешной авторизации
+        localStorage.removeItem(AUTO_LOGIN_ATTEMPTED_KEY);
       }
       declinedAddressRef.current = null;
       // Сбрасываем флаг попытки автоматического логина при успешной авторизации
@@ -206,18 +215,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check for existing auth on mount and when wallet connects
   useEffect(() => {
-    // Проверяем, изменилось ли состояние подключения или адрес
-    const isConnectedChanged = prevIsConnectedRef.current !== isConnected;
-    const addressChanged = prevAddressRef.current !== address;
-    
-    // Обновляем refs
-    prevIsConnectedRef.current = isConnected;
-    prevAddressRef.current = address;
-    
-    // Выполняем проверку только если изменилось состояние подключения или адрес
-    if (!isConnectedChanged && !addressChanged && prevIsConnectedRef.current !== undefined) {
-      return;
-    }
+      // Проверяем, изменилось ли состояние подключения или адрес
+      const isConnectedChanged = prevIsConnectedRef.current !== isConnected;
+      const addressChanged = prevAddressRef.current !== address;
+      
+      // Обновляем refs
+      prevIsConnectedRef.current = isConnected;
+      prevAddressRef.current = address;
+      
+      // Выполняем проверку только если изменилось состояние подключения или адрес
+      // ИЛИ если это первая инициализация (prevIsConnectedRef.current === undefined)
+      if (!isConnectedChanged && !addressChanged && prevIsConnectedRef.current !== undefined) {
+        return;
+      }
 
     const checkAuth = async () => {
       setIsLoading(true);
@@ -266,6 +276,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             // Если адреса совпадают и авторизация успешна, значит все в порядке
             console.log("[Auth Check] Authentication successful, cookie is valid");
+            // Очищаем флаг попытки автоматического логина, так как авторизация успешна
+            autoLoginAttemptedRef.current = null;
+            if (typeof window !== "undefined") {
+              localStorage.removeItem(AUTO_LOGIN_ATTEMPTED_KEY);
+            }
           }
         } catch (error) {
           // Не авторизован или токен истек
@@ -305,50 +320,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Сбрасываем флаг попытки, если кошелек отключен или адрес изменился
       if (!isConnected || !address) {
         autoLoginAttemptedRef.current = null;
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(AUTO_LOGIN_ATTEMPTED_KEY);
+        }
       }
       return;
     }
 
-    // Проверяем, не пытались ли мы уже автоматически залогиниться для этого адреса
-    if (autoLoginAttemptedRef.current && 
-        autoLoginAttemptedRef.current.toLowerCase() === address.toLowerCase()) {
-      return; // Уже пытались для этого адреса
-    }
-
-    // Проверяем, не отменил ли пользователь подпись для этого адреса
-    const isDeclined = declinedAddressRef.current && 
-      declinedAddressRef.current.toLowerCase() === address.toLowerCase();
-    
-    if (isDeclined) {
-      return;
-    }
-
-    // Также проверяем localStorage
-    if (typeof window !== "undefined") {
-      const declinedAddress = localStorage.getItem(DECLINED_SIGNATURE_KEY);
-      if (declinedAddress && declinedAddress.toLowerCase() === address.toLowerCase()) {
-        return; // Не предлагаем автоматически
+      // Проверяем, не пытались ли мы уже автоматически залогиниться для этого адреса
+      // Проверяем и ref (для текущей сессии) и localStorage (для перезагрузок)
+      const attemptedAddress = autoLoginAttemptedRef.current || 
+        (typeof window !== "undefined" ? localStorage.getItem(AUTO_LOGIN_ATTEMPTED_KEY) : null);
+      
+      if (attemptedAddress && attemptedAddress.toLowerCase() === address.toLowerCase()) {
+        return; // Уже пытались для этого адреса
       }
-    }
 
-    // Проверяем, есть ли сохраненный адрес - если есть и он совпадает, значит пользователь уже подписывал
-    const savedAddress = typeof window !== "undefined" 
-      ? localStorage.getItem(SIGNED_WALLET_KEY) 
-      : null;
-    
-    // Если адрес совпадает с сохраненным, но авторизация не прошла - значит кука протухла
-    // Если адреса нет или не совпадает - это новый адрес или первый раз
-    if (savedAddress && savedAddress.toLowerCase() === address.toLowerCase()) {
-      // Адрес совпадает, но авторизация не прошла - кука протухла, нужно переподписать
-    } else if (!savedAddress) {
-      // Первый раз подключаем этот кошелек
-    } else {
-      // Адрес изменился - это обрабатывается в checkAuth через logout
-      return;
-    }
+      // Проверяем, не отменил ли пользователь подпись для этого адреса
+      const isDeclined = declinedAddressRef.current && 
+        declinedAddressRef.current.toLowerCase() === address.toLowerCase();
+      
+      if (isDeclined) {
+        return;
+      }
+
+      // Также проверяем localStorage
+      if (typeof window !== "undefined") {
+        const declinedAddress = localStorage.getItem(DECLINED_SIGNATURE_KEY);
+        if (declinedAddress && declinedAddress.toLowerCase() === address.toLowerCase()) {
+          return; // Не предлагаем автоматически
+        }
+      }
+
+      // Проверяем, есть ли сохраненный адрес - если есть и он совпадает, значит пользователь уже подписывал
+      const savedAddress = typeof window !== "undefined" 
+        ? localStorage.getItem(SIGNED_WALLET_KEY) 
+        : null;
+      
+      // ВАЖНО: Если адрес совпадает с сохраненным, но авторизация не прошла - значит кука протухла
+      // В этом случае НЕ предлагаем автоматическую подпись, пользователь должен нажать кнопку вручную
+      // Это предотвращает назойливые запросы подписи при каждой перезагрузке
+      if (savedAddress && savedAddress.toLowerCase() === address.toLowerCase()) {
+        // Адрес совпадает, но авторизация не прошла - кука протухла
+        // НЕ предлагаем автоматическую подпись, пользователь должен подписать вручную
+        return;
+      } else if (!savedAddress) {
+        // Первый раз подключаем этот кошелек - можно предложить автоматическую подпись
+      } else {
+        // Адрес изменился - это обрабатывается в checkAuth через logout
+        return;
+      }
     
     // Отмечаем, что мы пытаемся залогиниться для этого адреса
     autoLoginAttemptedRef.current = address;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(AUTO_LOGIN_ATTEMPTED_KEY, address);
+    }
     
     login().catch((error) => {
       // При ошибке сбрасываем флаг, чтобы можно было попробовать снова
@@ -357,6 +384,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Если это не отмена пользователем, сбрасываем флаг
         if (errorCode !== 4001 && errorCode !== 'ACTION_REJECTED' && errorCode !== 'USER_REJECTED') {
           autoLoginAttemptedRef.current = null;
+          if (typeof window !== "undefined") {
+            localStorage.removeItem(AUTO_LOGIN_ATTEMPTED_KEY);
+          }
         }
       }
       console.error("Auto login error:", error);
