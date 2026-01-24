@@ -9,9 +9,19 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@abstract-foundation/agw-client": "^1.10.0",
+    "@abstract-foundation/agw-react": "^1.10.0",
+    "@privy-io/cross-app-connect": "^0.4.0",
+    "@privy-io/popup": "^0.0.1",
+    "@tanstack/react-query": "^5.90.17",
+    "@tanstack/react-virtual": "^3.13.18",
+    "connectkit": "^1.9.1",
     "next": "16.1.2",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-parallax-tilt": "^1.7.316",
+    "viem": "^2.44.2",
+    "wagmi": "^3.3.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -1,0 +1,99 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import type { LeaderboardEntry } from "@/lib/types";
+import { LeaderboardTable } from "./LeaderboardTable";
+import { BlurCard } from "./BlurCard";
+
+interface LeaderboardCardProps {
+  entries: LeaderboardEntry[];
+  title: string;
+  subtitle?: string;
+  showSearch?: boolean;
+  height?: number | "full";
+  isLoading?: boolean;
+  emptyMessage?: string;
+}
+
+export function LeaderboardCard({
+  entries,
+  title,
+  subtitle,
+  showSearch = false,
+  height = 400,
+  isLoading = false,
+  emptyMessage = "No participants yet",
+}: LeaderboardCardProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Фильтруем записи по поисковому запросу
+  const filteredEntries = useMemo(() => {
+    if (!searchQuery.trim()) return entries;
+
+    const query = searchQuery.toLowerCase().trim();
+    return entries.filter((entry) => {
+      // Поиск по адресу кошелька
+      if (entry.wallet_address?.toLowerCase().includes(query)) return true;
+      // Поиск по user_id
+      if (String(entry.user_id).includes(query)) return true;
+      return false;
+    });
+  }, [entries, searchQuery]);
+
+  return (
+    <BlurCard backgroundColor="rgba(247, 238, 210, 1)" className={height === "full" ? "h-full flex flex-col" : ""}>
+      {/* Header */}
+      <div className={`flex items-center ${showSearch ? "justify-between" : ""} px-6 pt-6 pb-4 flex-shrink-0`}>
+        <div>
+          <h2 className="text-2xl font-semibold leading-8 text-black">
+            {title}
+            {subtitle && <span className="text-xl font-normal text-zinc-600 ml-2">{subtitle}</span>}
+          </h2>
+        </div>
+
+        {/* Search */}
+        {showSearch && (
+          <div className="relative flex items-center gap-2">
+            <svg
+              className="absolute left-4 w-5 h-5 text-[rgba(0,0,0,0.5)]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search by username or wallet address"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-[396px] h-12 px-4 rounded-2xl bg-[rgba(137,137,137,0.14)] border border-[rgba(255,255,255,0.09)] backdrop-blur-[150px] text-base font-normal leading-none tracking-normal text-[rgba(0,0,0,0.5)] placeholder:text-[rgba(0,0,0,0.5)] outline-none focus:outline-none"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Table */}
+      <div className={`px-6 pb-6 ${height === "full" ? "flex-1 min-h-0 flex flex-col" : ""}`}>
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-16 bg-white/20 rounded animate-pulse" />
+            ))}
+          </div>
+        ) : filteredEntries.length === 0 ? (
+          <div className="py-8 text-center text-zinc-500">
+            {searchQuery ? "No results found" : emptyMessage}
+          </div>
+        ) : (
+          <LeaderboardTable entries={filteredEntries} height={height === "full" ? undefined : height} className={height === "full" ? "flex-1 min-h-0" : ""} />
+        )}
+      </div>
+    </BlurCard>
+  );
+}

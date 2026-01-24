@@ -1,0 +1,30 @@
+"use client";
+
+import type { UserProfileResponse } from "@/lib/types";
+import { Avatar } from "@/components/Avatar";
+
+interface UserAvatarProps {
+  profile: UserProfileResponse;
+}
+
+export function UserAvatar({ profile }: UserAvatarProps) {
+  // Генерируем имя из адреса кошелька
+  const displayName = profile.wallet_address
+    ? `${profile.wallet_address.slice(0, 6)}...${profile.wallet_address.slice(-4)}`
+    : "User";
+
+  return (
+    <div className="relative z-10 ml-4 flex items-end gap-4 -mt-12 mb-8">
+      {/* Аватар */}
+      <Avatar 
+        walletAddress={profile.wallet_address} 
+        size={96} 
+        border={true}
+        borderColor="white"
+      />
+      
+      {/* Имя пользователя */}
+      <h1 className="text-2xl mb-2 font-semibold text-black">{displayName}</h1>
+    </div>
+  );
+}
