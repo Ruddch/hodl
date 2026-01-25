@@ -9,10 +9,12 @@ interface AvatarProps {
   className?: string;
   border?: boolean;
   borderColor?: string;
+  avatarUrl?: string | null;
 }
 
 /**
- * Универсальный компонент аватарки, генерируемый на основе адреса кошелька
+ * Универсальный компонент аватарки
+ * Если передан avatarUrl, показывает его, иначе генерирует на основе адреса кошелька
  * Одинаковый адрес всегда дает одинаковую аватарку
  */
 export function Avatar({
@@ -22,11 +24,42 @@ export function Avatar({
   className = "",
   border = false,
   borderColor = "white",
+  avatarUrl,
 }: AvatarProps) {
   const style = generateAvatarStyle(walletAddress, fallbackSeed);
   
   const sizeValue = typeof size === "number" ? `${size}px` : size;
   
+  // Если есть avatarUrl, показываем изображение
+  if (avatarUrl) {
+    return (
+      <div
+        className={`rounded-full overflow-hidden ${className}`}
+        style={{
+          width: sizeValue,
+          height: sizeValue,
+          border: border ? `4px solid ${borderColor}` : undefined,
+          flexShrink: 0,
+        }}
+      >
+        <img
+          src={avatarUrl}
+          alt="Avatar"
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            // Если изображение не загрузилось, скрываем его и показываем fallback
+            e.currentTarget.style.display = 'none';
+            const parent = e.currentTarget.parentElement;
+            if (parent) {
+              parent.style.background = style.background;
+            }
+          }}
+        />
+      </div>
+    );
+  }
+  
+  // Иначе показываем сгенерированную аватарку
   return (
     <div
       className={`rounded-full ${className}`}

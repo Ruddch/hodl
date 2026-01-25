@@ -12,8 +12,11 @@ export function UserInfo() {
   const { isAuthenticated, isLoading, login, disconnect } = useAuth();
   const { data: profile } = useMyProfile(isAuthenticated);
 
-  // Генерируем короткое имя из адреса
-  const displayName = address
+  console.log('🔴 UserInfo', isAuthenticated, isLoading, profile);
+  // Используем nickname если есть, иначе генерируем короткое имя из адреса
+  const displayName = profile?.nickname 
+    ? profile.nickname
+    : address
     ? `${address.slice(0, 6)}...${address.slice(-2)}`
     : "User";
 
@@ -23,7 +26,11 @@ export function UserInfo() {
         <div className="rounded-[30px] bg-[#efeff0] border border-[rgba(255,255,255,0.09)] backdrop-blur-[150px] p-4">
           {/* User Avatar and Name */}
           <Link href="/profile" className="flex items-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
-            <Avatar walletAddress={address} size={40} />
+            <Avatar 
+              walletAddress={address} 
+              size={40} 
+              avatarUrl={profile?.avatar_url}
+            />
             <span className="font-semibold text-black">{displayName}</span>
           </Link>
 

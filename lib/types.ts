@@ -361,6 +361,8 @@ export interface UserProfileResponse {
   total_wins: number;
   cards?: UserCard[];
   stats?: UserStats;
+  avatar_url?: string | null;
+  nickname?: string | null;
 }
 
 // ==================== Alpha Test ====================

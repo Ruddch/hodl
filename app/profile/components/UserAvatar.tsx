@@ -8,8 +8,10 @@ interface UserAvatarProps {
 }
 
 export function UserAvatar({ profile }: UserAvatarProps) {
-  // Генерируем имя из адреса кошелька
-  const displayName = profile.wallet_address
+  // Используем nickname если есть, иначе генерируем имя из адреса кошелька
+  const displayName = profile.nickname
+    ? profile.nickname
+    : profile.wallet_address
     ? `${profile.wallet_address.slice(0, 6)}...${profile.wallet_address.slice(-4)}`
     : "User";
 
@@ -21,6 +23,7 @@ export function UserAvatar({ profile }: UserAvatarProps) {
         size={96} 
         border={true}
         borderColor="white"
+        avatarUrl={profile.avatar_url}
       />
       
       {/* Имя пользователя */}
