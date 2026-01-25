@@ -64,92 +64,92 @@ function RewardButton({
 }
 
 export function TournamentStatisticsTable() {
-  const { user } = useAuth();
-  const [tableData, setTableData] = useState<TournamentStatsRow[]>([]);
-  const [loadingTournaments, setLoadingTournaments] = useState<Set<number>>(new Set());
+  // const { user } = useAuth();
+  // const [tableData, setTableData] = useState<TournamentStatsRow[]>([]);
+  // const [loadingTournaments, setLoadingTournaments] = useState<Set<number>>(new Set());
   
-  // Получаем все турниры, в которых пользователь участвовал
-  const { data: tournamentsData, isLoading: tournamentsLoading } = useTournaments({
-    limit: 50,
-  });
+  // // Получаем все турниры, в которых пользователь участвовал
+  // const { data: tournamentsData, isLoading: tournamentsLoading } = useTournaments({
+  //   limit: 50,
+  // });
 
-  // Получаем турниры, в которых пользователь зарегистрирован (первые 10 для оптимизации)
-  const userTournaments = useMemo(() => {
-    const tournaments = tournamentsData?.items
-      .filter(t => t.is_registered === true)
-      .sort((a, b) => new Date(b.end_date || b.start_date).getTime() - new Date(a.end_date || a.start_date).getTime())
-      .slice(0, 10) || [];
-    return tournaments;
-  }, [tournamentsData]);
+  // // Получаем турниры, в которых пользователь зарегистрирован (первые 10 для оптимизации)
+  // const userTournaments = useMemo(() => {
+  //   const tournaments = tournamentsData?.items
+  //     .filter(t => t.is_registered === true)
+  //     .sort((a, b) => new Date(b.end_date || b.start_date).getTime() - new Date(a.end_date || a.start_date).getTime())
+  //     .slice(0, 10) || [];
+  //   return tournaments;
+  // }, [tournamentsData]);
 
-  // Загружаем данные для каждого турнира
-  useEffect(() => {
-    if (!user || userTournaments.length === 0) return;
+  // // Загружаем данные для каждого турнира
+  // useEffect(() => {
+  //   if (!user || userTournaments.length === 0) return;
 
-    const loadTournamentData = async (tournament: Tournament) => {
-      // Помечаем турнир как загружаемый
-      setLoadingTournaments(prev => new Set(prev).add(tournament.id));
+  //   const loadTournamentData = async (tournament: Tournament) => {
+  //     // Помечаем турнир как загружаемый
+  //     setLoadingTournaments(prev => new Set(prev).add(tournament.id));
 
-      try {
-        const leaderboardData = await getTournamentLeaderboard(tournament.id, { limit: 100 });
-        const myPosition = leaderboardData.my_position;
+  //     try {
+  //       const leaderboardData = await getTournamentLeaderboard(tournament.id, { limit: 100 });
+  //       const myPosition = leaderboardData.my_position;
 
-        if (myPosition) {
-          const rewards = myPosition.prizes?.reduce(
-            (sum, prize) => sum + Number(prize.amount || 0),
-            0
-          ) || 0;
+  //       if (myPosition) {
+  //         const rewards = myPosition.prizes?.reduce(
+  //           (sum, prize) => sum + Number(prize.amount || 0),
+  //           0
+  //         ) || 0;
 
-          // Определяем статус награды (пока заглушка - всегда "available")
-          // TODO: Добавить проверку статуса награды из API
-          const rewardStatus: "available" | "claimed" | "soon" = "available";
+  //         // Определяем статус награды (пока заглушка - всегда "available")
+  //         // TODO: Добавить проверку статуса награды из API
+  //         const rewardStatus: "available" | "claimed" | "soon" = "available";
 
-          const rowData: TournamentStatsRow = {
-            tournament,
-            position: myPosition.position,
-            score: myPosition.final_score,
-            cards: myPosition.cards || [],
-            date: tournament.start_date,
-            rewards,
-            rewardStatus,
-          };
+  //         const rowData: TournamentStatsRow = {
+  //           tournament,
+  //           position: myPosition.position,
+  //           score: myPosition.final_score,
+  //           cards: myPosition.cards || [],
+  //           date: tournament.start_date,
+  //           rewards,
+  //           rewardStatus,
+  //         };
 
-          setTableData(prev => {
-            const filtered = prev.filter(row => row.tournament.id !== tournament.id);
-            const updated = [...filtered, rowData];
-            return updated.sort((a, b) => 
-              new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-          });
-        }
-      } catch (error) {
-        console.error(`Failed to load tournament ${tournament.id}:`, error);
-      } finally {
-        setLoadingTournaments(prev => {
-          const next = new Set(prev);
-          next.delete(tournament.id);
-          return next;
-        });
-      }
-    };
+  //         setTableData(prev => {
+  //           const filtered = prev.filter(row => row.tournament.id !== tournament.id);
+  //           const updated = [...filtered, rowData];
+  //           return updated.sort((a, b) => 
+  //             new Date(b.date).getTime() - new Date(a.date).getTime()
+  //           );
+  //         });
+  //       }
+  //     } catch (error) {
+  //       console.error(`Failed to load tournament ${tournament.id}:`, error);
+  //     } finally {
+  //       setLoadingTournaments(prev => {
+  //         const next = new Set(prev);
+  //         next.delete(tournament.id);
+  //         return next;
+  //       });
+  //     }
+  //   };
 
-    // Загружаем данные для всех турниров параллельно
-    userTournaments.forEach(tournament => {
-      loadTournamentData(tournament);
-    });
-  }, [user, userTournaments]);
+  //   // Загружаем данные для всех турниров параллельно
+  //   userTournaments.forEach(tournament => {
+  //     loadTournamentData(tournament);
+  //   });
+  // }, [user, userTournaments]);
 
-  const isLoading = tournamentsLoading || loadingTournaments.size > 0;
+  // const isLoading = tournamentsLoading || loadingTournaments.size > 0;
 
-  if (isLoading && tableData.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-black/50">Loading tournament statistics...</p>
-      </div>
-    );
-  }
+  // if (isLoading && tableData.length === 0) {
+  //   return (
+  //     <div className="text-center py-12">
+  //       <p className="text-black/50">Loading tournament statistics...</p>
+  //     </div>
+  //   );
+  // }
 
-  if (!isLoading && tableData.length === 0) {
+  if (true) {
     return (
       <div className="text-center py-12">
         <p className="text-black/50">No tournament statistics available</p>
@@ -159,7 +159,7 @@ export function TournamentStatisticsTable() {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      {/* <table className="w-full">
         <thead>
           <tr className="border-b border-black/10">
             <th className="text-left py-3 px-4 text-sm font-medium text-black">Tournament</th>
@@ -172,7 +172,6 @@ export function TournamentStatisticsTable() {
         <tbody>
           {tableData.map((row) => (
             <tr key={row.tournament.id} className="border-b border-black/5">
-              {/* Tournament */}
               <td className="py-4 px-4">
                 <div>
                   <p className="text-base font-medium text-black">{getTournamentName(row.tournament)}</p>
@@ -194,14 +193,12 @@ export function TournamentStatisticsTable() {
                 </div>
               </td>
 
-              {/* Score */}
               <td className="py-4 px-4">
                 <p className="text-base font-medium text-black">
                   {row.score.toLocaleString("en-US")}
                 </p>
               </td>
 
-              {/* Cards */}
               <td className="py-4 px-4">
                 <div className="flex gap-1.5">
                   {row.cards.slice(0, 4).map((card, index) => (
@@ -228,14 +225,12 @@ export function TournamentStatisticsTable() {
                 </div>
               </td>
 
-              {/* Date */}
               <td className="py-4 px-4">
                 <p className="text-base font-medium text-black">
                   {formatDate(row.date)}
                 </p>
               </td>
 
-              {/* Rewards */}
               <td className="py-4 px-4">
                 <div className="flex items-center gap-3">
                   <p className="text-base font-medium text-black">
@@ -247,7 +242,7 @@ export function TournamentStatisticsTable() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table> */}
     </div>
   );
 }
