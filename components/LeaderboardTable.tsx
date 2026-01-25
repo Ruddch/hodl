@@ -26,7 +26,7 @@ function formatReward(prizes: LeaderboardEntry["prizes"]): string {
   if (!prizes || prizes.length === 0) return "—";
   
   const firstPrize = prizes[0];
-  const amount = firstPrize.amount;
+  const amount = Number(firstPrize.amount);
   const formattedAmount = new Intl.NumberFormat("en-US").format(amount);
   
   return `${formattedAmount} ${firstPrize.reward_name}`;
