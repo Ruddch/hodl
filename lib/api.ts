@@ -410,19 +410,21 @@ export function useTournaments(params: GetTournamentsParams = {}) {
   });
 }
 
-export function useTournamentDetails(tournamentId: number | undefined, includeDeck: boolean = false) {
+export function useTournamentDetails(tournamentId: number | undefined, includeDeck: boolean = false, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: ["tournament", tournamentId, includeDeck],
     queryFn: () => getTournamentDetails(tournamentId!, includeDeck),
     enabled: !!tournamentId,
+    ...options,
   });
 }
 
-export function useTournamentLeaderboard(tournamentId: number | undefined, params: GetLeaderboardParams = {}) {
+export function useTournamentLeaderboard(tournamentId: number | undefined, params: GetLeaderboardParams = {}, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: ["leaderboard", tournamentId, params],
     queryFn: () => getTournamentLeaderboard(tournamentId!, params),
     enabled: !!tournamentId,
+    ...options,
   });
 }
 

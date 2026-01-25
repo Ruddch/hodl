@@ -46,7 +46,11 @@ function LeaderboardEmpty() {
 
 // Состояние: турнир идет (ongoing) или финишировал (finished)
 function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
-  const { data: leaderboardData, isLoading } = useTournamentLeaderboard(tournamentId, { limit: 100 });
+  const { data: leaderboardData, isLoading } = useTournamentLeaderboard(
+    tournamentId, 
+    { limit: 100 },
+    { refetchInterval: 5 * 60 * 1000 } // Обновление каждые 5 минут
+  );
 
   // Получаем всех участников
   const allEntries = leaderboardData?.leaderboard || [];

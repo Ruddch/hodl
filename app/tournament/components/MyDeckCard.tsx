@@ -75,7 +75,8 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId }: RegisteredDe
   // Загружаем лидерборд только для ongoing турниров
   const { data: leaderboardData } = useTournamentLeaderboard(
     isOngoing && tournamentId ? tournamentId : undefined,
-    { limit: 100 }
+    { limit: 100 },
+    { refetchInterval: 5 * 60 * 1000 } // Обновление каждые 5 минут
   );
 
   const myPosition = leaderboardData?.my_position;

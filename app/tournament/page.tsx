@@ -139,7 +139,8 @@ function TournamentPageContent() {
   // Загружаем детали выбранного турнира
   const { data: tournamentDetails, isLoading: detailsLoading, refetch: refetchDetails } = useTournamentDetails(
     currentTournamentId ?? undefined,
-    true
+    true,
+    { refetchInterval: 5 * 60 * 1000 } // Обновление каждые 5 минут
   );
 
   const currentTournament = tournamentDetails || tournamentsInEpoch.find((t) => t.id === currentTournamentId);
