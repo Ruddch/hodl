@@ -96,7 +96,7 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
 
         <div className="flex gap-28 mb-6">
           <div>
-            <p className="text-base text-black/50 leading-8">Weekly price</p>
+            <p className="text-base text-black/50 leading-8">Weekly prize</p>
             <p className="text-[36px] font-semibold leading-8 text-black mt-2">
               {tournament.prize_pool || "—"}
             </p>
