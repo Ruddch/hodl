@@ -12,11 +12,12 @@ export function StatsCards({ profile }: StatsCardsProps) {
   
   // Получаем баланс - берем первый доступный баланс из balances
   const getBalance = () => {
-    if (!statsData?.balances) return "0 ph";
+    if (!statsData?.balances) return "0";
     const balanceEntries = Object.entries(statsData.balances);
-    if (balanceEntries.length === 0) return "0 ph";
+    if (balanceEntries.length === 0) return "0";
     const [symbol, amount] = balanceEntries[0];
-    return `${amount} ${symbol}`;
+    const formattedAmount = new Intl.NumberFormat("en-US").format(amount);
+    return `${formattedAmount} ${symbol}`;
   };
 
   // Форматируем best_position для отображения
