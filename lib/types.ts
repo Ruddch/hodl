@@ -87,6 +87,11 @@ export interface SessionsListResponse {
 }
 
 // ==================== Tournaments ====================
+export interface PrizePoolInfo {
+  amount: string;
+  currency_name: string;
+}
+
 export interface Tournament {
   id: number;
   tournament_number: number;
@@ -102,6 +107,8 @@ export interface Tournament {
   registration_end?: string;
   max_participants?: number | null;
   prize_pool?: string | null;
+  prize_pools?: Record<string, PrizePoolInfo> | null;
+  estimated_final_prize_pools?: Record<string, PrizePoolInfo> | null;
   deck_size?: number;
   my_deck_id?: number | null;
 }

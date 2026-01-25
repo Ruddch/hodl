@@ -41,6 +41,17 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
     return `${month.charAt(0).toUpperCase() + month.slice(1)} fire`;
   }, [tournament.start_date]);
 
+  const prizePoolDisplay = useMemo(() => {
+    if (!tournament.estimated_final_prize_pools) return "—";
+    const firstPoolKey = Object.keys(tournament.estimated_final_prize_pools)[0];
+    if (!firstPoolKey) return "—";
+    const prizeInfo = tournament.estimated_final_prize_pools[firstPoolKey];
+    const amount = parseFloat(prizeInfo.amount);
+    const formattedAmount = new Intl.NumberFormat("en-US").format(amount);
+    
+    return `${formattedAmount} ${prizeInfo.currency_name}`;
+  }, [tournament.estimated_final_prize_pools]);
+
   const statusText = tournament.status === "registration" 
     ? "Tournament will start in" 
     : tournament.status === "ongoing" 
@@ -75,7 +86,6 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
           background: "linear-gradient(107deg, rgba(208, 203, 255, 0.06) 60.8%, rgba(21, 0, 211, 0.06) 227.6%)" 
         }}
       />
-      
       {/* Background image справа */}
       <div className="absolute right-0 top-0 bottom-0 w-[50%] overflow-hidden rounded-r-[16px]">
         <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[rgba(202, 233, 254, 0.8)] z-10" />
@@ -86,7 +96,6 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
           className="object-cover object-right"
         />
       </div>
-      
       {/* Content */}
       <div className="relative px-9 py-10">
         <div className="flex items-center gap-3 mb-5">
@@ -98,7 +107,7 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
           <div>
             <p className="text-base text-black/50 leading-8">Weekly prize</p>
             <p className="text-[36px] font-semibold leading-8 text-black mt-2">
-              {tournament.prize_pool || "—"}
+              {prizePoolDisplay}
             </p>
           </div>
           <div>
@@ -140,7 +149,7 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
               ) : null}
             </>
           )}
-          
+
           {/* Таймер показывается всегда когда турнир в статусе registration */}
           {tournament.status === "registration" && timeRemaining && (
             <p className="text-base font-medium text-black">
@@ -148,7 +157,7 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
               <span>{timeRemaining.days}d</span> : <span>{timeRemaining.hours}h</span> : <span className="text-black/50">{timeRemaining.minutes}</span>m
             </p>
           )}
-          
+
           {/* Таймер для ongoing турнира */}
           {tournament.status === "ongoing" && timeRemaining && (
             <p className="text-base font-medium text-black">
