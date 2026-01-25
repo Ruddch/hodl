@@ -127,7 +127,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId }: RegisteredDe
                 : "text-[#171645] bg-[rgba(169,171,205,0.2)]"
             }`}
           >
-            DECK SCORE: {isOngoing && deckScore !== undefined ? `${formatScore(deckScore)}PH` : "—"}
+            DECK SCORE: {isOngoing && deckScore !== undefined ? `${formatScore(deckScore)}` : "—"}
           </span>
         </div>
         {!isOngoing && (
@@ -169,7 +169,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId }: RegisteredDe
                       <div className="mt-4">
                         <div className="text-sm font-normal text-black/50 leading-4 tracking-normal flex justify-between items-center">
                           <span>Score:</span>
-                          <span className="text-black">{formatScore(card.calculated_score)}Ph</span>
+                          <span className="text-black">{formatScore(card.calculated_score)}</span>
                         </div>
                         <div className="text-sm font-normal leading-8 tracking-normal flex justify-between items-center text-black/50">
                           <span>Price change:</span>

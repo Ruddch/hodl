@@ -16,8 +16,8 @@ const leagueGothic = League_Gothic({
 });
 
 export const metadata: Metadata = {
-  title: "HODL - Crypto App",
-  description: "Crypto application on Abstract blockchain",
+  title: "Hodleague",
+  description: "Crypto fantasy on Abstract chain",
 };
 
 export default function RootLayout({

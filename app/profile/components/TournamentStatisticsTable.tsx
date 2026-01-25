@@ -96,7 +96,7 @@ export function TournamentStatisticsTable() {
 
         if (myPosition) {
           const rewards = myPosition.prizes?.reduce(
-            (sum, prize) => sum + (prize.amount || 0),
+            (sum, prize) => sum + Number(prize.amount || 0),
             0
           ) || 0;
 

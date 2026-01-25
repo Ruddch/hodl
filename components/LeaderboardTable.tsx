@@ -21,10 +21,15 @@ export function formatScore(score: number) {
   return formatted;
 }
 
-// Расчет общей награды
-function calculateReward(prizes: LeaderboardEntry["prizes"]): number {
-  if (!prizes || prizes.length === 0) return 0;
-  return prizes.reduce((sum, prize) => sum + (prize.amount || 0), 0);
+// Форматирование награды 
+function formatReward(prizes: LeaderboardEntry["prizes"]): string {
+  if (!prizes || prizes.length === 0) return "—";
+  
+  const firstPrize = prizes[0];
+  const amount = Number(firstPrize.amount);
+  const formattedAmount = new Intl.NumberFormat("en-US").format(amount);
+  
+  return `${formattedAmount} ${firstPrize.reward_name}`;
 }
 
 // Компонент ранга
@@ -112,7 +117,7 @@ function LeaderboardRow({
     ? truncateAddress(entry.wallet_address)
     : `User #${entry.user_id}`;
 
-  const reward = calculateReward(entry.prizes);
+  const reward = formatReward(entry.prizes);
 
   return (
     <div
@@ -137,7 +142,7 @@ function LeaderboardRow({
       {/* Score */}
       <div>
         <span className="text-base font-medium text-black">
-          {formatScore(entry.final_score)} Ph
+          {formatScore(entry.final_score)}
         </span>
       </div>
 
@@ -149,8 +154,8 @@ function LeaderboardRow({
       {/* Rewards */}
       <div>
         <span className="text-base font-medium text-black">
-          {formatScore(reward)} Ph
-        </span>
+        {reward}
+      </span>
       </div>
     </div>
   );

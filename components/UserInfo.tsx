@@ -38,7 +38,7 @@ export function UserInfo() {
           <div className="mb-3">
             <p className="text-sm text-zinc-400">Balance</p>
             <p className="text-lg font-semibold text-black">
-              0Ph
+              0
             </p>
           </div>
 
