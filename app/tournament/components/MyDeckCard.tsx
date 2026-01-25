@@ -100,7 +100,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId }: RegisteredDe
     const isPositive = change > 0;
     const absChange = Math.abs(change);
     return {
-      value: `${absChange.toFixed(0)}%`,
+      value: `${absChange.toFixed(2)}%`,
       isPositive,
     };
   };
@@ -172,7 +172,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId }: RegisteredDe
                           <span className="text-black">{formatScore(card.calculated_score)}Ph</span>
                         </div>
                         <div className="text-sm font-normal leading-8 tracking-normal flex justify-between items-center text-black/50">
-                          <span>MCap change:</span>
+                          <span>Price change:</span>
                           <span className={`flex items-center gap-1 ${mcapChange.isPositive ? "text-green-600" : "text-red-600"}`}>
                             {mcapChange.isPositive ? (
                               <>
