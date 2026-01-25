@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useConfig } from "wagmi";
+import { waitForTransactionReceipt } from "wagmi/actions";
 import { useAuth } from "@/lib/auth-context";
 import { useValidateDeck, useRegisterForTournament, useUnregisterFromTournament } from "@/lib/api";
 import { useRegisterDeckOnChain, useUnregisterDeckOnChain } from "@/lib/contracts/tournament-registry";
@@ -13,6 +14,7 @@ interface UseTournamentRegistrationOptions {
 export function useTournamentRegistration(options?: UseTournamentRegistrationOptions) {
   const { signedWalletAddress } = useAuth();
   const { address } = useAccount();
+  const config = useConfig();
   const [isRegistering, setIsRegistering] = useState(false);
   const [isUnregistering, setIsUnregistering] = useState(false);
 
@@ -63,6 +65,17 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
       
       console.log("Transaction submitted:", txHash);
 
+      // 2.1. Ждем подтверждения транзакции в блокчейне
+      console.log("Waiting for transaction confirmation...");
+      const receipt = await waitForTransactionReceipt(config, {
+        hash: txHash,
+      });
+      
+      console.log("Transaction confirmed:", {
+        blockNumber: receipt.blockNumber,
+        status: receipt.status,
+      });
+
       // 3. Отправляем tx_hash на бэкенд для подтверждения регистрации
       await registerMutation.mutateAsync({
         tournamentId: tournament.id,
@@ -97,6 +110,17 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
       const txHash = await unregisterDeckOnChain(tournament.id);
       
       console.log("Transaction submitted:", txHash);
+
+      // 1.1. Ждем подтверждения транзакции в блокчейне
+      console.log("Waiting for transaction confirmation...");
+      const receipt = await waitForTransactionReceipt(config, {
+        hash: txHash,
+      });
+      
+      console.log("Transaction confirmed:", {
+        blockNumber: receipt.blockNumber,
+        status: receipt.status,
+      });
 
       // 2. Отправляем tx_hash на бэкенд для подтверждения отмены регистрации
       await unregisterMutation.mutateAsync({
