@@ -2,10 +2,9 @@
 
 import { MainLayout } from "@/components/MainLayout";
 import { DeckSelectionModal } from "@/components/DeckSelectionModal";
-import { useTournaments, useTournamentDetails, useValidateDeck, useRegisterForTournament } from "@/lib/api";
+import { useTournaments, useTournamentDetails } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { useRegisterDeckOnChain } from "@/lib/contracts/tournament-registry";
-import { useAccount } from "wagmi";
+import { useTournamentRegistration } from "@/lib/hooks/useTournamentRegistration";
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { Tournament } from "@/lib/types";
@@ -40,23 +39,16 @@ function groupTournamentsByEpoch(tournaments: Tournament[]) {
 }
 
 function TournamentPageContent() {
-  const { isAuthenticated, login, signedWalletAddress } = useAuth();
-  const { address } = useAccount();
+  const { isAuthenticated, login } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [selectedEpoch, setSelectedEpoch] = useState<string | null>(null);
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | null>(null);
   const [showDeckModal, setShowDeckModal] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Загружаем турниры с большим лимитом чтобы иметь данные для группировки
   const { data: tournamentsData, isLoading: tournamentsLoading, refetch: refetchTournaments } = useTournaments({ limit: 50 });
-
-  // Мутации для регистрации
-  const validateDeckMutation = useValidateDeck();
-  const registerMutation = useRegisterForTournament();
-  const { registerDeck: registerDeckOnChain } = useRegisterDeckOnChain();
 
   // Группируем турниры по эпохам
   const epochs = useMemo(() => {
@@ -150,6 +142,17 @@ function TournamentPageContent() {
   // Можно ли регистрироваться
   const canRegister = currentTournament?.status === "registration" && !currentTournament?.is_registered;
 
+  // Хук для регистрации и отмены регистрации
+  const { register, unregister, isRegistering, isUnregistering } = useTournamentRegistration({
+    onSuccess: () => {
+      // Обновляем данные после успешной регистрации/отмены регистрации
+      refetchTournaments();
+      refetchDetails();
+      // Закрываем модальное окно после успешной регистрации
+      setShowDeckModal(false);
+    },
+  });
+
   // Открытие модального окна выбора колоды
   const handleOpenDeckModal = () => {
     if (!isAuthenticated) {
@@ -162,58 +165,13 @@ function TournamentPageContent() {
   // Регистрация на турнир
   const handleRegister = async (selectedCardIds: number[]) => {
     if (!currentTournament) return;
+    await register(currentTournament, selectedCardIds);
+  };
 
-    // Проверяем, что активный кошелек совпадает с тем, на который подписывали
-    if (signedWalletAddress && address && address.toLowerCase() !== signedWalletAddress.toLowerCase()) {
-      alert("Активный кошелек не совпадает с кошельком, на который вы подписывали. Пожалуйста, переключите кошелек в вашем кошельке (Rabi Wallet) на адрес, который вы использовали для авторизации.");
-      return;
-    }
-
-    setIsRegistering(true);
-    try {
-      // 1. Валидируем колоду на бэкенде
-      const validation = await validateDeckMutation.mutateAsync({
-        tournamentId: currentTournament.id,
-        data: { deck_composition: selectedCardIds },
-      });
-
-      if (!validation.valid) {
-        alert(validation.message || "Deck validation failed");
-        return;
-      }
-
-      // 2. Регистрируем колоду в смарт-контракте
-      // deck_hash возвращается от бэкенда в формате bytes32
-      const deckHash = validation.deck_hash as `0x${string}`;
-      
-      console.log("Registering deck on blockchain...", {
-        tournamentId: currentTournament.id,
-        deckHash,
-      });
-
-      const txHash = await registerDeckOnChain(currentTournament.id, deckHash);
-      
-      console.log("Transaction submitted:", txHash);
-
-      // 3. Отправляем tx_hash на бэкенд для подтверждения регистрации
-      await registerMutation.mutateAsync({
-        tournamentId: currentTournament.id,
-        data: {
-          deck_composition: selectedCardIds,
-          tx_hash: txHash,
-        },
-      });
-
-      // Закрываем модальное окно и обновляем данные
-      setShowDeckModal(false);
-      refetchTournaments();
-      refetchDetails();
-    } catch (error) {
-      console.error("Registration failed:", error);
-      alert(error instanceof Error ? error.message : "Registration failed");
-    } finally {
-      setIsRegistering(false);
-    }
+  // Отмена регистрации на турнир
+  const handleUnregister = async () => {
+    if (!currentTournament) return;
+    await unregister(currentTournament);
   };
 
   return (
@@ -278,6 +236,8 @@ function TournamentPageContent() {
               myDeck={tournamentDetails?.my_deck}
               tournamentStatus={currentTournament.status}
               tournamentId={currentTournament.id}
+              onUnregister={handleUnregister}
+              isUnregistering={isUnregistering}
             />
             <LeaderboardPreviewCard
               tournamentStatus={currentTournament.status}

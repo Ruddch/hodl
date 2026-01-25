@@ -12,7 +12,6 @@ export function UserInfo() {
   const { isAuthenticated, isLoading, login, disconnect } = useAuth();
   const { data: profile } = useMyProfile(isAuthenticated);
 
-  console.log('🔴 UserInfo', isAuthenticated, isLoading, profile);
   // Используем nickname если есть, иначе генерируем короткое имя из адреса
   const displayName = profile?.nickname 
     ? profile.nickname

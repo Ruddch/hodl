@@ -12,6 +12,8 @@ interface MyDeckCardProps {
   myDeck?: CardInDeckInfo[] | null;
   tournamentStatus?: "registration" | "ongoing" | "finished";
   tournamentId?: number;
+  onUnregister?: () => void;
+  isUnregistering?: boolean;
 }
 
 interface EmptyDeckProps {
@@ -67,9 +69,11 @@ interface RegisteredDeckProps {
   myDeck?: CardInDeckInfo[] | null;
   tournamentStatus?: "registration" | "ongoing" | "finished";
   tournamentId?: number;
+  onUnregister?: () => void;
+  isUnregistering?: boolean;
 }
 
-function RegisteredDeck({ myDeck, tournamentStatus, tournamentId }: RegisteredDeckProps) {
+function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, isUnregistering }: RegisteredDeckProps) {
   const isOngoing = tournamentStatus === "ongoing";
   
   // Загружаем лидерборд только для ongoing турниров
@@ -130,6 +134,18 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId }: RegisteredDe
           >
             DECK SCORE: {isOngoing && deckScore !== undefined ? `${formatScore(deckScore)}` : "—"}
           </span>
+          {tournamentStatus === "registration" && onUnregister && (
+            <button
+              onClick={onUnregister}
+              disabled={isUnregistering}
+              className="cursor-pointer px-3 py-0 bg-[#2200EF] hover:opacity-90 text-white text-sm font-medium rounded-[5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                boxShadow: "0px 4px 8px 0px rgba(74, 106, 255, 0.3), 0px 2px 4px 0px rgba(74, 106, 255, 0.2)"
+              }}
+            >
+              {isUnregistering ? "Unregistering..." : "Unregister"}
+            </button>
+          )}
         </div>
         {!isOngoing && (
           <p className="text-[13px] font-medium text-black ml-auto">
@@ -253,6 +269,8 @@ export function MyDeckCard({
   myDeck,
   tournamentStatus,
   tournamentId,
+  onUnregister,
+  isUnregistering,
 }: MyDeckCardProps) {
   return (
     <BlurCard blurValue={150} backgroundColor="rgba(141, 121, 253, 0.5)">
@@ -261,6 +279,8 @@ export function MyDeckCard({
           myDeck={myDeck}
           tournamentStatus={tournamentStatus}
           tournamentId={tournamentId}
+          onUnregister={onUnregister}
+          isUnregistering={isUnregistering}
         />
       ) : (
         <EmptyDeck onStartClick={onStartClick} canRegister={canRegister} />
