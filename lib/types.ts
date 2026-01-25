@@ -156,9 +156,11 @@ export interface LeaderboardResponse {
 }
 
 export interface PrizeInfo {
-  prize_type: string;
-  amount: number;
-  currency?: string | null;
+  reward_type_id: number;
+  reward_name: string;
+  reward_category: string;
+  currency_type: string;
+  amount: string;
 }
 
 export interface PrizeConfig {
