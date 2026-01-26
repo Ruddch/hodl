@@ -1,15 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import type { Tournament } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
 
-function getTimeRemaining(endDate: string) {
+function getTimeRemaining(endDate: string, currentTime?: number) {
   const end = new Date(endDate).getTime();
-  const now = Date.now();
+  const now = currentTime ?? Date.now();
   const diff = end - now;
 
   if (diff <= 0) return null;
@@ -28,11 +28,23 @@ interface TournamentInfoCardProps {
 
 export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentInfoCardProps) {
   const { isConnected } = useAccount();
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const canRegister = tournament.status === "registration" && !tournament.is_registered;
+  
+  // Обновляем таймер каждую минуту
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000); // 60000 мс = 1 минута
+
+    return () => clearInterval(interval);
+  }, []);
+
   const timeRemaining =
-    tournament.status === "registration"
-      ? getTimeRemaining(tournament.start_date)
+    tournament.status === "registration" && tournament.gameplay_start_date && tournament.gameplay_start_date !== ""
+      ? getTimeRemaining(tournament.gameplay_start_date, currentTime)
       : tournament.status === "ongoing"
-      ? getTimeRemaining(tournament.end_date)
+      ? getTimeRemaining(tournament.end_date, currentTime)
       : null;
 
   const tournamentName = useMemo(() => {
@@ -52,13 +64,14 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
     return `${formattedAmount} ${prizeInfo.currency_name}`;
   }, [tournament.estimated_final_prize_pools]);
 
-  const statusText = tournament.status === "registration" 
+  const statusText = 
+  canRegister && tournament.gameplay_start_date
+    ? ""
+    : tournament.status === "registration" 
     ? "Tournament will start in" 
     : tournament.status === "ongoing" 
     ? "Tournament ends in" 
     : "";
-
-  const canRegister = tournament.status === "registration" && !tournament.is_registered;
 
   return (
     <div 
@@ -154,7 +167,7 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
           {tournament.status === "registration" && timeRemaining && (
             <p className="text-base font-medium text-black">
               {statusText}{" "}
-              <span>{timeRemaining.days}d</span> : <span>{timeRemaining.hours}h</span> : <span className="text-black/50">{timeRemaining.minutes}</span>m
+              <span>{timeRemaining.days}d</span> : <span>{timeRemaining.hours}h</span> : <span>{timeRemaining.minutes}</span>m
             </p>
           )}
 
@@ -162,7 +175,7 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
           {tournament.status === "ongoing" && timeRemaining && (
             <p className="text-base font-medium text-black">
               {statusText}{" "}
-              <span>{timeRemaining.days}d</span> : <span>{timeRemaining.hours}h</span> : <span className="text-black/50">{timeRemaining.minutes}</span>m
+              <span>{timeRemaining.days}d</span> : <span>{timeRemaining.hours}h</span> : <span>{timeRemaining.minutes}</span>m
             </p>
           )}
         </div>

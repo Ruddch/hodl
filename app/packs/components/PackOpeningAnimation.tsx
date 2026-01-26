@@ -37,10 +37,12 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   const [packOpened, setPackOpened] = useState(false);
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
   const [flippingCards, setFlippingCards] = useState<Set<number>>(new Set());
+  const [containerScale, setContainerScale] = useState(1);
 
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const containerRef = useRef<any>(null);
+  const cardsContainerRef = useRef<HTMLDivElement>(null);
   const packRectRef = useRef<DOMRect | null>(null);
   const angleContainerRef = useRef<HTMLDivElement>(null);
   const angleElementRef = useRef<HTMLDivElement>(null);
@@ -248,7 +250,8 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
     }
   }, [getParallaxElement, getEventCoordinates]);
 
-  const handleEnd = useCallback((e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleEnd = useCallback((_e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => {
     if (!isDragging) return;
     setIsDragging(false);
     
@@ -275,6 +278,44 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
     }, 0);
   }, [flippedCards]);
   
+  // Расчет scale для адаптации под размер экрана
+  const calculateScale = useCallback(() => {
+    // Максимальная ширина, которую занимают карты
+    // Карта имеет max-width 320px, крайние карты смещены на 260% от ширины карты
+    // При ширине карты 320px: смещение = 320 * 2.6 = 832px в каждую сторону
+    // Общая ширина от левого края левой карты до правого края правой карты ≈ 2000px
+    const maxCardsWidth = 2000;
+    
+    // Учитываем padding контейнера .app (2rem = 32px с каждой стороны)
+    const padding = 64;
+    const availableWidth = window.innerWidth - padding;
+    
+    // Вычисляем scale, чтобы все карты поместились
+    const scale = Math.min(1, availableWidth / maxCardsWidth);
+    
+    // Минимальный scale для очень маленьких экранов
+    const minScale = 0.4;
+    
+    return Math.max(minScale, scale);
+  }, []);
+
+  // Обновление scale при изменении размера окна
+  useEffect(() => {
+    const updateScale = () => {
+      setContainerScale(calculateScale());
+    };
+
+    // Устанавливаем начальный scale
+    updateScale();
+
+    // Обработчик изменения размера окна
+    window.addEventListener('resize', updateScale);
+    
+    return () => {
+      window.removeEventListener('resize', updateScale);
+    };
+  }, [calculateScale]);
+
   // Очистка при размонтировании
   useEffect(() => {
     return () => {
@@ -363,7 +404,14 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   return (
     <div className="app">
       <div className="wrapper">
-        <div className={`cards-container ${packOpened ? 'pack-opened' : ''}`}>
+        <div 
+          ref={cardsContainerRef}
+          className={`cards-container ${packOpened ? 'pack-opened' : ''}`}
+          style={{
+            // '--container-scale': containerScale,
+            '--container-scale': 0.9,
+          } as React.CSSProperties}
+        >
           {cards.map((cardData, index) => {
             const transform = !packOpened 
               ? `translateX(calc(-50% + ${index * 2}px)) translateY(${50 - index * 3}px) rotate(${(index - 2) * 0.5}deg)` : 

@@ -43,7 +43,8 @@ export function DeckSelectionModal({
       );
     }
 
-    return cards;
+    // Сортируем по token_weight (по убыванию - сначала более тяжелые карты)
+    return cards.sort((a, b) => b.token_weight - a.token_weight);
   }, [profile?.cards, searchQuery]);
 
   // Текущий вес выбранных карт

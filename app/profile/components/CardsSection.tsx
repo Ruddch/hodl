@@ -70,7 +70,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
 
           {activeTab === "cards" && (
             <p className="text-sm text-black/50">
-              Cards will be available till 3 Jan, 2026
+              Cards will be available till next tournament
             </p>
           )}
         </div>
@@ -83,7 +83,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
                 <p className="text-black/50">No cards yet</p>
               </div>
             ) : (
-              <div className="grid grid-cols-5 gap-4">
+              <div className="grid grid-cols-6 gap-4">
                 {groupedCards.map((group) => (
                   <div
                     key={group.token_symbol}
