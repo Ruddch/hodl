@@ -134,6 +134,8 @@ export interface LeaderboardEntry {
   position: number;
   user_id: number;
   wallet_address?: string | null;
+  nickname?: string | null;
+  avatar_url?: string | null;
   final_score: number;
   deck_composition: number[];
   cards: CardInDeck[];

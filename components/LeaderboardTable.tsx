@@ -57,8 +57,16 @@ function PositionBadge({ position, isCurrentUser }: { position: number; isCurren
 }
 
 // Компонент аватарки
-function PlayerAvatar({ walletAddress, userId }: { walletAddress: string | null | undefined; userId: number }) {
-  return <Avatar walletAddress={walletAddress} fallbackSeed={userId} size={40} />;
+function PlayerAvatar({ 
+  walletAddress, 
+  userId, 
+  avatarUrl 
+}: { 
+  walletAddress: string | null | undefined; 
+  userId: number;
+  avatarUrl?: string | null;
+}) {
+  return <Avatar walletAddress={walletAddress} fallbackSeed={userId} size={40} avatarUrl={avatarUrl} />;
 }
 
 // Компонент карт
@@ -113,7 +121,10 @@ function LeaderboardRow({
   entry: LeaderboardEntry;
   isCurrentUser: boolean;
 }) {
-  const playerName = entry.wallet_address
+  // Определяем имя игрока: приоритет nickname, затем wallet_address, затем user_id
+  const playerName = entry.nickname 
+    ? entry.nickname
+    : entry.wallet_address
     ? truncateAddress(entry.wallet_address)
     : `User #${entry.user_id}`;
 
@@ -132,7 +143,11 @@ function LeaderboardRow({
       {/* Player */}
       <div className="flex items-center min-w-0" style={{ gap: "18px" }}>
         <PositionBadge position={entry.position} isCurrentUser={isCurrentUser} />
-        <PlayerAvatar walletAddress={entry.wallet_address} userId={entry.user_id} />
+        <PlayerAvatar 
+          walletAddress={entry.wallet_address} 
+          userId={entry.user_id} 
+          avatarUrl={entry.avatar_url}
+        />
         <span className="text-base font-medium text-black truncate">
           {playerName}
           {isCurrentUser && <span className="text-[#5B4AD9] ml-1">(you)</span>}

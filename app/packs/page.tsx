@@ -15,13 +15,6 @@ export default function PacksPage() {
   const openPackMutation = useOpenPack();
   const [openedPack, setOpenedPack] = useState<OpenPackResponse | null>(null);
 
-  // Очищаем состояние паков при дисконекте
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     setOpenedPack(null);
-  //   }
-  // }, [isAuthenticated]);
-
   const totalPacks = packsData?.available_packs || 0;
 
   const handleOpenPack = async () => {

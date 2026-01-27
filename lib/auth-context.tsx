@@ -174,7 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // При обновлении пользователя произойдут перезапросы всех зависимых ручек
      
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Ошибка авторизации";
+      const errorMessage = err instanceof Error ? err.message : "Authentication error";
       setError(errorMessage);
       setIsAuthenticated(false);
       setUser(null);

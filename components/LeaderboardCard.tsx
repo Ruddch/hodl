@@ -32,6 +32,8 @@ export function LeaderboardCard({
 
     const query = searchQuery.toLowerCase().trim();
     return entries.filter((entry) => {
+      // Поиск по nickname
+      if (entry.nickname?.toLowerCase().includes(query)) return true;
       // Поиск по адресу кошелька
       if (entry.wallet_address?.toLowerCase().includes(query)) return true;
       // Поиск по user_id
