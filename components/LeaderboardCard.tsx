@@ -13,6 +13,7 @@ interface LeaderboardCardProps {
   height?: number | "full";
   isLoading?: boolean;
   emptyMessage?: string;
+  myPosition?: LeaderboardEntry | null;
 }
 
 export function LeaderboardCard({
@@ -23,15 +24,30 @@ export function LeaderboardCard({
   height = 400,
   isLoading = false,
   emptyMessage = "No participants yet",
+  myPosition,
 }: LeaderboardCardProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Добавляем позицию пользователя в начало списка, если она есть и не первая
+  const entriesWithMyPosition = useMemo(() => {
+    if (!myPosition || myPosition.position === 1) {
+      return entries;
+    }
+    // Проверяем, нет ли уже этой записи в начале списка
+    const firstEntry = entries[0];
+    if (firstEntry && firstEntry.user_id === myPosition.user_id) {
+      return entries;
+    }
+    // Добавляем myPosition в начало
+    return [myPosition, ...entries];
+  }, [entries, myPosition]);
+
   // Фильтруем записи по поисковому запросу
   const filteredEntries = useMemo(() => {
-    if (!searchQuery.trim()) return entries;
+    if (!searchQuery.trim()) return entriesWithMyPosition;
 
     const query = searchQuery.toLowerCase().trim();
-    return entries.filter((entry) => {
+    return entriesWithMyPosition.filter((entry) => {
       // Поиск по nickname
       if (entry.nickname?.toLowerCase().includes(query)) return true;
       // Поиск по адресу кошелька
@@ -40,7 +56,7 @@ export function LeaderboardCard({
       if (String(entry.user_id).includes(query)) return true;
       return false;
     });
-  }, [entries, searchQuery]);
+  }, [entriesWithMyPosition, searchQuery]);
 
   return (
     <BlurCard backgroundColor="rgba(247, 238, 210, 1)" className={height === "full" ? "h-full flex flex-col" : ""}>

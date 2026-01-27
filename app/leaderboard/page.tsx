@@ -51,6 +51,7 @@ export default function LeaderboardPage() {
           height="full"
           isLoading={isLoading}
           emptyMessage={!selectedTournament ? "No tournaments available" : "No participants yet"}
+          myPosition={leaderboardData?.my_position}
         />
       </div>
     </MainLayout>
