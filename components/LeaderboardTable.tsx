@@ -39,6 +39,7 @@ function PositionBadge({ position, isCurrentUser }: { position: number; isCurren
       className="flex items-center justify-center"
       style={{
         width: "32px",
+        minWidth: "32px",
         height: "32px",
         borderRadius: "8px",
         border: "1px solid #CAC1F3",
