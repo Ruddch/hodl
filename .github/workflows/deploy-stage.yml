@@ -29,7 +29,8 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          NODE_ENV: development
+          NODE_ENV: production
+          NEXT_PUBLIC_ENV: development
 
       - name: Create .nojekyll
         run: touch out/.nojekyll

@@ -29,9 +29,10 @@ import type {
   AlphaTestCheckResponse,
 } from "./types";
 
-const API_BASE_URL = process.env.NODE_ENV === "development" 
-  ? "https://uat.hodleague.com" 
-  : "https://back.hodleague.com";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_ENV === "development"
+    ? "https://uat.hodleague.com"
+    : "https://back.hodleague.com";
 
 // ==================== Auth Storage ====================
 const TOKEN_KEY = "hodleague_token";
