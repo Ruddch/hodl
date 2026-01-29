@@ -62,7 +62,7 @@ export function DeckDetailModal({
               </svg>
             </button>
           </div>
-          {deck ? (
+          {deck || isLoading ? (
             <Deck
               deckDetail={deck ?? null}
               deckLoading={isLoading}

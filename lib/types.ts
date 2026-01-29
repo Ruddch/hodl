@@ -393,12 +393,24 @@ export interface UserCard {
   is_locked: boolean;
 }
 
+export interface UserBalanceItem {
+  reward_type_id: number;
+  name: string;
+  category: string;
+  currency_type: string;
+  available: number;
+  pending: number;
+  pending_count: number;
+  claimed_count: number;
+  last_earned: string;
+}
+
 export interface UserStats {
   total_cards: number;
   tournaments_participated: number;
   best_position: number;
   best_score: number;
-  balances: Record<string, number>;
+  balances: UserBalanceItem[];
 }
 
 export interface UserProfileResponse {

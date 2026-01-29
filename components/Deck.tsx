@@ -96,7 +96,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
   // Загружаем лидерборд только для "моей колоды" и только при ongoing
   const { data: leaderboardData } = useTournamentLeaderboard(
     !isViewMode && isOngoing && tournamentId ? tournamentId : undefined,
-    { limit: 100 },
+    { limit: 10 },
     { refetchInterval: 5 * 60 * 1000 }
   );
 

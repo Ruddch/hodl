@@ -5,6 +5,7 @@ import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useAuth } from "@/lib/auth-context";
 import { useMyProfile } from "@/lib/api";
+import { formatBalance } from "@/lib/balance";
 import { Avatar } from "./Avatar";
 
 export function UserInfo() {
@@ -37,7 +38,7 @@ export function UserInfo() {
           <div className="mb-3">
             <p className="text-sm text-zinc-400">Balance</p>
             <p className="text-lg font-semibold text-black">
-              0
+              {formatBalance(profile?.stats?.balances)}
             </p>
           </div>
 
@@ -68,7 +69,7 @@ export function UserInfo() {
           {/* Disconnect button */}
           <button
             onClick={() => disconnect()}
-            className="w-full mt-3 py-2 px-4 text-sm rounded-xl border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-colors"
+            className="w-full cursor-pointer mt-3 py-2 px-4 text-sm rounded-xl border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-colors"
           >
             Disconnect
           </button>
