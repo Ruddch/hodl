@@ -24,13 +24,13 @@ export function UserInfo() {
       {isConnected && address ? (
         <div className="rounded-[30px] bg-[#efeff0] border border-[rgba(255,255,255,0.09)] backdrop-blur-[150px] p-4">
           {/* User Avatar and Name */}
-          <Link href="/profile" className="flex items-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
+          <Link href="/profile" className="flex items-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity min-w-0">
             <Avatar 
               walletAddress={address} 
               size={40} 
               avatarUrl={profile?.avatar_url}
             />
-            <span className="font-semibold text-black">{displayName}</span>
+            <span className="font-semibold text-black truncate">{displayName}</span>
           </Link>
 
           {/* Balance */}

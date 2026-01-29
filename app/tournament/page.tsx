@@ -12,7 +12,7 @@ import type { Tournament } from "@/lib/types";
 import { EpochSelector } from "./components/EpochSelector";
 import { WeekSelector } from "./components/WeekSelector";
 import { TournamentInfoCard } from "./components/TournamentInfoCard";
-import { MyDeckCard } from "./components/MyDeckCard";
+import { Deck } from "@/components/Deck";
 import { LeaderboardPreviewCard } from "./components/LeaderboardPreviewCard";
 
 // Группировка турниров по эпохам (месяцам)
@@ -78,7 +78,7 @@ function TournamentPageContent() {
     }
 
     setIsInitialized(true);
-  }, [epochKeys.length, searchParams, tournamentsData?.items.length, isInitialized, epochs]);
+  }, [epochKeys.length, searchParams, tournamentsData?.items.length, isInitialized, epochs, epochKeys]);
 
   // Определяем текущую эпоху и турнир
   const currentEpoch = selectedEpoch || epochKeys[0] || null;
@@ -229,7 +229,7 @@ function TournamentPageContent() {
               tournament={currentTournament} 
               onRegisterClick={handleOpenDeckModal}
             />
-            <MyDeckCard
+            <Deck
               isRegistered={currentTournament.is_registered || false}
               onStartClick={handleOpenDeckModal}
               canRegister={canRegister}
