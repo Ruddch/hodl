@@ -10,6 +10,7 @@ import type {
   PaginatedTournamentsResponse,
   TournamentDetail,
   LeaderboardResponse,
+  DeckDetailResponse,
   DeckValidateRequest,
   DeckValidateResponse,
   DeckRegisterRequest,
@@ -29,9 +30,10 @@ import type {
   AlphaTestCheckResponse,
 } from "./types";
 
-const API_BASE_URL = process.env.NODE_ENV === "development" 
-  ? "https://uat.hodleague.com" 
-  : "https://back.hodleague.com";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_ENV === "development"
+    ? "https://uat.hodleague.com"
+    : "https://back.hodleague.com";
 
 // ==================== Auth Storage ====================
 const TOKEN_KEY = "hodleague_token";
@@ -206,6 +208,13 @@ export async function getTournamentLeaderboard(
   
   const query = searchParams.toString();
   return fetchApi(`/api/tournaments/${tournamentId}/leaderboard${query ? `?${query}` : ""}`);
+}
+
+export async function getTournamentDeck(
+  tournamentId: number,
+  deckId: number
+): Promise<DeckDetailResponse> {
+  return fetchApi(`/api/tournaments/${tournamentId}/decks/${deckId}`);
 }
 
 export async function validateDeck(
@@ -425,6 +434,14 @@ export function useTournamentLeaderboard(tournamentId: number | undefined, param
     queryFn: () => getTournamentLeaderboard(tournamentId!, params),
     enabled: !!tournamentId,
     ...options,
+  });
+}
+
+export function useTournamentDeck(tournamentId: number | undefined, deckId: number | undefined) {
+  return useQuery({
+    queryKey: ["deck", tournamentId, deckId],
+    queryFn: () => getTournamentDeck(tournamentId!, deckId!),
+    enabled: !!tournamentId && !!deckId,
   });
 }
 

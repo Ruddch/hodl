@@ -64,6 +64,7 @@ function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
         height={400}
         isLoading={isLoading}
         myPosition={leaderboardData?.my_position}
+        tournamentId={tournamentId}
       />
       {/* View all link */}
       <Link

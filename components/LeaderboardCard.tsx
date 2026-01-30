@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import type { LeaderboardEntry } from "@/lib/types";
 import { LeaderboardTable } from "./LeaderboardTable";
 import { BlurCard } from "./BlurCard";
+import { DeckDetailModal } from "./DeckDetailModal";
 
 interface LeaderboardCardProps {
   entries: LeaderboardEntry[];
@@ -14,6 +15,7 @@ interface LeaderboardCardProps {
   isLoading?: boolean;
   emptyMessage?: string;
   myPosition?: LeaderboardEntry | null;
+  tournamentId?: number;
 }
 
 export function LeaderboardCard({
@@ -25,8 +27,18 @@ export function LeaderboardCard({
   isLoading = false,
   emptyMessage = "No participants yet",
   myPosition,
+  tournamentId,
 }: LeaderboardCardProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [deckModalOpen, setDeckModalOpen] = useState(false);
+  const [selectedDeckId, setSelectedDeckId] = useState<number | undefined>(undefined);
+
+  const handleDeckClick = useCallback((entry: LeaderboardEntry) => {
+    if (entry.deck_id != null) {
+      setSelectedDeckId(entry.deck_id);
+      setDeckModalOpen(true);
+    }
+  }, []);
 
   // Добавляем позицию пользователя в начало списка, если она есть и не первая
   const entriesWithMyPosition = useMemo(() => {
@@ -109,9 +121,21 @@ export function LeaderboardCard({
             {searchQuery ? "No results found" : emptyMessage}
           </div>
         ) : (
-          <LeaderboardTable entries={filteredEntries} height={height === "full" ? undefined : height} className={height === "full" ? "flex-1 min-h-0" : ""} />
+          <LeaderboardTable
+            entries={filteredEntries}
+            height={height === "full" ? undefined : height}
+            className={height === "full" ? "flex-1 min-h-0" : ""}
+            onDeckClick={tournamentId != null ? handleDeckClick : undefined}
+          />
         )}
       </div>
+
+      <DeckDetailModal
+        open={deckModalOpen}
+        onClose={() => setDeckModalOpen(false)}
+        tournamentId={tournamentId}
+        deckId={selectedDeckId}
+      />
     </BlurCard>
   );
 }

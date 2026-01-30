@@ -5,6 +5,7 @@ import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useAuth } from "@/lib/auth-context";
 import { useMyProfile } from "@/lib/api";
+import { formatBalance } from "@/lib/balance";
 import { Avatar } from "./Avatar";
 
 export function UserInfo() {
@@ -24,20 +25,20 @@ export function UserInfo() {
       {isConnected && address ? (
         <div className="rounded-[30px] bg-[#efeff0] border border-[rgba(255,255,255,0.09)] backdrop-blur-[150px] p-4">
           {/* User Avatar and Name */}
-          <Link href="/profile" className="flex items-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
+          <Link href="/profile" className="flex items-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity min-w-0">
             <Avatar 
               walletAddress={address} 
               size={40} 
               avatarUrl={profile?.avatar_url}
             />
-            <span className="font-semibold text-black">{displayName}</span>
+            <span className="font-semibold text-black truncate">{displayName}</span>
           </Link>
 
           {/* Balance */}
           <div className="mb-3">
             <p className="text-sm text-zinc-400">Balance</p>
             <p className="text-lg font-semibold text-black">
-              0
+              {formatBalance(profile?.stats?.balances)}
             </p>
           </div>
 
@@ -68,7 +69,7 @@ export function UserInfo() {
           {/* Disconnect button */}
           <button
             onClick={() => disconnect()}
-            className="w-full mt-3 py-2 px-4 text-sm rounded-xl border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-colors"
+            className="w-full cursor-pointer mt-3 py-2 px-4 text-sm rounded-xl border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-colors"
           >
             Disconnect
           </button>

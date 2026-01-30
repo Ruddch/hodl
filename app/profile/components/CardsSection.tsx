@@ -39,6 +39,10 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
   }>);
 
   const groupedCards = Object.values(cardsByToken);
+  const expiresAt = cards[0]?.expires_at;
+  const expiresLabel = expiresAt
+    ? new Date(expiresAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
+    : null;
 
   return (
     <BlurCard backgroundColor="rgba(247, 238, 210, 1)">
@@ -70,7 +74,9 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
 
           {activeTab === "cards" && (
             <p className="text-sm text-black/50">
-              Cards will be available till next tournament
+              {expiresLabel
+                ? `Cards will be available till ${expiresLabel}`
+                : "Cards will be available till next tournament"}
             </p>
           )}
         </div>

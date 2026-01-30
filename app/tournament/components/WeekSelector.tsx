@@ -15,7 +15,7 @@ export function WeekSelector({ tournaments, selectedId, onSelect }: WeekSelector
           <button
             key={t.id}
             onClick={() => onSelect(t.id)}
-            className={`text-base font-medium leading-none tracking-normal transition-colors ${
+            className={`cursor-pointer text-base font-medium leading-none tracking-normal transition-colors ${
               isSelected
                 ? "text-black"
                 : "text-black/50 hover:text-black/70"

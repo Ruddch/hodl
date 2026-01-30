@@ -114,39 +114,33 @@ function PlayerCards({ cards }: { cards: LeaderboardEntry["cards"] }) {
   );
 }
 
-// Строка таблицы
+// Строка таблицы (вся строка кликабельна для открытия модалки колоды)
 function LeaderboardRow({
   entry,
   isCurrentUser,
+  onDeckClick,
 }: {
   entry: LeaderboardEntry;
   isCurrentUser: boolean;
+  onDeckClick: ((entry: LeaderboardEntry) => void) | undefined;
 }) {
-  // Определяем имя игрока: приоритет nickname, затем wallet_address, затем user_id
-  const playerName = entry.nickname 
+  const playerName = entry.nickname
     ? entry.nickname
     : entry.wallet_address
-    ? truncateAddress(entry.wallet_address)
-    : `User #${entry.user_id}`;
+      ? truncateAddress(entry.wallet_address)
+      : `User #${entry.user_id}`;
 
   const reward = formatReward(entry.prizes);
+  const canOpenDeck = onDeckClick && entry.deck_id != null;
 
-  return (
-    <div
-      className={`grid items-center py-3 border-b border-[rgba(0,0,0,0.05)] ${
-        isCurrentUser ? "bg-[rgba(242,242,242,0.5)]" : ""
-      }`}
-      style={{
-        gridTemplateColumns: "1fr 1fr 1fr 1fr",
-        gap: "1rem",
-      }}
-    >
+  const rowContent = (
+    <>
       {/* Player */}
       <div className="flex items-center min-w-0" style={{ gap: "18px" }}>
         <PositionBadge position={entry.position} isCurrentUser={isCurrentUser} />
-        <PlayerAvatar 
-          walletAddress={entry.wallet_address} 
-          userId={entry.user_id} 
+        <PlayerAvatar
+          walletAddress={entry.wallet_address}
+          userId={entry.user_id}
           avatarUrl={entry.avatar_url}
         />
         <span className="text-base font-medium text-black truncate">
@@ -169,10 +163,33 @@ function LeaderboardRow({
 
       {/* Rewards */}
       <div>
-        <span className="text-base font-medium text-black">
-        {reward}
-      </span>
+        <span className="text-base font-medium text-black">{reward}</span>
       </div>
+    </>
+  );
+
+  const rowClassName = `grid items-center py-3 border-b border-[rgba(0,0,0,0.05)] ${
+    isCurrentUser ? "bg-[rgba(242,242,242,0.5)]" : ""
+  } ${canOpenDeck ? "cursor-pointer transition-colors leaderboard-row-hover" : ""}`;
+
+  const gridStyle = { gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem" };
+
+  if (canOpenDeck) {
+    return (
+      <button
+        type="button"
+        onClick={() => onDeckClick(entry)}
+        className={`w-full text-left ${rowClassName}`}
+        style={gridStyle}
+      >
+        {rowContent}
+      </button>
+    );
+  }
+
+  return (
+    <div className={rowClassName} style={gridStyle}>
+      {rowContent}
     </div>
   );
 }
@@ -181,9 +198,10 @@ interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
   height?: number;
   className?: string;
+  onDeckClick?: (entry: LeaderboardEntry) => void;
 }
 
-export function LeaderboardTable({ entries, height, className = "" }: LeaderboardTableProps) {
+export function LeaderboardTable({ entries, height, className = "", onDeckClick }: LeaderboardTableProps) {
   const { address } = useAccount();
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -267,6 +285,7 @@ export function LeaderboardTable({ entries, height, className = "" }: Leaderboar
                 <LeaderboardRow
                   entry={entry}
                   isCurrentUser={isCurrentUser(entry)}
+                  onDeckClick={onDeckClick}
                 />
               </div>
             );

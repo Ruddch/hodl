@@ -1,24 +1,14 @@
 "use client";
 
 import type { UserProfileResponse } from "@/lib/types";
+import { formatBalance } from "@/lib/balance";
 
 interface StatsCardsProps {
   profile: UserProfileResponse;
 }
 
 export function StatsCards({ profile }: StatsCardsProps) {
-  // Получаем данные из stats объекта
   const statsData = profile.stats;
-  
-  // Получаем баланс - берем первый доступный баланс из balances
-  const getBalance = () => {
-    if (!statsData?.balances) return "0";
-    const balanceEntries = Object.entries(statsData.balances);
-    if (balanceEntries.length === 0) return "0";
-    const [symbol, amount] = balanceEntries[0];
-    const formattedAmount = new Intl.NumberFormat("en-US").format(amount);
-    return `${formattedAmount} ${symbol}`;
-  };
 
   // Форматируем best_position для отображения
   const formatBestPosition = (position: number) => {
@@ -28,7 +18,7 @@ export function StatsCards({ profile }: StatsCardsProps) {
   };
 
   const stats = {
-    balance: getBalance(),
+    balance: formatBalance(statsData?.balances),
     bestScore: statsData?.best_score ? statsData.best_score.toLocaleString() : "0",
     cards: statsData?.total_cards ?? 0,
     bestResult: {

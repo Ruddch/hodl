@@ -133,6 +133,7 @@ export interface PaginatedTournamentsResponse {
 export interface LeaderboardEntry {
   position: number;
   user_id: number;
+  deck_id?: number | null;
   wallet_address?: string | null;
   nickname?: string | null;
   avatar_url?: string | null;
@@ -141,6 +142,42 @@ export interface LeaderboardEntry {
   cards: CardInDeck[];
   prizes?: PrizeInfo[] | null;
   calculated_at: string;
+}
+
+// Детали колоды (ответ GET /api/tournaments/{id}/decks/{deck_id})
+export interface DeckDetailCard {
+  user_card_id: number;
+  card_id: number;
+  token_symbol: string;
+  token_name: string;
+  token_image_url: string;
+  token_weight: number;
+  rarity_name: string;
+  rarity_color: string;
+  design_type: string;
+  rendered_image_url: string;
+  current_price: number | null;
+  market_cap: number | null;
+  tournament_change: number | null;
+  calculated_score: number;
+}
+
+export interface DeckDetailResponse {
+  deck_id: number;
+  tournament_id: number;
+  tournament_number: number;
+  tournament_status: string;
+  user_id: number;
+  wallet_address: string | null;
+  nickname: string | null;
+  avatar_url: string | null;
+  deck_composition: number[];
+  cards: DeckDetailCard[];
+  total_weight: number;
+  submitted_at: string;
+  position: number;
+  final_score: number;
+  prizes: PrizeInfo[];
 }
 
 export interface LeaderboardResponse {
@@ -352,7 +389,20 @@ export interface UserCard {
   design_type: string;
   rendered_image_url: string;
   acquired_at: string;
+  expires_at?: string | null;
   is_locked: boolean;
+}
+
+export interface UserBalanceItem {
+  reward_type_id: number;
+  name: string;
+  category: string;
+  currency_type: string;
+  available: number;
+  pending: number;
+  pending_count: number;
+  claimed_count: number;
+  last_earned: string;
 }
 
 export interface UserStats {
@@ -360,7 +410,7 @@ export interface UserStats {
   tournaments_participated: number;
   best_position: number;
   best_score: number;
-  balances: Record<string, number>;
+  balances: UserBalanceItem[];
 }
 
 export interface UserProfileResponse {
