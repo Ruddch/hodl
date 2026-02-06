@@ -6,9 +6,10 @@ interface EpochSelectorProps {
   epochs: string[];
   selectedEpoch: string;
   onSelect: (epoch: string) => void;
+  className?: string;
 }
 
-export function EpochSelector({ epochs, selectedEpoch, onSelect }: EpochSelectorProps) {
+export function EpochSelector({ epochs, selectedEpoch, onSelect, className }: EpochSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +36,7 @@ export function EpochSelector({ epochs, selectedEpoch, onSelect }: EpochSelector
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}

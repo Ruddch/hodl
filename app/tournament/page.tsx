@@ -56,7 +56,23 @@ function TournamentPageContent() {
     return groupTournamentsByEpoch(tournamentsData.items);
   }, [tournamentsData]);
 
-  const epochKeys = Object.keys(epochs);
+  // Сортируем эпохи по дате (от новых к старым)
+  const epochKeys = useMemo(() => {
+    const keys = Object.keys(epochs);
+    if (!keys.length) return [];
+    
+    return keys.sort((a, b) => {
+      // Получаем самую раннюю дату турнира в каждой эпохе для сравнения
+      const getEpochDate = (epochKey: string) => {
+        const tournamentsInEpoch = epochs[epochKey] || [];
+        if (!tournamentsInEpoch.length) return 0;
+        // Берем самую позднюю дату начала турнира в эпохе
+        return Math.max(...tournamentsInEpoch.map(t => new Date(t.start_date).getTime()));
+      };
+      
+      return getEpochDate(b) - getEpochDate(a); // Сортируем от новых к старым
+    });
+  }, [epochs]);
 
   // Инициализация из URL при первой загрузке
   useEffect(() => {
@@ -80,8 +96,25 @@ function TournamentPageContent() {
     setIsInitialized(true);
   }, [epochKeys.length, searchParams, tournamentsData?.items.length, isInitialized, epochs, epochKeys]);
 
-  // Определяем текущую эпоху и турнир
-  const currentEpoch = selectedEpoch || epochKeys[0] || null;
+  // Определяем текущую эпоху: сначала ищем эпоху с активным турниром, если нет - берем самую новую
+  const currentEpoch = useMemo(() => {
+    if (selectedEpoch) return selectedEpoch;
+    if (!epochKeys.length) return null;
+    
+    // Ищем эпоху с активным турниром (registration или ongoing)
+    for (const epochKey of epochKeys) {
+      const tournamentsInEpoch = epochs[epochKey] || [];
+      const hasActiveTournament = tournamentsInEpoch.some(
+        (t) => t.status === "registration" || t.status === "ongoing"
+      );
+      if (hasActiveTournament) {
+        return epochKey;
+      }
+    }
+    
+    // Если активных нет, берем самую новую эпоху
+    return epochKeys[0];
+  }, [selectedEpoch, epochKeys, epochs]);
 
   // Мемоизируем турниры в эпохе
   const tournamentsInEpoch = useMemo(() => {
@@ -178,7 +211,7 @@ function TournamentPageContent() {
     <MainLayout>
       <div className="max-w-8xl mx-auto">
         {/* Фильтры: Эпоха + Недели */}
-        <div className="flex items-center gap-9 mb-8">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-9 mb-8 md:pl-0">
           {tournamentsLoading ? (
             <>
               <div className="h-10 w-40 bg-zinc-200 rounded-lg animate-pulse"></div>
@@ -193,6 +226,7 @@ function TournamentPageContent() {
           ) : (
             <>
               <EpochSelector
+                className="pl-14 md:pl-0"
                 epochs={epochKeys}
                 selectedEpoch={currentEpoch || epochKeys[0]}
                 onSelect={(epoch) => {
