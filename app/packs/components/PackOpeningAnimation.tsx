@@ -408,8 +408,8 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
           ref={cardsContainerRef}
           className={`cards-container ${packOpened ? 'pack-opened' : ''}`}
           style={{
-            // '--container-scale': containerScale,
-            '--container-scale': 0.9,
+            '--container-scale': containerScale,
+            // '--container-scale': 0.9,
           } as React.CSSProperties}
         >
           {cards.map((cardData, index) => {

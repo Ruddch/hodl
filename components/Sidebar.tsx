@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { UserInfo } from "./UserInfo";
 import { useTournaments, useAvailablePacks } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { TournamentIcon, LeaderboardIcon, PacksIcon } from "./Icons";
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: tournamentsData } = useTournaments({ limit: 10 });
   const { isAuthenticated } = useAuth();
@@ -29,10 +35,24 @@ export function Sidebar() {
   const leaderboardIconColor = isLeaderboardActive ? "black" : "rgba(0, 0, 0, 0.5)";
   const packsIconColor = isPacksActive ? "black" : "rgba(0, 0, 0, 0.5)";
 
+  // Закрываем меню при переходе на другую страницу на мобильных
+  useEffect(() => {
+    if (isOpen) {
+      onClose();
+    }
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
-    <aside className="w-72 bg-[#f6f6f6] flex flex-col h-screen fixed left-0 top-0 rounded-r-[30px] border border-white/10 backdrop-blur-[75px]">
-      {/* Logo */}
-      <div className="px-8 pt-8">
+    <aside
+      className={`
+        w-72 bg-[#f6f6f6] flex flex-col h-screen fixed left-0 top-0 rounded-r-[30px] border border-white/10 backdrop-blur-[75px] z-50
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        md:translate-x-0 md:static
+      `}
+    >
+      {/* Logo и кнопка закрытия для мобильных */}
+      <div className="px-8 pt-8 flex items-center justify-between">
         <div className="flex items-center gap-1">
           <div className="w-[24px] h-[24px] text-black flex items-center justify-center overflow-hidden">
             <svg width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -43,6 +63,26 @@ export function Sidebar() {
           </div>
           <span className="text-[26px] font-medium text-black">Hodleague</span>
         </div>
+        {/* Кнопка закрытия для мобильных */}
+        <button
+          onClick={onClose}
+          className="md:hidden p-2 hover:bg-white/50 rounded-lg transition-colors"
+          aria-label="Close menu"
+        >
+          <svg
+            className="w-6 h-6 text-black"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
       </div>
       
       {/* Navigation */}
