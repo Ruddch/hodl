@@ -93,7 +93,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
                 <p className="text-black/50">No cards yet</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                 {groupedCards.map((group) => {
                   const firstCard = group.cards[0];
                   const cardId = firstCard?.card_id;

@@ -54,8 +54,8 @@ export default function PacksPage() {
             backgroundPosition: "center",
           }}
         >
-          <div className="px-8 py-12">
-            <h1 className="text-[36px] font-medium leading-[44px] tracking-normal text-white">
+          <div className="px-6 py-10 md:px-8 md:py-12">
+            <h1 className="text-[24px] md:text-[36px] font-medium leading-[30px] md:leading-[44px] tracking-normal text-white">
               Marketplace of packs <br/>
               will be available soon
             </h1>

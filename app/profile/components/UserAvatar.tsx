@@ -16,7 +16,7 @@ export function UserAvatar({ profile }: UserAvatarProps) {
     : "User";
 
   return (
-    <div className="relative z-10 ml-4 flex items-end gap-4 -mt-12 mb-8">
+    <div className="relative z-10 ml-4 flex items-end gap-4 -mt-12 mb-4 sm:mb-8">
       {/* Аватар */}
       <Avatar 
         walletAddress={profile.wallet_address} 
