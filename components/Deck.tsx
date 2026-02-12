@@ -91,7 +91,7 @@ function formatReward(prizes: DeckDetailResponse["prizes"] | undefined): string 
 
 function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, isUnregistering, deckDetail, deckLoading }: RegisteredDeckProps) {
   const isViewMode = deckDetail !== undefined || deckLoading;
-  const isOngoing = tournamentStatus === "ongoing";
+  const isOngoing = tournamentStatus === "ongoing" || tournamentStatus === "finished";
 
   // Загружаем лидерборд только для "моей колоды" и только при ongoing
   const { data: leaderboardData } = useTournamentLeaderboard(
