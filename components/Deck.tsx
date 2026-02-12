@@ -146,8 +146,8 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
   return (
     <>
       {/* Header */}
-      <div className="flex items-center px-4 sm:px-6 pt-6 pb-4 relative flex-wrap gap-2 sm:gap-4">
-        <h3 className="text-2xl font-semibold leading-8 text-black">{title}</h3>
+      <div className="flex items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-4 relative flex-wrap gap-2 sm:gap-4">
+        <h3 className="text-xl md:text-2xl font-semibold leading-8 text-black">{title}</h3>
         <div className="flex gap-1.5 sm:gap-4 ml-0 flex-nowrap">
           <span
             className={`px-1.5 sm:px-2.5 h-6 sm:h-8 flex items-center text-[10px] sm:text-[13px] font-semibold rounded whitespace-nowrap ${
@@ -191,7 +191,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
       {/* Cards section */}
       <div className="px-4 sm:px-6 pb-6 relative">
         {deckLoading ? (
-          <div className="grid grid-cols-2 gap-3 py-6 sm:flex sm:flex-wrap sm:justify-around sm:gap-4">
+          <div className="grid grid-cols-3 gap-4 py-6 sm:flex sm:flex-wrap sm:justify-around sm:gap-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
@@ -280,7 +280,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 py-6 sm:flex sm:flex-wrap sm:justify-around sm:gap-4">
+          <div className="grid grid-cols-3 gap-4 py-6 sm:flex sm:flex-wrap sm:justify-around sm:gap-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}

@@ -53,8 +53,8 @@ export default function PacksPage() {
             backgroundPosition: "center",
           }}
         >
-          <div className="px-6 py-10 md:px-8 md:py-12">
-            <h1 className="text-[24px] md:text-[36px] font-medium leading-[30px] md:leading-[44px] tracking-normal text-white">
+          <div className="px-4 py-6 md:px-8 md:py-12">
+            <h1 className="text-xl md:text-[36px] font-medium leading-8 md:leading-[44px] tracking-normal text-white">
               Marketplace of packs <br/>
               will be available soon
             </h1>
@@ -64,7 +64,7 @@ export default function PacksPage() {
         {/* Main Content */}
         <BlurCard className="mt-6" backgroundColor="rgba(255, 179, 215, 1)"> 
           <div className="px-8 py-8">
-            <h2 className="text-3xl font-bold text-black mb-2">My packs</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-black mb-2">My packs</h2>
             <p className="text-base text-zinc-600 mb-8">
               In beta you will get 5 new packs to bet every week
             </p>
