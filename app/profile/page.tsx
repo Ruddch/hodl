@@ -32,7 +32,7 @@ export default function ProfilePage() {
         ) : !profile ? (
           <p className="text-center text-zinc-500">Profile not found</p>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             {/* Баннер профиля */}
             <ProfileBanner 
               onLogout={handleLogout}

@@ -32,28 +32,42 @@ function formatReward(prizes: LeaderboardEntry["prizes"]): string {
   return `${formattedAmount} ${firstPrize.reward_name}`;
 }
 
-// Компонент ранга
-function PositionBadge({ position, isCurrentUser }: { position: number; isCurrentUser: boolean }) {
+// Компонент ранга: мобилка — просто число, десктоп — бейдж в рамке
+function PositionBadge({ position }: { position: number; isCurrentUser: boolean }) {
   return (
-    <div
-      className="flex items-center justify-center"
-      style={{
-        width: "32px",
-        minWidth: "32px",
-        height: "32px",
-        borderRadius: "8px",
-        border: "1px solid #CAC1F3",
-        fontFamily: "var(--font-league-gothic), sans-serif",
-        fontSize: "14px",
-        fontWeight: 400,
-        lineHeight: "32px",
-        letterSpacing: "0%",
-        color: "#4E6AFF",
-        textAlign: "center",
-      }}
-    >
-      {position}
-    </div>
+    <>
+      {/* Мобилка: без рамки */}
+      <span
+        className="md:hidden shrink-0 text-[#4E6AFF]"
+        style={{
+          fontFamily: "var(--font-league-gothic), sans-serif",
+          fontSize: "14px",
+          fontWeight: 400,
+          lineHeight: 1,
+        }}
+      >
+        {position}
+      </span>
+      {/* Десктоп: бейдж с рамкой */}
+      <div
+        className="hidden md:flex items-center justify-center shrink-0"
+        style={{
+          width: "32px",
+          minWidth: "32px",
+          height: "32px",
+          borderRadius: "8px",
+          border: "1px solid #CAC1F3",
+          fontFamily: "var(--font-league-gothic), sans-serif",
+          fontSize: "14px",
+          fontWeight: 400,
+          lineHeight: "32px",
+          color: "#4E6AFF",
+          textAlign: "center",
+        }}
+      >
+        {position}
+      </div>
+    </>
   );
 }
 
@@ -72,16 +86,17 @@ function PlayerAvatar({
 
 // Компонент карт
 function PlayerCards({ cards }: { cards: LeaderboardEntry["cards"] }) {
+  const cardStyle = { aspectRatio: `${CARD_ASPECT_RATIO}` };
+  const emptyCards = [1, 2, 3, 4, 5];
+
   if (!cards || cards.length === 0) {
     return (
-      <div className="flex gap-1.5">
-        {[1, 2, 3, 4, 5].map((i) => (
+      <div className="flex md:gap-1.5 [&>*+*]:-ml-4 md:[&>*+*]:ml-0">
+        {emptyCards.map((i) => (
           <div
             key={i}
-            className="w-8 rounded-[7%] bg-white"
-            style={{
-              aspectRatio: `${CARD_ASPECT_RATIO}`,
-            }}
+            className="w-8 md:w-8 rounded-[7%] bg-white shrink-0"
+            style={cardStyle}
           />
         ))}
       </div>
@@ -89,20 +104,16 @@ function PlayerCards({ cards }: { cards: LeaderboardEntry["cards"] }) {
   }
 
   return (
-    <div className="flex gap-1.5">
+    <div className="flex md:gap-1.5 [&>*+*]:-ml-4 md:[&>*+*]:ml-0">
       {cards.slice(0, 5).map((card, index) => (
         <div
           key={card.card_id || index}
-          className="w-8 rounded-[7%] overflow-hidden bg-white"
-          style={{
-            aspectRatio: `${CARD_ASPECT_RATIO}`,
-          }}
+          className="w-8 md:w-8 rounded-[7%] overflow-hidden bg-white shrink-0 relative"
+          style={{ ...cardStyle, zIndex: index }}
         >
           {card.rendered_image_url && (
             <img
-              style={{
-                aspectRatio: `${CARD_ASPECT_RATIO}`,
-              }}
+              style={cardStyle}
               src={card.rendered_image_url}
               alt={card.token_name}
               className="w-full h-full object-cover"
@@ -136,7 +147,7 @@ function LeaderboardRow({
   const rowContent = (
     <>
       {/* Player */}
-      <div className="flex items-center min-w-0" style={{ gap: "18px" }}>
+      <div className="flex items-center gap-2 md:gap-[18px] min-w-0">
         <PositionBadge position={entry.position} isCurrentUser={isCurrentUser} />
         <PlayerAvatar
           walletAddress={entry.wallet_address}
@@ -150,7 +161,7 @@ function LeaderboardRow({
       </div>
 
       {/* Score */}
-      <div>
+      <div className="min-w-0 shrink-0">
         <span className="text-base font-medium text-black">
           {formatScore(entry.final_score)}
         </span>
@@ -162,25 +173,25 @@ function LeaderboardRow({
       </div>
 
       {/* Rewards */}
-      <div>
+      <div className="min-w-0 shrink-0">
         <span className="text-base font-medium text-black">{reward}</span>
       </div>
     </>
   );
 
-  const rowClassName = `grid items-center py-3 border-b border-[rgba(0,0,0,0.05)] ${
+  const rowClassName = `items-center py-3 border-b border-[rgba(0,0,0,0.05)] ${
     isCurrentUser ? "bg-[rgba(242,242,242,0.5)]" : ""
   } ${canOpenDeck ? "cursor-pointer transition-colors leaderboard-row-hover" : ""}`;
 
-  const gridStyle = { gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem" };
+  const gridClasses =
+    "grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4";
 
   if (canOpenDeck) {
     return (
       <button
         type="button"
         onClick={() => onDeckClick(entry)}
-        className={`w-full text-left ${rowClassName}`}
-        style={gridStyle}
+        className={`w-full text-left grid ${gridClasses} ${rowClassName}`}
       >
         {rowContent}
       </button>
@@ -188,7 +199,7 @@ function LeaderboardRow({
   }
 
   return (
-    <div className={rowClassName} style={gridStyle}>
+    <div className={`grid ${gridClasses} ${rowClassName}`}>
       {rowContent}
     </div>
   );
@@ -228,14 +239,10 @@ export function LeaderboardTable({ entries, height, className = "", onDeckClick 
   }
 
   return (
-    <div className={height === undefined ? `flex flex-col ${className}` : className || ""}>
+    <div className={`min-w-0 overflow-hidden ${height === undefined ? `flex flex-col ${className}` : className || ""}`}>
       {/* Table Header */}
       <div
-        className="grid items-center py-2 border-b border-[rgba(0,0,0,0.1)] mb-2 flex-shrink-0"
-        style={{
-          gridTemplateColumns: "1fr 1fr 1fr 1fr",
-          gap: "1rem",
-        }}
+        className="grid items-center py-2 border-b border-[rgba(0,0,0,0.1)] mb-2 flex-shrink-0 grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4"
       >
         <div>
           <span className="text-sm font-medium text-zinc-600">Player</span>

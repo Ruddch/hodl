@@ -43,7 +43,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
       {/* Основной контент */}
       <div className="flex flex-col flex-1">
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto py-5 px-4 md:py-6 md:px-6">{children}</main>
       </div>
     </div>
   );

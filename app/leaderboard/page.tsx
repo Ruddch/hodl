@@ -42,7 +42,7 @@ export default function LeaderboardPage() {
 
   return (
     <MainLayout>
-      <div className="max-w-8xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 3rem)' }}>
+      <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0" style={{ height: 'calc(100vh - 3rem)' }}>
         <LeaderboardCard
           entries={leaderboardData?.leaderboard || []}
           title="Leaderboard"

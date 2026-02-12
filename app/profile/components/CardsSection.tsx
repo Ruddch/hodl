@@ -46,13 +46,13 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
 
   return (
     <BlurCard backgroundColor="rgba(247, 238, 210, 1)">
-      <div className="p-8">
+      <div className="p-4 sm:p-6 md:p-8">
         {/* Toggle переключатель */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-[1px] rounded-[16px] p-2" style={{ backgroundColor: 'rgba(137, 137, 137, 0.14)' }}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex gap-[1px] rounded-[16px] p-2 w-fit" style={{ backgroundColor: 'rgba(137, 137, 137, 0.14)' }}>
             <button
               onClick={() => onTabChange("cards")}
-              className={`p-[12px] rounded-[10px] text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
+              className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
                 activeTab === "cards"
                   ? "bg-white text-black border border-[rgba(0,0,0,0.08)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
                   : "text-black/50 hover:text-black"
@@ -62,7 +62,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
             </button>
             <button
               onClick={() => onTabChange("tournaments")}
-              className={`p-[12px] rounded-[10px] text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
+              className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors whitespace-nowrap ${
                 activeTab === "tournaments"
                   ? "bg-white text-black border border-[rgba(0,0,0,0.08)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
                   : "text-black/50 hover:text-black"
@@ -73,7 +73,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
           </div>
 
           {activeTab === "cards" && (
-            <p className="text-sm text-black/50">
+            <p className="text-xs sm:text-sm text-black/50">
               {expiresLabel
                 ? `Cards will be available till ${expiresLabel}`
                 : "Cards will be available till next tournament"}
@@ -89,7 +89,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
                 <p className="text-black/50">No cards yet</p>
               </div>
             ) : (
-              <div className="grid grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                 {groupedCards.map((group) => (
                   <div
                     key={group.token_symbol}
