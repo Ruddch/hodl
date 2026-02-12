@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import type { CardInDeckInfo, DeckDetailResponse } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
+import { CardStatsModal } from "@/components/CardStatsModal";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { useTournamentLeaderboard } from "@/lib/api";
 
@@ -48,7 +50,7 @@ function EmptyDeck({ onStartClick, canRegister }: EmptyDeckProps) {
           />
         </div>
 
-        <p className="text-xl font-semibold text-black mb-6">
+        <p className="text-normal md:text-xl font-semibold text-black mb-6 ">
           You haven&apos;t registered any deck yet
         </p>
 
@@ -90,6 +92,9 @@ function formatReward(prizes: DeckDetailResponse["prizes"] | undefined): string 
 }
 
 function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, isUnregistering, deckDetail, deckLoading }: RegisteredDeckProps) {
+  const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  const [selectedCardInfo, setSelectedCardInfo] = useState<{ imageUrl?: string | null; name?: string; rarity?: string } | null>(null);
+
   const isViewMode = deckDetail !== undefined || deckLoading;
   const isOngoing = tournamentStatus === "ongoing" || tournamentStatus === "finished";
 
@@ -141,25 +146,25 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
   return (
     <>
       {/* Header */}
-      <div className="flex items-center px-6 pt-6 pb-4 relative flex-wrap gap-4">
+      <div className="flex items-center px-4 sm:px-6 pt-6 pb-4 relative flex-wrap gap-2 sm:gap-4">
         <h3 className="text-2xl font-semibold leading-8 text-black">{title}</h3>
-        <div className="flex gap-4 ml-0 flex-wrap">
+        <div className="flex gap-1.5 sm:gap-4 ml-0 flex-nowrap">
           <span
-            className={`px-2.5 h-8 flex items-center text-[13px] font-semibold rounded ${
+            className={`px-1.5 sm:px-2.5 h-6 sm:h-8 flex items-center text-[10px] sm:text-[13px] font-semibold rounded whitespace-nowrap ${
               badgesActive ? "text-[#171645] bg-[#CAC1F3]" : "text-[#171645] bg-[rgba(169,171,205,0.2)]"
             }`}
           >
             {placeLabel}: {position != null ? position : "—"}
           </span>
           <span
-            className={`px-2.5 h-8 flex items-center text-[13px] font-semibold rounded ${
+            className={`px-1.5 sm:px-2.5 h-6 sm:h-8 flex items-center text-[10px] sm:text-[13px] font-semibold rounded whitespace-nowrap ${
               badgesActive ? "text-[#171645] bg-[#CAC1F3]" : "text-[#171645] bg-[rgba(169,171,205,0.2)]"
             }`}
           >
             DECK SCORE: {formatScore(finalScore)}
           </span>
           {prizes && prizes.length > 0 && (
-            <span className="px-2.5 h-8 flex items-center text-[13px] font-semibold rounded text-[#171645] bg-[#CAC1F3]">
+            <span className="px-1.5 sm:px-2.5 h-6 sm:h-8 flex items-center text-[10px] sm:text-[13px] font-semibold rounded text-[#171645] bg-[#CAC1F3] whitespace-nowrap">
               REWARD: {formatReward(prizes)}
             </span>
           )}
@@ -184,13 +189,13 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
       </div>
 
       {/* Cards section */}
-      <div className="px-6 pb-6 relative">
+      <div className="px-4 sm:px-6 pb-6 relative">
         {deckLoading ? (
-          <div className="flex gap-4 py-6 justify-around flex-wrap">
+          <div className="grid grid-cols-2 gap-3 py-6 sm:flex sm:flex-wrap sm:justify-around sm:gap-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="flex-1 max-w-[220px] rounded-[14px] bg-white/50 animate-pulse"
+                className="min-w-0 rounded-[14px] bg-white/50 animate-pulse sm:flex-1 sm:max-w-[220px]"
                 style={{
                   aspectRatio: `${CARD_ASPECT_RATIO}`,
                   boxShadow:
@@ -201,13 +206,37 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
           </div>
         ) : cards.length > 0 ? (
           <div className="space-y-4">
-            <div className="flex gap-4 justify-around flex-wrap">
+            <div className="grid grid-cols-3 gap-4 sm:flex sm:flex-wrap sm:justify-around sm:gap-4">
               {cards.map((card: { user_card_id?: number; card_id?: number; token_name: string; rarity_name?: string; rendered_image_url?: string | null; calculated_score: number; tournament_change?: number | null }, index: number) => {
                 const mcapChange = formatMcapChange(card.tournament_change);
+                const cardId = card.card_id;
                 return (
-                  <div key={card.user_card_id ?? card.card_id ?? index} className="flex-1 max-w-[220px]">
+                  <div key={card.user_card_id ?? card.card_id ?? index} className="min-w-0 flex flex-col sm:flex-1 sm:max-w-[220px]">
                     <div
-                      className="rounded-[7%] overflow-hidden bg-white mb-2"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        if (cardId != null) {
+                          setSelectedCardId(cardId);
+                          setSelectedCardInfo({
+                            imageUrl: card.rendered_image_url,
+                            name: card.token_name,
+                            rarity: card.rarity_name,
+                          });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (cardId != null && (e.key === "Enter" || e.key === " ")) {
+                          e.preventDefault();
+                          setSelectedCardId(cardId);
+                          setSelectedCardInfo({
+                            imageUrl: card.rendered_image_url,
+                            name: card.token_name,
+                            rarity: card.rarity_name,
+                          });
+                        }
+                      }}
+                      className="rounded-[7%] overflow-hidden bg-white mb-2 cursor-pointer hover:ring-2 hover:ring-[#5B4AD9]/50 hover:ring-offset-2 transition-shadow"
                       style={{
                         aspectRatio: `${CARD_ASPECT_RATIO}`,
                         boxShadow:
@@ -223,12 +252,12 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
                       )}
                     </div>
                     {showCardStats && (
-                      <div className="mt-4">
-                        <div className="text-sm font-normal text-black/50 leading-4 tracking-normal flex justify-between items-center">
+                      <div className="mt-0 gap-1 sm:gap-2 sm:mt-2 flex flex-col justify-center">
+                        <div className="text-xs sm:text-sm font-normal text-black/50 leading-4 tracking-normal flex justify-between items-center">
                           <span>Score:</span>
                           <span className="text-black">{formatScore(card.calculated_score)}</span>
                         </div>
-                        <div className="text-sm font-normal leading-8 tracking-normal flex justify-between items-center text-black/50">
+                        <div className="text-xs sm:text-sm font-normal leading-[12px] sm:leading-[16px] tracking-normal flex justify-between items-center text-black/50">
                           <span>Price change:</span>
                           <span className={`flex items-center gap-1 ${mcapChange.isPositive ? "text-green-600" : "text-red-600"}`}>
                             {mcapChange.isPositive ? (
@@ -251,11 +280,11 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
             </div>
           </div>
         ) : (
-          <div className="flex gap-4 py-6">
+          <div className="grid grid-cols-2 gap-3 py-6 sm:flex sm:flex-wrap sm:justify-around sm:gap-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="flex-1 rounded-[14px] bg-white"
+                className="min-w-0 rounded-[14px] bg-white sm:flex-1 sm:max-w-[220px]"
                 style={{
                   aspectRatio: `${CARD_ASPECT_RATIO}`,
                   boxShadow:
@@ -266,6 +295,18 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
           </div>
         )}
       </div>
+
+      <CardStatsModal
+        open={selectedCardId != null}
+        onClose={() => {
+          setSelectedCardId(null);
+          setSelectedCardInfo(null);
+        }}
+        cardId={selectedCardId}
+        cardImageUrl={selectedCardInfo?.imageUrl}
+        cardName={selectedCardInfo?.name}
+        cardRarity={selectedCardInfo?.rarity}
+      />
     </>
   );
 }

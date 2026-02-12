@@ -236,6 +236,45 @@ export interface CardDetailResponse extends CardBase {
   stats: CardStats;
 }
 
+export interface CardTournamentStatsRarity {
+  id: number;
+  name: string;
+  score_bonus: number;
+  color: string;
+}
+
+export interface CardTournamentPrice {
+  date: string;
+  price: number;
+}
+
+export interface CardTournamentScore {
+  tournament_number: number;
+  base_score: number;
+  final_score: number;
+  score_multiplier: number;
+}
+
+export interface CardTournamentWeight {
+  tournament_number: number;
+  weight: number | null;
+}
+
+export interface CardTournamentStatsData {
+  prices: CardTournamentPrice[];
+  scores: CardTournamentScore[];
+  weights: CardTournamentWeight[];
+}
+
+export interface CardTournamentStatsResponse {
+  card_id: number;
+  token_id: number;
+  token_symbol: string;
+  rarity: CardTournamentStatsRarity;
+  tournaments_count: number;
+  data: CardTournamentStatsData;
+}
+
 export interface CardStats {
   total_owned: number;
   unique_owners: number;

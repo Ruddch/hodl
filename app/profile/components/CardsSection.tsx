@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import type { UserProfileResponse } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { BlurCard } from "@/components/BlurCard";
+import { CardStatsModal } from "@/components/CardStatsModal";
 import { TournamentStatisticsTable } from "./TournamentStatisticsTable";
 
 interface CardsSectionProps {
@@ -14,6 +16,8 @@ interface CardsSectionProps {
 
 export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionProps) {
   const cards = profile.cards || [];
+  const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  const [selectedCardInfo, setSelectedCardInfo] = useState<{ imageUrl?: string | null; name?: string } | null>(null);
 
   // Группируем карты по токену для отображения количества
   const cardsByToken = cards.reduce((acc, card) => {
@@ -90,10 +94,34 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-                {groupedCards.map((group) => (
+                {groupedCards.map((group) => {
+                  const firstCard = group.cards[0];
+                  const cardId = firstCard?.card_id;
+                  return (
                   <div
                     key={group.token_symbol}
-                    className="relative rounded-2xl overflow-hidden border border-white/10 shadow-sm"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      if (cardId != null) {
+                        setSelectedCardId(cardId);
+                        setSelectedCardInfo({
+                          imageUrl: firstCard?.rendered_image_url,
+                          name: group.token_name,
+                        });
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (cardId != null && (e.key === "Enter" || e.key === " ")) {
+                        e.preventDefault();
+                        setSelectedCardId(cardId);
+                        setSelectedCardInfo({
+                          imageUrl: firstCard?.rendered_image_url,
+                          name: group.token_name,
+                        });
+                      }
+                    }}
+                    className="relative rounded-2xl overflow-hidden border border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-[#5B4AD9]/50 hover:ring-offset-2 transition-shadow"
                     style={{
                       background: "linear-gradient(135deg, rgba(242, 242, 242, 0.5) 0%, rgba(200, 180, 255, 0.3) 100%)"
                     }}
@@ -128,7 +156,8 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
                       )}
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             )}
           </div>
@@ -138,6 +167,17 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
           <TournamentStatisticsTable />
         )}
       </div>
+
+      <CardStatsModal
+        open={selectedCardId != null}
+        onClose={() => {
+          setSelectedCardId(null);
+          setSelectedCardInfo(null);
+        }}
+        cardId={selectedCardId}
+        cardImageUrl={selectedCardInfo?.imageUrl}
+        cardName={selectedCardInfo?.name}
+      />
     </BlurCard>
   );
 }
