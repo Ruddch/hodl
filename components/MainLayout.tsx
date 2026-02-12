@@ -15,7 +15,7 @@ export function MainLayout({ children, title }: MainLayoutProps) {
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-dvh bg-white">
       {/* Мобильная навигационная панель в стиле сайдбара */}
       <div className={`md:hidden fixed top-0 left-0 right-0 z-[60] flex items-center justify-between px-6 py-4 ${isSidebarOpen ? "bg-[#f6f6f6]" : "bg-transparent"} backdrop-blur-[75px] rounded-br-[30px]`}>
         <PageHeader title={title} isSidebarOpen={isSidebarOpen} />
@@ -61,7 +61,7 @@ export function MainLayout({ children, title }: MainLayoutProps) {
       {/* Overlay для мобильных */}
       {isSidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/50 z-40 transition-opacity"
+          className="md:hidden fixed inset-0 bg-black/50 z-40 scroll-none transition-opacity"
           onClick={() => setIsSidebarOpen(false)}
           aria-hidden="true"
         />

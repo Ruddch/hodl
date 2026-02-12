@@ -46,7 +46,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <aside
       className={`
-        w-72 bg-[#f6f6f6] flex flex-col h-screen fixed left-0 top-0 rounded-r-[30px] border border-white/10 backdrop-blur-[75px] z-50
+        w-72 bg-[#f6f6f6] flex flex-col h-dvh fixed left-0 top-0 rounded-r-[30px] border border-white/10 backdrop-blur-[75px] z-50
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0 md:static
