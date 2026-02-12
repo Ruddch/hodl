@@ -6,6 +6,7 @@ export interface NonceRequest {
 export interface VerifyRequest {
   wallet_address: string;
   signature: string;
+  referral_code?: string | null;
   //message: string;
 }
 
@@ -463,6 +464,9 @@ export interface UserProfileResponse {
   stats?: UserStats;
   avatar_url?: string | null;
   nickname?: string | null;
+  referral_count?: number;
+  referral_link?: string | null;
+  referral_route?: string | null;
 }
 
 // ==================== Alpha Test ====================

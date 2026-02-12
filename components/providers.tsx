@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConnectKitProvider } from "connectkit";
 import { wagmiConfig } from "@/lib/wagmi";
 import { AuthProvider } from "@/lib/auth-context";
+import { RefCapture } from "@/components/RefCapture";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,6 +21,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider>
+          <RefCapture />
           <AuthProvider>
             {children}
           </AuthProvider>
