@@ -23,6 +23,7 @@ import type {
   UserProfileResponse,
   CardCatalogResponse,
   CardDetailResponse,
+  CardTournamentStatsResponse,
   AvailablePacksResponse,
   OpenPackRequest,
   OpenPackResponse,
@@ -280,6 +281,21 @@ export async function getCardDetails(cardId: number): Promise<CardDetailResponse
   return fetchApi(`/api/cards/${cardId}`);
 }
 
+export interface GetCardTournamentStatsParams {
+  limit?: number;
+}
+
+export async function getCardTournamentStats(
+  cardId: number,
+  params: GetCardTournamentStatsParams = {}
+): Promise<CardTournamentStatsResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.limit != null) searchParams.set("limit", String(params.limit));
+
+  const query = searchParams.toString();
+  return fetchApi(`/api/cards/${cardId}/tournament-stats${query ? `?${query}` : ""}`);
+}
+
 // ==================== Packs API ====================
 export async function getAvailablePacks(): Promise<AvailablePacksResponse> {
   return fetchApi("/api/packs/available");
@@ -507,6 +523,17 @@ export function useCardDetails(cardId: number | undefined) {
   return useQuery({
     queryKey: ["card", cardId],
     queryFn: () => getCardDetails(cardId!),
+    enabled: !!cardId,
+  });
+}
+
+export function useCardTournamentStats(
+  cardId: number | undefined,
+  params: GetCardTournamentStatsParams = {}
+) {
+  return useQuery({
+    queryKey: ["cardTournamentStats", cardId, params],
+    queryFn: () => getCardTournamentStats(cardId!, params),
     enabled: !!cardId,
   });
 }

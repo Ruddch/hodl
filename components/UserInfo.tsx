@@ -8,7 +8,11 @@ import { useMyProfile } from "@/lib/api";
 import { formatBalance } from "@/lib/balance";
 import { Avatar } from "./Avatar";
 
-export function UserInfo() {
+interface UserInfoProps {
+  onNavClick?: () => void;
+}
+
+export function UserInfo({ onNavClick }: UserInfoProps) {
   const { address, isConnected } = useAccount();
   const { isAuthenticated, isLoading, login, disconnect } = useAuth();
   const { data: profile } = useMyProfile(isAuthenticated);
@@ -25,7 +29,7 @@ export function UserInfo() {
       {isConnected && address ? (
         <div className="rounded-[30px] bg-[#efeff0] border border-[rgba(255,255,255,0.09)] backdrop-blur-[150px] p-4">
           {/* User Avatar and Name */}
-          <Link href="/profile" className="flex items-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity min-w-0">
+          <Link href="/profile" onClick={onNavClick} className="flex items-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity min-w-0">
             <Avatar 
               walletAddress={address} 
               size={40} 
@@ -43,7 +47,7 @@ export function UserInfo() {
           </div>
 
           {/* My Cards */}
-          <Link href="/profile" className="bg-white rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity">
+          <Link href="/profile" onClick={onNavClick} className="bg-white rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity">
             <span className="text-sm text-black">My cards</span>
             <span className="text-sm font-semibold text-black">
               {profile?.total_cards ?? profile?.cards?.length ?? 0}

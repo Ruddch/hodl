@@ -10,7 +10,6 @@ interface StatsCardsProps {
 export function StatsCards({ profile }: StatsCardsProps) {
   const statsData = profile.stats;
 
-  // Форматируем best_position для отображения
   const formatBestPosition = (position: number) => {
     if (position === 0) return "—";
     const suffix = position === 1 ? "st" : position === 2 ? "nd" : position === 3 ? "rd" : "th";
@@ -25,15 +24,17 @@ export function StatsCards({ profile }: StatsCardsProps) {
       place: statsData?.best_position ? formatBestPosition(statsData.best_position) : "—",
     },
     tournaments: statsData?.tournaments_participated ?? 0,
+    refCount: profile.referral_count ?? 0,
   };
 
   return (
-    <div className="grid grid-cols-5 gap-4 mb-8">
+    <div className="space-y-4 sm:space-y-5 mb-6 sm:mb-8">
+    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
       {/* Balance */}
-      <div className="bg-[#F2F2F2] rounded-[16px] p-6">
+      <div className="bg-[#F2F2F2] rounded-[12px] sm:rounded-[16px] p-2 sm:p-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-[16px] font-normal text-black/50">Balance</h3>
-          <div className="w-8 h-8 flex items-center justify-center">
+          <h3 className="text-[12px] sm:text-[16px] font-normal text-black/50">Balance</h3>
+          <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="0.65" y="4.65" width="22.7" height="14.7" rx="4.35" stroke="black" strokeOpacity="0.5" strokeWidth="1.3"/>
               <circle cx="12" cy="12" r="3.35" stroke="black" strokeOpacity="0.5" strokeWidth="1.3"/>
@@ -44,14 +45,14 @@ export function StatsCards({ profile }: StatsCardsProps) {
             </svg>
           </div>
         </div>
-        <p className="text-[24px] font-semibold text-black">{stats.balance}</p>
+        <p className="text-[16px] sm:text-[24px] font-semibold text-black">{stats.balance}</p>
       </div>
 
       {/* Best score */}
-      <div className="bg-[#F2F2F2] rounded-[16px] p-6">
+      <div className="bg-[#F2F2F2] rounded-[12px] sm:rounded-[16px] p-2 sm:p-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-[16px] font-normal text-black/50">Best score</h3>
-          <div className="w-8 h-8 flex items-center justify-center">
+          <h3 className="text-[12px] sm:text-[16px] font-normal text-black/50">Best score</h3>
+          <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M15.3496 14.6504V20.3818C15.3496 20.6419 15.0764 20.8113 14.8438 20.6953L13.1855 19.8662C12.4395 19.4932 11.5605 19.4932 10.8145 19.8662L9.15625 20.6953C8.92361 20.8113 8.65039 20.6419 8.65039 20.3818V14.6504H15.3496Z" stroke="black" strokeOpacity="0.5" strokeWidth="1.3"/>
               <circle cx="12" cy="9" r="7" fill="#F7F7F7"/>
@@ -60,14 +61,14 @@ export function StatsCards({ profile }: StatsCardsProps) {
             </svg>
           </div>
         </div>
-        <p className="text-[24px] font-semibold text-black">{stats.bestScore}</p>
+        <p className="text-[16px] sm:text-[24px] font-semibold text-black">{stats.bestScore}</p>
       </div>
 
       {/* Cards */}
-      <div className="bg-[#F2F2F2] rounded-[16px] p-6">
+      <div className="bg-[#F2F2F2] rounded-[12px] sm:rounded-[16px] p-2 sm:p-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-[16px] font-normal text-black/50">Cards</h3>
-          <div className="w-8 h-8 flex items-center justify-center">
+          <h3 className="text-[12px] sm:text-[16px] font-normal text-black/50">Cards</h3>
+          <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="1" y="8" width="9" height="12" rx="2" transform="rotate(-14 1 8)" fill="#F7F7F7"/>
               <rect x="1.78794" y="8.47344" width="7.7" height="10.7" rx="1.35" transform="rotate(-14 1.78794 8.47344)" stroke="black" strokeOpacity="0.5" strokeWidth="1.3"/>
@@ -78,14 +79,14 @@ export function StatsCards({ profile }: StatsCardsProps) {
             </svg>
           </div>
         </div>
-        <p className="text-[24px] font-semibold text-black">{stats.cards}</p>
+        <p className="text-[16px] sm:text-[24px] font-semibold text-black">{stats.cards}</p>
       </div>
 
       {/* Best result */}
-      <div className="bg-[#F2F2F2] rounded-[16px] p-6">
+      <div className="bg-[#F2F2F2] rounded-[12px] sm:rounded-[16px] p-2 sm:p-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-[16px] font-normal text-black/50">Best result</h3>
-          <div className="w-8 h-8 flex items-center justify-center">
+          <h3 className="text-[12px] sm:text-[16px] font-normal text-black/50">Best result</h3>
+          <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <mask id="path-1-inside-1_175_15846" fill="white">
                 <rect x="2.875" y="11.375" width="5.625" height="5.625" rx="1.125"/>
@@ -102,15 +103,15 @@ export function StatsCards({ profile }: StatsCardsProps) {
             </svg>
           </div>
         </div>
-        <p className="text-[24px] font-semibold text-black">{stats.bestResult.place}</p>
+        <p className="text-[16px] sm:text-[24px] font-semibold text-black truncate" title={stats.bestResult.place}>{stats.bestResult.place}</p>
         {/* <p className="text-sm text-black/50">{stats.bestResult.date}</p> */}
       </div>
 
       {/* Tournaments */}
-      <div className="bg-[#F2F2F2] rounded-[16px] p-6">
+        <div className="bg-[#F2F2F2] rounded-[12px] sm:rounded-[16px] p-2 sm:p-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-[16px] font-normal text-black/50">Tournaments</h3>
-          <div className="w-8 h-8 flex items-center justify-center">
+          <h3 className="text-[12px] sm:text-[16px] font-normal text-black/50">Tournaments</h3>
+          <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g clipPath="url(#clip0_175_15857)">
                 <path d="M5.39868 11.2378L6.37475 14.8805M6.37475 14.8805L10.0175 13.9044M6.37475 14.8805L11.7081 5.6429M18.4577 12.619L17.4816 8.97624M17.4816 8.97624L13.8389 9.9523M17.4816 8.97624L12.1483 18.2138" stroke="black" strokeOpacity="0.5" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
@@ -123,8 +124,24 @@ export function StatsCards({ profile }: StatsCardsProps) {
             </svg>
           </div>
         </div>
-        <p className="text-[24px] font-semibold text-black">{stats.tournaments}</p>
+        <p className="text-[16px] sm:text-[24px] font-semibold text-black">{stats.tournaments}</p>
       </div>
+
+      {/* Ref count */}
+      <div className="bg-[#F2F2F2] rounded-[12px] sm:rounded-[16px] p-2 sm:p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-[12px] sm:text-[16px] font-normal text-black/50">Referrals</h3>
+          <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="black" strokeOpacity="0.5" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="9" cy="7" r="4" stroke="black" strokeOpacity="0.5" strokeWidth="1.3"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="black" strokeOpacity="0.5" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <p className="text-[16px] sm:text-[24px] font-semibold text-black">{stats.refCount}</p>
+      </div>
+    </div>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   logout as logoutApi,
   checkAlphaTestAccess
 } from "./api";
+import { REF_CODE_KEY } from "@/components/RefCapture";
 import type { UserProfileResponse } from "./types";
 import { AlphaTestAccessModal } from "@/components/AlphaTestAccessModal";
 
@@ -156,10 +157,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const signature = await mutateAsync({ account: address, message });
 
       // 4. Верифицируем подпись (токен устанавливается в куки на бэкенде)
+      const refCode = typeof window !== "undefined" ? localStorage.getItem(REF_CODE_KEY) : null;
       await verifySignature({
         wallet_address: address,
         signature,
+        ...(refCode && { referral_code: refCode }),
       });
+      if (refCode && typeof window !== "undefined") {
+        localStorage.removeItem(REF_CODE_KEY);
+      }
 
       // 5. Сохраняем адрес кошелька
       setSignedWalletAddress(address);

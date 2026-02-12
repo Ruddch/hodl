@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useVirtualizer, measureElement } from "@tanstack/react-virtual";
 import { useMyProfile } from "@/lib/api";
 import type { UserCard, Tournament } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
@@ -14,7 +14,33 @@ interface DeckSelectionModalProps {
 }
 
 const DECK_SIZE = 5;
-const CARDS_PER_ROW = 6;
+const ROW_HEIGHT_ESTIMATE = 300; // грубая оценка, measureElement скорректирует
+
+// Хук для определения количества колонок по ширине экрана
+function useCardsPerRow() {
+  const [cardsPerRow, setCardsPerRow] = useState(() => {
+    if (typeof window === "undefined") return 6;
+    const w = window.innerWidth;
+    if (w < 480) return 3;
+    if (w < 640) return 3;
+    if (w < 768) return 4;
+    if (w < 1024) return 5;
+    return 6;
+  });
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w < 480) setCardsPerRow(3);
+      else if (w < 640) setCardsPerRow(3);
+      else if (w < 768) setCardsPerRow(4);
+      else if (w < 1024) setCardsPerRow(5);
+      else setCardsPerRow(6);
+    };
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return cardsPerRow;
+}
 
 export function DeckSelectionModal({
   tournament,
@@ -25,7 +51,7 @@ export function DeckSelectionModal({
   const { data: profile, isLoading } = useMyProfile(true);
   const [selectedCards, setSelectedCards] = useState<UserCard[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const cardsPerRow = useCardsPerRow();
   const parentRef = useRef<HTMLDivElement>(null);
 
   // Фильтруем карты по поиску
@@ -58,21 +84,17 @@ export function DeckSelectionModal({
   // Группируем карты по рядам для виртуализации
   const rows = useMemo(() => {
     const result: UserCard[][] = [];
-    for (let i = 0; i < filteredCards.length; i += CARDS_PER_ROW) {
-      result.push(filteredCards.slice(i, i + CARDS_PER_ROW));
+    for (let i = 0; i < filteredCards.length; i += cardsPerRow) {
+      result.push(filteredCards.slice(i, i + cardsPerRow));
     }
     return result;
-  }, [filteredCards]);
+  }, [filteredCards, cardsPerRow]);
 
-  // Виртуализация - высота ряда зависит от ширины карты и aspect ratio
-  // При 6 колонках с gap-4 (16px) примерная ширина карты ~180px, высота ~282px
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: (index: number) => {
-      // Первая строка без padding-top, остальные с padding-top 24px для gap
-      return index === 0 ? 300 : 324;
-    },
+    estimateSize: () => ROW_HEIGHT_ESTIMATE,
+    measureElement,
     overscan: 2,
   });
 
@@ -137,44 +159,45 @@ export function DeckSelectionModal({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-[1280px] max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col mx-4 overflow-hidden">
+      {/* Modal - full screen на мобилке, центрированная на десктопе */}
+      <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-[1280px] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden sm:mx-4">
         {/* Header */}
-        <div className="p-6 pb-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-black">
+        <div className="p-4 sm:p-6 pb-2 sm:pb-4 flex-shrink-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base sm:text-xl font-bold text-black leading-tight">
                 Register pack for the {tournamentName} tournament
               </h2>
-              <p className="text-sm text-zinc-500 mt-1">
+              <p className="text-xs sm:text-sm text-zinc-500 mt-1">
                 Select {DECK_SIZE} cards you want to bet this week
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors"
+              className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors flex-shrink-0"
+              aria-label="Close"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
           {/* Search */}
-          <div className="mt-4">
+          <div className="mt-3 sm:mt-4">
             <input
               type="text"
               placeholder="Search by card name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full max-w-sm px-4 py-2.5 bg-zinc-100 border border-zinc-200 rounded-xl text-sm text-black placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:max-w-sm px-3 sm:px-4 py-2 sm:py-2.5 bg-zinc-100 border border-zinc-200 rounded-xl text-sm text-black placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -182,12 +205,15 @@ export function DeckSelectionModal({
         {/* Cards Grid with Virtualization */}
         <div
           ref={parentRef}
-          className="flex-1 overflow-auto p-6 pb-24"
-          style={{ minHeight: "320px" }}
+          className="flex-1 overflow-auto p-3 sm:p-6 pb-30 sm:pb-30"
+          style={{ minHeight: "280px" }}
         >
           {isLoading ? (
-            <div className="grid grid-cols-6 gap-4">
-              {Array.from({ length: 10 }).map((_, i) => (
+            <div
+              className="grid gap-2 sm:gap-4"
+              style={{ gridTemplateColumns: `repeat(${cardsPerRow}, 1fr)` }}
+            >
+              {Array.from({ length: Math.min(10, cardsPerRow * 2) }).map((_, i) => (
                 <div
                   key={i}
                   className="bg-zinc-200 rounded-xl animate-pulse"
@@ -210,17 +236,21 @@ export function DeckSelectionModal({
               {rowVirtualizer.getVirtualItems().map((virtualRow) => (
                 <div
                   key={virtualRow.key}
+                  ref={rowVirtualizer.measureElement}
+                  data-index={virtualRow.index}
                   style={{
                     position: "absolute",
                     top: 0,
                     left: 0,
                     width: "100%",
-                    height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
-                    paddingTop: virtualRow.index > 0 ? '24px' : '0',
+                    paddingTop: virtualRow.index > 0 ? 16 : 0,
                   }}
                 >
-                  <div className="grid grid-cols-6 gap-4">
+                  <div
+                    className="grid gap-2 sm:gap-4"
+                    style={{ gridTemplateColumns: `repeat(${cardsPerRow}, 1fr)` }}
+                  >
                     {rows[virtualRow.index].map((card) => {
                       const isSelected = selectedCards.some(
                         (c) => c.user_card_id === card.user_card_id
@@ -232,9 +262,9 @@ export function DeckSelectionModal({
                           key={card.user_card_id}
                           onClick={() => canSelect && toggleCard(card)}
                           disabled={!canSelect && !isSelected}
-                          className={`relative rounded-[14px] overflow-visible transition-all ${
+                          className={`relative rounded-[10px] sm:rounded-[14px] overflow-visible transition-all ${
                             isSelected
-                              ? "ring-3 ring-[#2200EF] ring-offset-6"
+                              ? "ring-2 sm:ring-3 ring-[#2200EF] ring-offset-2 sm:ring-offset-6"
                               : canSelect
                               ? ""
                               : "opacity-40 cursor-not-allowed"
@@ -243,11 +273,11 @@ export function DeckSelectionModal({
                         >
                           {/* SELECTED label */}
                           {isSelected && (
-                            <div className="absolute flex items-center justify-center top-0 -translate-y-[20px] left-1/2 -translate-x-1/2 z-10 px-3 py-2 bg-[#2200EF] rounded-[4px]">
-                              <span className="text-[10px] leading-[10px] font-semibold text-white">SELECTED</span>
+                            <div className="absolute flex items-center justify-center top-0 -translate-y-[14px] sm:-translate-y-[20px] left-1/2 -translate-x-1/2 z-10 px-2 py-1 sm:px-3 sm:py-2 bg-[#2200EF] rounded-[4px]">
+                              <span className="text-[8px] sm:text-[10px] leading-[8px] sm:leading-[10px] font-semibold text-white">SELECTED</span>
                             </div>
                           )}
-                          <div className="w-full h-full rounded-[14px] overflow-hidden">
+                          <div className="w-full h-full rounded-[10px] sm:rounded-[14px] overflow-hidden">
                             {card.rendered_image_url ? (
                               <img
                                 src={card.rendered_image_url}
@@ -276,15 +306,15 @@ export function DeckSelectionModal({
         </div>
 
         {/* Footer with Selected Cards and Actions */}
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           {/* Selected Cards - выступают наполовину над футером */}
-          <div className="absolute left-6 bottom-full mb-[-90px] flex items-end gap-3 z-10">
+          <div className="absolute left-3 right-3 w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)] sm:left-6 sm:right-auto bottom-full mb-[-15px] sm:mb-[-20px] md:mb-[-20px] lg:mb-[-90px] flex items-end justify-center sm:justify-start gap-[5px] md:gap-[13px] z-10 pb-1">
             {Array.from({ length: DECK_SIZE }).map((_, index) => {
               const card = selectedCards[index];
               return (
                 <div
                   key={index}
-                  className="relative w-[120px] rounded-xl transition-all"
+                  className="relative w-[calc(20%-4px)] md:w-[120px] flex-shrink-0 rounded-lg sm:rounded-xl transition-all"
                   style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
                 >
                   {card ? (
@@ -303,17 +333,19 @@ export function DeckSelectionModal({
                       {/* Remove button */}
                       <button
                         onClick={() => removeCard(card.user_card_id)}
-                        className="absolute cursor-pointer -top-1.5 -right-1.5 w-5 h-5 bg-white border border-[#EBEBEB] rounded-lg flex items-center justify-center hover:bg-zinc-100 transition-colors backdrop-blur-[150px]"
+                        className="absolute cursor-pointer -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-7 h-7 sm:w-5 sm:h-5 bg-white border border-[#EBEBEB] rounded-md sm:rounded-lg flex items-center justify-center hover:bg-zinc-100 transition-colors backdrop-blur-[150px]"
                         style={{
                           boxShadow: '0px 1px 3px 0px rgba(79, 79, 79, 0.1)'
                         }}
+                        aria-label="Remove card"
                       >
                         <svg 
-                          width="13" 
-                          height="13" 
+                          width="10" 
+                          height="10" 
                           viewBox="0 0 13 13" 
                           fill="none" 
                           xmlns="http://www.w3.org/2000/svg"
+                          className="sm:w-[13px] sm:h-[13px]"
                         >
                           <path 
                             d="M9.32044 3.10693L3.10681 9.32057M3.10681 3.10693L9.32044 9.32057" 
@@ -326,8 +358,8 @@ export function DeckSelectionModal({
                     </>
                   ) : (
                     /* Empty slot with blur background */
-                    <div className="w-full h-full rounded-xl border-2 border-dashed border-zinc-300 bg-[#D8D4FF]/29 backdrop-blur-xl flex items-center justify-center">
-                      <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-full h-full rounded-lg sm:rounded-xl border-2 border-dashed border-zinc-300 bg-[#D8D4FF]/29 backdrop-blur-xl flex items-center justify-center">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
@@ -338,19 +370,18 @@ export function DeckSelectionModal({
           </div>
 
           {/* Footer content */}
-          <div className="bg-white border-t border-zinc-100 px-8 py-5">
-            <div className="flex items-end justify-end gap-6">
+          <div className="bg-white border-t border-zinc-100 px-4 sm:px-8 py-4 sm:py-5">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-end gap-4 sm:gap-6">
               {/* Weight Info and Actions */}
-              <div className="flex flex-col items-end gap-4">
+              <div className="flex flex-col w-full sm:items-end sm:max-w-[470px] gap-3 sm:gap-4">
                 {/* Weight info with progress bar */}
-                <div className="w-[470px]">
+                <div className="w-full">
                   <div className="flex items-baseline justify-between mb-2">
-                    <span className="text-[16px] font-semibold text-black">Weight of the pack</span>
-                    <span className="text-sm font-bold text-black">
+                    <span className="text-sm sm:text-[16px] font-semibold text-black">Weight of the pack</span>
+                    <span className="text-xs sm:text-sm font-bold text-black">
                       {currentWeight}/{tournament.weight_limit}
                     </span>
                   </div>
-                  {/* Progress bar */}
                   <div className="w-full h-2 bg-zinc-200 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-300"
@@ -366,11 +397,11 @@ export function DeckSelectionModal({
                 </div>
 
                 {/* Buttons */}
-                <div className="flex items-center gap-3 w-full">
+                <div className="flex items-center gap-2 sm:gap-3 w-full sm:flex-row">
                   <button
                     onClick={onClose}
                     disabled={isRegistering}
-                    className="flex-1 py-3 bg-white rounded-2xl text-base font-medium text-[#2200EF] leading-none tracking-normal text-center transition-colors disabled:opacity-50"
+                    className="flex-1 py-2.5 sm:py-3 bg-white rounded-xl sm:rounded-2xl text-sm sm:text-base font-medium text-[#2200EF] leading-none tracking-normal text-center transition-colors disabled:opacity-50"
                     style={{ 
                       border: '1px solid rgba(34, 0, 239, 0.08)',
                       boxShadow: '0px 0px 1px 0px rgba(133, 109, 253, 0.1), 0px 1px 1px 0px rgba(133, 109, 253, 0.09)'
@@ -381,7 +412,7 @@ export function DeckSelectionModal({
                   <button
                     onClick={handleRegister}
                     disabled={selectedCards.length !== DECK_SIZE || isRegistering}
-                    className="flex-1 py-3 rounded-2xl border border-[#2200EF] disabled:border-zinc-300  disabled:bg-zinc-300  disabled:cursor-not-allowed leading-none text-white font-medium transition-colors hover:opacity-90"
+                    className="flex-1 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl border border-[#2200EF] disabled:border-zinc-300 disabled:bg-zinc-300 disabled:cursor-not-allowed text-sm sm:text-base leading-none text-white font-medium transition-colors hover:opacity-90"
                     style={{ 
                       backgroundColor: selectedCards.length === DECK_SIZE && !isRegistering ? '#2200EF' : undefined
                     }}

@@ -1,6 +1,5 @@
 "use client";
 
-import { MainLayout } from "@/components/MainLayout";
 import { useTournaments, useTournamentLeaderboard } from "@/lib/api";
 import { useMemo } from "react";
 import { LeaderboardCard } from "@/components/LeaderboardCard";
@@ -41,8 +40,7 @@ export default function LeaderboardPage() {
     : undefined;
 
   return (
-    <MainLayout>
-      <div className="max-w-8xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 3rem)' }}>
+    <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0" style={{ height: 'calc(100vh - 3rem)' }}>
         <LeaderboardCard
           entries={leaderboardData?.leaderboard || []}
           title="Leaderboard"
@@ -54,7 +52,6 @@ export default function LeaderboardPage() {
           myPosition={leaderboardData?.my_position}
           tournamentId={selectedTournament?.id}
         />
-      </div>
-    </MainLayout>
+    </div>
   );
 }

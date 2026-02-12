@@ -8,7 +8,7 @@ interface WeekSelectorProps {
 
 export function WeekSelector({ tournaments, selectedId, onSelect }: WeekSelectorProps) {
   return (
-    <div className="flex items-center gap-9">
+    <div className="flex items-center gap-3 md:gap-9">
       {tournaments.map((t, index) => {
         const isSelected = selectedId === t.id;
         return (

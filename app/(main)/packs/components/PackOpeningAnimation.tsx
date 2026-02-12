@@ -5,10 +5,6 @@ import Tilt from 'react-parallax-tilt';
 import { Card } from './Card';
 import './PackOpeningAnimation.css';
 
-// Временные импорты звуков - будут добавлены позже
-// import wooshSound from '/sounds/woosh_3.mp3';
-// import magicSound from '/sounds/magic_3.mp3';
-
 interface PackOpeningAnimationProps {
   cards?: Array<{
     user_card_id: number;
@@ -26,20 +22,37 @@ const glowMap = {
   'common': 'silver',
 };
 
+const PACK_MAX_WIDTH = 473;
+const ANGLE_AT_MAX = 36; // ширина уголка/ленточки при макс. размере пака
+
+/** Вычисляемая ширина пака — синхронно с CSS (min(473px, 100vw - 4rem)) */
+const getPackWidth = () => Math.min(PACK_MAX_WIDTH, Math.max(150, window.innerWidth - 64));
+
+/** Размер уголка пропорционально ширине пака */
+const getAngleSize = (packWidth: number) => packWidth * ANGLE_AT_MAX / PACK_MAX_WIDTH;
+
 export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({ 
   cards = [] 
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [progress, setProgress] = useState({ x: 36 });
-  const [distance, setDistance] = useState(36);
+  const [progress, setProgress] = useState(() => ({ 
+    x: getAngleSize(typeof window !== 'undefined' ? getPackWidth() : PACK_MAX_WIDTH) 
+  }));
+  const [distance, setDistance] = useState(() => 
+    getAngleSize(typeof window !== 'undefined' ? getPackWidth() : PACK_MAX_WIDTH)
+  );
   const [dragginStarted, setDragginStarted] = useState(false);
   const [packOpened, setPackOpened] = useState(false);
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
   const [flippingCards, setFlippingCards] = useState<Set<number>>(new Set());
   const [containerScale, setContainerScale] = useState(1);
+  const [packWidth, setPackWidth] = useState(() => 
+    typeof window !== 'undefined' ? getPackWidth() : PACK_MAX_WIDTH
+  );
 
-  
+  const angleSize = getAngleSize(packWidth);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const containerRef = useRef<any>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
@@ -51,8 +64,8 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   const rafIdRef = useRef<number | null>(null);
   const animationRafIdRef = useRef<number | null>(null);
   const animationStartTimeRef = useRef<number | null>(null);
-  const animationStartProgressRef = useRef<number>(36);
-  const animationStartDistanceRef = useRef<number>(36);
+  const animationStartProgressRef = useRef<number>(ANGLE_AT_MAX);
+  const animationStartDistanceRef = useRef<number>(ANGLE_AT_MAX);
   
   // Вспомогательная функция для безопасного получения DOM элемента
   const getParallaxElement = useCallback(() => {
@@ -97,7 +110,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   
   // Мемоизируем вычисление градиента
   const volumeGradient = useMemo(() => {
-    if (progress.x <= 36) {
+    if (progress.x <= angleSize) {
       return 'linear-gradient(135deg,rgba(155, 156, 152, 0.5) 50%, rgba(255, 250, 250, 0.6) 60%, rgba(176, 174, 174, 0.5) 73%, rgba(153, 153, 153, 0.6) 88%, rgba(115, 112, 112, 0.7) 100%)';
     }
     
@@ -108,7 +121,8 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
     }
     
     const height = angleContainer.style.height.replace('px', '');
-    const startGradient = 100 - (parseFloat(height) - 16) / parseFloat(height) * 100;
+    const gradientOffset = 16 * angleSize / ANGLE_AT_MAX;
+    const startGradient = 100 - (parseFloat(height) - gradientOffset) / parseFloat(height) * 100;
     const diagonalAngle = 135 - rotationAngle * 0.5;
     return `linear-gradient(${diagonalAngle}deg, 
       rgba(155, 156, 152, 0.5) ${startGradient}%, 
@@ -116,7 +130,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
       rgba(176, 174, 174, 0.5) ${startGradient + 23}%, 
       rgba(153, 153, 153, 0.6) 88%, 
       rgba(115, 112, 112, 0.7) 100%)`;
-  }, [progress.x, rotationAngle]);
+  }, [progress.x, rotationAngle, angleSize]);
   
   // Обновляем градиент при изменении состояния
   useEffect(() => {
@@ -127,20 +141,22 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   
   // Мемоизируем clipPath
   const clipPath = useMemo(() => {
-    if (!dragginStarted || progress.x < 36) {
+    if (!dragginStarted || progress.x < angleSize) {
       return '50% 50%';
     }
-    return `0px ${36 + rotationAngle * 0.4}px`;
-  }, [dragginStarted, progress.x, rotationAngle]);
+    return `0px ${angleSize + rotationAngle * 0.4}px`;
+  }, [dragginStarted, progress.x, rotationAngle, angleSize]);
+
+  const openThreshold = packWidth * 0.97;
 
   // Вычисляем opacity для glow-rays на основе distance
   const glowRaysOpacity = useMemo(() => {
-    const minDistance = 36;
-    const maxDistance = 473;
+    const minDistance = angleSize;
+    const maxDistance = packWidth;
     const normalized = Math.max(0, Math.min(1, (distance - minDistance) / (maxDistance - minDistance)));
     const eased = 1 - Math.pow(1 - normalized, 2);
     return eased;
-  }, [distance]);
+  }, [distance, packWidth, angleSize]);
 
   // Easing функция для плавной анимации
   const easeOutCubic = useCallback((t: number) => {
@@ -150,8 +166,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   // Функция анимации открытия пакета до конца
   const animateToEnd = useCallback(() => {
     const duration = 400;
-    const targetProgress = 473;
-    const targetDistance = 473;
+    const target = packWidth;
 
     const animate = (currentTime: number) => {
       if (!animationStartTimeRef.current) {
@@ -163,9 +178,9 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
       const easedProgress = easeOutCubic(progressValue);
 
       const currentProgressX = animationStartProgressRef.current + 
-        (targetProgress - animationStartProgressRef.current) * easedProgress;
+        (target - animationStartProgressRef.current) * easedProgress;
       const currentDistance = animationStartDistanceRef.current + 
-        (targetDistance - animationStartDistanceRef.current) * easedProgress;
+        (target - animationStartDistanceRef.current) * easedProgress;
 
       setProgress({ x: currentProgressX });
       setDistance(currentDistance);
@@ -176,8 +191,8 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
         animationRafIdRef.current = requestAnimationFrame(animate);
       } else {
         setPackOpened(true);
-        setProgress({ x: targetProgress });
-        setDistance(targetDistance);
+        setProgress({ x: target });
+        setDistance(target);
         
         animationStartTimeRef.current = null;
         animationRafIdRef.current = null;
@@ -185,7 +200,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
     };
 
     animationRafIdRef.current = requestAnimationFrame(animate);
-  }, [easeOutCubic]);
+  }, [easeOutCubic, packWidth]);
 
   // Универсальная функция для получения координат из события
   const getEventCoordinates = useCallback((e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => {
@@ -213,14 +228,16 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
       if (packElement) {
         const rect = packElement.getBoundingClientRect();
         packRectRef.current = rect;
+        const maxDist = rect.width;
+        const minDist = getAngleSize(rect.width);
         const coords = getEventCoordinates(e);
         const relativeX = coords.x - rect.left;
         const relativeY = coords.y - rect.top;
         const relativeZ = Math.sqrt(relativeX * relativeX + relativeY * relativeY);
 
         const alpha = Math.min(Math.PI / 4, Math.max(0, Math.atan(relativeY / relativeX)));
-        const newDistance = Math.min(473, Math.max(36, relativeZ / (2 * Math.cos(alpha))));
-        const newProgressX = Math.min(473, Math.max(36, relativeX));
+        const newDistance = Math.min(maxDist, Math.max(minDist, relativeZ / (2 * Math.cos(alpha))));
+        const newProgressX = Math.min(maxDist, Math.max(minDist, relativeX));
 
         setMousePos({ x: relativeX, y: relativeY });
         setProgress({ x: newProgressX });
@@ -267,6 +284,30 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
     animateToEnd();
   }, [isDragging, progress.x, distance, animateToEnd]);
   
+  // Открытие пака по кнопке / Space
+  const triggerOpenPack = useCallback(() => {
+    if (packOpened || animationRafIdRef.current) return;
+
+    setDragginStarted(true);
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    if (isDragging) setIsDragging(false);
+
+    const packElement = getParallaxElement();
+    if (packElement) {
+      const rect = packElement.getBoundingClientRect();
+      packRectRef.current = rect;
+      setMousePos({ x: rect.left, y: rect.top });
+    }
+
+    animationStartProgressRef.current = progress.x;
+    animationStartDistanceRef.current = distance;
+    animationStartTimeRef.current = null;
+    animateToEnd();
+  }, [packOpened, isDragging, progress.x, distance, animateToEnd, getParallaxElement]);
+
   // Обработчик клика для переворота карточки
   const handleCardFlip = useCallback((index: number) => {
     if (flippedCards.has(index)) return;
@@ -294,27 +335,30 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
     const scale = Math.min(1, availableWidth / maxCardsWidth);
     
     // Минимальный scale для очень маленьких экранов
-    const minScale = 0.4;
+    const minScale = 0.6;
     
     return Math.max(minScale, scale);
   }, []);
 
-  // Обновление scale при изменении размера окна
+  // Обновление scale и packWidth при изменении размера окна
   useEffect(() => {
-    const updateScale = () => {
+    const update = () => {
       setContainerScale(calculateScale());
+      setPackWidth(getPackWidth());
     };
 
-    // Устанавливаем начальный scale
-    updateScale();
-
-    // Обработчик изменения размера окна
-    window.addEventListener('resize', updateScale);
-    
-    return () => {
-      window.removeEventListener('resize', updateScale);
-    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, [calculateScale]);
+
+  // Сброс progress/distance при ресайзе, если пак закрыт
+  useEffect(() => {
+    if (!packOpened && !isDragging) {
+      setProgress({ x: angleSize });
+      setDistance(angleSize);
+    }
+  }, [packWidth, packOpened, isDragging, angleSize]);
 
   // Очистка при размонтировании
   useEffect(() => {
@@ -332,39 +376,12 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
-        if (e.repeat) {
-          return;
-        }
-        
+        if (e.repeat) return;
         e.preventDefault();
-        
-        if (!packOpened && !animationRafIdRef.current) {
-          setDragginStarted(true);
-          
-          if (rafIdRef.current) {
-            cancelAnimationFrame(rafIdRef.current);
-            rafIdRef.current = null;
-          }
-          
-          if (isDragging) {
-            setIsDragging(false);
-          }
-          
-          const packElement = getParallaxElement();
-          if (packElement) {
-            const rect = packElement.getBoundingClientRect();
-            packRectRef.current = rect;
-            const relativeX = rect.left;
-            const relativeY = rect.top;
-            setMousePos({ x: relativeX, y: relativeY });
-          }
-          
-          animationStartProgressRef.current = progress.x;
-          animationStartDistanceRef.current = distance;
-          animationStartTimeRef.current = null;
-          
-          animateToEnd();
-        } else if (packOpened) {
+
+        if (!packOpened) {
+          triggerOpenPack();
+        } else {
           for (let i = 0; i < 5; i++) {
             if (!flippedCards.has(i)) {
               setFlippedCards(prev => new Set(prev).add(i));
@@ -374,12 +391,10 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
         }
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [packOpened, progress.x, distance, animateToEnd, isDragging, flippedCards, getParallaxElement]);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [packOpened, flippedCards, triggerOpenPack]);
 
   // Глобальные обработчики событий
   useEffect(() => {
@@ -443,7 +458,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
         </div>
         <div 
           style={{ opacity: glowRaysOpacity }} 
-          className={`glow-backlight-particles ${distance >= 460 && !isDragging ? 'pack-opened' : ''}`}
+          className={`glow-backlight-particles ${distance >= openThreshold && !isDragging ? 'pack-opened' : ''}`}
         >
           <div className="backlight-particle backlight-particle-1"></div>
           <div className="backlight-particle backlight-particle-2"></div>
@@ -456,14 +471,17 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
         </div>
         <div 
           style={{ opacity: glowRaysOpacity }} 
-          className={`glow-backlight ${distance >= 460 && !isDragging ? 'pack-opened' : ''}`}
+          className={`glow-backlight ${distance >= openThreshold && !isDragging ? 'pack-opened' : ''}`}
         >
           <div className="glow-ellipse glow-ellipse-1"></div>
           <div className="glow-ellipse glow-ellipse-2"></div>
           <div className="glow-ellipse glow-ellipse-3"></div>
         </div>
-        <div className={`animation-container ${distance >= 460 && !isDragging ? 'pack-opened' : ''}`}>
-          <div className={`glow-effect ${distance >= 460 ? 'pack-opened' : ''}`}>
+        <div 
+          className={`animation-container ${distance >= openThreshold && !isDragging ? 'pack-opened' : ''}`}
+          style={{ '--angle-size': `${angleSize}px` } as React.CSSProperties}
+        >
+          <div className={`glow-effect ${distance >= openThreshold ? 'pack-opened' : ''}`}>
             <div style={dragginStarted ? {} : { opacity: 1 }} className="glow-center">
             </div>
           </div>
@@ -472,7 +490,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
               containerRef.current = node;
               parallaxElementRef.current = node as unknown as HTMLElement;
             }}
-            className={`tilt-wrapper parallax-effect glare-scale ${distance >= 460 ? 'pack-opened' : ''}`}
+            className={`tilt-wrapper parallax-effect glare-scale ${distance >= openThreshold ? 'pack-opened' : ''}`}
             tiltEnable={!packOpened}
             tiltMaxAngleX={dragginStarted ? 0 : 10}
             tiltMaxAngleY={dragginStarted ? 0 : 10}
@@ -486,7 +504,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
           >
             <div 
               id="top" 
-              className={`top ${distance >= 460 ? 'pack-opened' : ''}`} 
+              className={`top ${distance >= openThreshold ? 'pack-opened' : ''}`} 
               ref={topElementRef}
               onMouseDown={(e) => handleStart(e)}
               onTouchStart={(e) => handleStart(e)}
@@ -495,7 +513,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
               <div
                 ref={angleContainerRef}
                 style={{ 
-                  height: Math.max(36, distance - 36), 
+                  height: Math.max(angleSize, distance - angleSize), 
                   transform: `translateX(-100%) rotateZ(${dragginStarted ? rotationAngle : 0}deg)` 
                 }}
                 className={`angle-container ${dragginStarted ? 'active' : ''}`}
@@ -516,7 +534,25 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
             </div>
           </Tilt>
         </div>
+
+       
       </div>
+       {/* Кнопка Open — скрывается в начале анимации при нажатии */}
+       {!packOpened && !dragginStarted && (
+          <button
+            type="button"
+            onClick={triggerOpenPack}
+            className="pack-open-btn-pulse block absolute bottom-[5%] left-1/2 -translate-x-1/2 w-fit mx-auto mt-12 px-6 py-3 text-lg font-medium text-white hover:opacity-90 rounded-[15px] transition-opacity active:scale-[0.98] cursor-pointer z-10"
+            style={{
+              backgroundColor: "rgb(213, 141, 69)",
+              WebkitTapHighlightColor: "transparent",
+              touchAction: "manipulation",
+            }}
+            aria-label="Open pack"
+          >
+            Open pack
+          </button>
+        )}
     </div>
   );
 };

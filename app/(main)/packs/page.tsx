@@ -1,6 +1,5 @@
 "use client";
 
-import { MainLayout } from "@/components/MainLayout";
 import { useAvailablePacks, useOpenPack } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
@@ -43,8 +42,8 @@ export default function PacksPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="max-w-8xl mx-auto">
+    <>
+    <div className="max-w-8xl mx-auto">
         {/* Banner */}
         <div
           className="relative rounded-[16px] overflow-hidden"
@@ -54,8 +53,8 @@ export default function PacksPage() {
             backgroundPosition: "center",
           }}
         >
-          <div className="px-8 py-12">
-            <h1 className="text-[36px] font-medium leading-[44px] tracking-normal text-white">
+          <div className="px-6 py-10 md:px-8 md:py-12">
+            <h1 className="text-[24px] md:text-[36px] font-medium leading-[30px] md:leading-[44px] tracking-normal text-white">
               Marketplace of packs <br/>
               will be available soon
             </h1>
@@ -118,11 +117,11 @@ export default function PacksPage() {
             </div>
           </div>
         </BlurCard>
-      </div>
+    </div>
 
-      {openedPack && (
+    {openedPack && (
         <OpenedPackModal result={openedPack} onClose={() => setOpenedPack(null)} />
-      )}
-    </MainLayout>
+    )}
+    </>
   );
 }

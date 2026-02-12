@@ -19,10 +19,18 @@
   }
 }
 
+html {
+  /* Фикс iOS overscroll: предотвращаем скролл body, чтобы overscroll всегда был одного цвета */
+  overflow: hidden;
+  height: 100%;
+}
+
 body {
-  background: var(--background);
+  background: #ffffff;
   color: var(--foreground);
   font-family: var(--font-instrument-sans), sans-serif;
+  overflow: hidden;
+  height: 100%;
 }
 
 /* Hover для кликабельной строки лидерборда — градиент в валидном CSS */

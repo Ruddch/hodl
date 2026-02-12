@@ -9,7 +9,7 @@ export function ProfileBanner({ onLogout }: ProfileBannerProps) {
     <div className="relative m-0 rounded-[16px] overflow-hidden">
       {/* Баннер с изображением */}
       <div 
-        className="h-48 relative bg-cover bg-center bg-no-repeat"
+        className="h-34 md:h-48 relative bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: "url('/profile_banner.png')"
         }}

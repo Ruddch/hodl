@@ -71,19 +71,21 @@ export function LeaderboardCard({
   }, [entriesWithMyPosition, searchQuery]);
 
   return (
-    <BlurCard backgroundColor="rgba(247, 238, 210, 1)" className={height === "full" ? "h-full flex flex-col" : ""}>
+    <BlurCard backgroundColor="rgba(247, 238, 210, 1)" className={`${height === "full" ? "h-full flex flex-col" : ""} min-w-0`}>
       {/* Header */}
-      <div className={`flex items-center ${showSearch ? "justify-between" : ""} px-6 pt-6 pb-4 flex-shrink-0`}>
-        <div>
-          <h2 className="text-2xl font-semibold leading-8 text-black">
+      <div
+        className={`flex flex-col md:flex-row md:items-center ${showSearch ? "md:justify-between pt-4 md:pt-6" : "pt-6"} gap-4 px-4 sm:px-6  pb-4 flex-shrink-0`}
+      >
+        <div className={`min-w-0`}>
+          <h2 className="text-xl md:text-2xl font-semibold leading-8 text-black break-words">
             {title}
-            {subtitle && <span className="text-xl font-normal text-zinc-600 ml-2">{subtitle}</span>}
+            {subtitle && <span className="text-lg md:text-xl font-normal text-zinc-600 ml-2">{subtitle}</span>}
           </h2>
         </div>
 
         {/* Search */}
         {showSearch && (
-          <div className="relative flex items-center gap-2">
+          <div className="relative flex items-center w-full md:w-auto shrink-0">
             <svg
               className="absolute left-4 w-5 h-5 text-[rgba(0,0,0,0.5)]"
               fill="none"
@@ -102,14 +104,14 @@ export function LeaderboardCard({
               placeholder="Search by username or wallet address"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[396px] h-12 px-4 rounded-2xl bg-[rgba(137,137,137,0.14)] border border-[rgba(255,255,255,0.09)] backdrop-blur-[150px] text-base font-normal leading-none tracking-normal text-[rgba(0,0,0,0.5)] placeholder:text-[rgba(0,0,0,0.5)] outline-none focus:outline-none"
+              className="w-full md:w-[396px] h-12 px-4 rounded-2xl bg-[rgba(137,137,137,0.14)] border border-[rgba(255,255,255,0.09)] backdrop-blur-[150px] text-base font-normal leading-none tracking-normal text-[rgba(0,0,0,0.5)] placeholder:text-[rgba(0,0,0,0.5)] outline-none focus:outline-none"
             />
           </div>
         )}
       </div>
 
       {/* Table */}
-      <div className={`px-6 pb-6 ${height === "full" ? "flex-1 min-h-0 flex flex-col" : ""}`}>
+      <div className={`px-4 md:px-6 pb-4 md:pb-6 min-w-0 overflow-hidden ${height === "full" ? "flex-1 min-h-0 flex flex-col" : ""}`}>
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (

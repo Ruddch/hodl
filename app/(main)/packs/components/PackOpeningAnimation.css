@@ -45,6 +45,22 @@
   position: relative;
   display: inline-block;
 }
+
+@keyframes pack-open-btn-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0px 4px 12px 0px rgba(255, 168, 82, 0.4), 0px 2px 4px 0px rgba(255, 150, 50, 0.3);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0px 6px 20px 0px rgba(255, 168, 82, 0.5), 0px 3px 8px 0px rgba(255, 150, 50, 0.4);
+  }
+}
+
+.pack-open-btn-pulse {
+  animation: pack-open-btn-pulse 2s ease-in-out infinite;
+}
+
 .tilt-wrapper:active {
   cursor: grabbing;
 }
@@ -59,7 +75,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: calc(100% - 36px);
+  width: calc(100% - var(--angle-size, 36px));
   height: 5%;
   background-image: url('/pack-top.png');
   background-size: cover;
@@ -87,7 +103,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 36px;
+  width: var(--angle-size, 36px);
   height: 100%;
   transform: translateX(-100%);
   transform-origin: right top;
@@ -233,12 +249,46 @@
   animation: cardJumpAndFall4 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
 }
 
+@media (max-width: 767px) {
+  .card-fall-0 {
+    animation: cardJumpAndFall0-m 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+  }
+  .card-fall-1 {
+    animation: cardJumpAndFall1-m 1.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
+  }
+  .card-fall-3 {
+    animation: cardJumpAndFall3-m 1.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both;
+  }
+  .card-fall-4 {
+    animation: cardJumpAndFall4-m 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+  }
+}
+
+@keyframes cardJumpAndFall0-m {
+  0% {
+    transform: translateX(calc(-50% + 0px)) translateY(50px) rotate(-1deg) rotateX(0deg) rotateY(0deg) translateZ(0px);
+  }
+  100% {
+    transform: translateX(-144%) translateY(-100%) rotate(-5deg) rotateX(0deg) rotateY(-360deg) translateZ(0px);
+  }
+}
+
+
 @keyframes cardJumpAndFall0 {
   0% {
     transform: translateX(calc(-50% + 0px)) translateY(50px) rotate(-1deg) rotateX(0deg) rotateY(0deg) translateZ(0px);
   }
   100% {
     transform: translateX(calc(-50% + -260%)) translateY(110px) rotate(-10deg) rotateX(0deg) rotateY(-360deg) translateZ(0px);
+  }
+}
+
+@keyframes cardJumpAndFall1-m {
+  0% {
+    transform: translateX(calc(-50% + 2px)) translateY(47px) rotate(-0.5deg) rotateX(0deg) rotateY(0deg) translateZ(0px);
+  }
+  100% {
+    transform: translateX(-120%) translateY(120%) rotate(-10deg) rotateX(0deg) rotateY(-360deg) translateZ(0px);
   }
 }
 
@@ -260,6 +310,15 @@
   }
 }
 
+@keyframes cardJumpAndFall3-m {
+  0% {
+    transform: translateX(calc(-50% + 6px)) translateY(41px) rotate(0.5deg) rotateX(0deg) rotateY(0deg) translateZ(0px);
+  }
+  100% {
+    transform: translateX(43%) translateY(-100%) rotate(5deg) rotateX(0deg) rotateY(360deg) translateZ(0px);
+  }
+}
+
 @keyframes cardJumpAndFall3 {
   0% {
     transform: translateX(calc(-50% + 6px)) translateY(41px) rotate(0.5deg) rotateX(0deg) rotateY(0deg) translateZ(0px);
@@ -269,6 +328,14 @@
   }
 }
 
+@keyframes cardJumpAndFall4-m {
+  0% {
+    transform: translateX(calc(-50% + 8px)) translateY(38px) rotate(1deg) rotateX(0deg) rotateY(0deg) translateZ(0px);
+  }
+  100% {
+    transform: translateX(43%) translateY(115%) rotate(7deg) rotateX(0deg) rotateY(360deg) translateZ(0px);
+  }
+}
 @keyframes cardJumpAndFall4 {
   0% {
     transform: translateX(calc(-50% + 8px)) translateY(38px) rotate(1deg) rotateX(0deg) rotateY(0deg) translateZ(0px);
@@ -550,8 +617,9 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 473px;
-  height: 718px;
+  width: min(473px, calc(100vw - 4rem));
+  aspect-ratio: 473 / 718;
+  height: auto;
   background-image: url('/pack-bottom-3.png');
   background-size: contain;
   background-repeat: no-repeat;
@@ -573,7 +641,7 @@
 
 .glow-effect {
   position: absolute;
-  top: 36px;
+  top: var(--angle-size, 36px);
   left: 50%;
   transform: translate(-50%, -50%);
   width: 600px;
@@ -595,15 +663,16 @@
   transform: translateY(1250px) scale(1.1);
 }
 
+/* Пропорции при pack 473px: width 440, height 25, ellipse 225x25 */
 .glow-center {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 440px;
-  height: 25px;
+  width: calc(440 * var(--angle-size, 36px) / 36);
+  height: calc(25 * var(--angle-size, 36px) / 36);
   background: radial-gradient(
-    ellipse 225px 25px at center,
+    ellipse calc(225 * var(--angle-size, 36px) / 36) calc(25 * var(--angle-size, 36px) / 36) at center,
     rgba(255, 255, 255, 1) 0%,
     rgba(255, 255, 220, 0.95) 15%,
     rgba(255, 240, 150, 0.9) 25%,
