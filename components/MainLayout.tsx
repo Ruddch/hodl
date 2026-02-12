@@ -61,7 +61,7 @@ export function MainLayout({ children, title }: MainLayoutProps) {
       {/* Overlay для мобильных */}
       {isSidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/50 z-40 scroll-none transition-opacity"
+          className="md:hidden fixed inset-0 bg-black/50 z-40 touch-none select-none transition-opacity"
           onClick={() => setIsSidebarOpen(false)}
           aria-hidden="true"
         />
@@ -72,7 +72,7 @@ export function MainLayout({ children, title }: MainLayoutProps) {
 
       {/* Основной контент */}
       <div className="flex flex-col flex-1">
-        <main className="flex-1 overflow-y-auto pt-16 py-5 px-4 md:py-6 md:px-6">{children}</main>
+        <main className="flex-1 overflow-y-auto overscroll-contain bg-white pt-16 py-5 px-4 md:py-6 md:px-6">{children}</main>
       </div>
     </div>
   );
