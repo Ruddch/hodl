@@ -5,13 +5,14 @@ import { Logo } from "./Logo";
 interface PageHeaderProps {
   title?: string;
   isSidebarOpen?: boolean;
+  onClick?: () => void;
 }
 
-export function PageHeader({ title, isSidebarOpen }: PageHeaderProps) {
+export function PageHeader({ title, isSidebarOpen, onClick }: PageHeaderProps) {
   const displayText = isSidebarOpen ? "Hodleague" : (title ?? "");
 
   return (
-    <div className="flex items-center gap-2 min-w-0 flex-1">
+    <div onClick={onClick ? () => onClick() : () => {} } className="flex items-center gap-2 min-w-0 flex-1">
       <Logo />
       <span className="text-xl font-medium text-black truncate">
         {displayText}

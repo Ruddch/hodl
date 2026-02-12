@@ -18,7 +18,7 @@ export function MainLayout({ children, title }: MainLayoutProps) {
     <div className="flex h-dvh bg-white">
       {/* Мобильная навигационная панель в стиле сайдбара */}
       <div className={`md:hidden fixed top-0 left-0 right-0 z-[60] flex items-center justify-between px-6 py-4 touch-none select-none ${isSidebarOpen ? "bg-[#f6f6f6]" : "bg-transparent"} backdrop-blur-[75px] rounded-br-[30px]`}>
-        <PageHeader title={title} isSidebarOpen={isSidebarOpen} />
+        <PageHeader onClick={toggleSidebar} title={title} isSidebarOpen={isSidebarOpen} />
         <button
           onClick={toggleSidebar}
           className="relative p-2 -m-2 hover:bg-[#e6e6e6] rounded-lg transition-colors w-10 h-10 flex items-center justify-center"
