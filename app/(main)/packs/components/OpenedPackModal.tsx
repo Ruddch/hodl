@@ -10,7 +10,7 @@ interface OpenedPackModalProps {
 
 export function OpenedPackModal({ result, onClose }: OpenedPackModalProps) {
   return (
-    <div className="fixed inset-0 bg-[#121111] z-50">
+    <div className="fixed inset-0 bg-[#121111] z-[70]">
       {/* Close button */}
       <button
         onClick={onClose}

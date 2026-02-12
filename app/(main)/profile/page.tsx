@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useMyProfile, useLogout } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
-import { MainLayout } from "@/components/MainLayout";
 import { ProfileBanner } from "./components/ProfileBanner";
 import { UserAvatar } from "./components/UserAvatar";
 import { StatsCards } from "./components/StatsCards";
@@ -23,8 +22,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <MainLayout>
-      <div className="max-w-8xl mx-auto min-h-full">
+    <div className="max-w-8xl mx-auto min-h-full">
         {!isAuthenticated ? (
           <p className="text-center text-zinc-500">Please connect your wallet to view your profile</p>
         ) : isLoading ? (
@@ -52,7 +50,6 @@ export default function ProfilePage() {
             />
           </div>
         )}
-      </div>
-    </MainLayout>
+    </div>
   );
 }

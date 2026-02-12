@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { UserInfo } from "./UserInfo";
+import { Logo } from "./Logo";
 import { useTournaments, useAvailablePacks } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { TournamentIcon, LeaderboardIcon, PacksIcon } from "./Icons";
@@ -51,19 +52,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         md:translate-x-0 md:static
       `}
     >
-      {/* Logo и кнопка закрытия для мобильных */}
-      <div className="px-8 pt-8 flex items-center justify-between">
+      {/* Logo и кнопка закрытия — скрыты на мобильных при открытом сайдбаре (есть в навбаре) */}
+      <div className={`px-8 pt-8 flex items-center justify-between shrink-0 hidden display-none md:block md:flex`}>
         <div className="flex items-center gap-1">
-          <div className="w-[24px] h-[24px] text-black flex items-center justify-center overflow-hidden">
-            <svg width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-              <path d="M6.41047 2.35023e-08C6.12406 1.09829e-08 5.90162 0.249602 5.93447 0.534121L7.44135 13.5852C7.46927 13.8269 7.67398 14.0094 7.91735 14.0094L10.8684 14.0094C11.133 14.0094 11.3475 13.7949 11.3475 13.5302L11.3475 0.479161C11.3475 0.214527 11.133 2.2993e-07 10.8684 2.18363e-07L6.41047 2.35023e-08Z" fill="black"/>
-              <path d="M4.93694 14.0098C5.22335 14.0098 5.44579 13.7602 5.41294 13.4756L3.90606 0.424584C3.87814 0.182819 3.67343 0.000380437 3.43006 0.000380427L0.479051 0.000380298C0.214417 0.000380286 -0.0001105 0.214908 -0.000110512 0.479542L-0.000111082 13.5306C-0.000111094 13.7952 0.214417 14.0098 0.47905 14.0098L4.93694 14.0098Z" fill="black"/>
-              <rect x="4.00781" y="5.53418" width="4.06272" height="1.68113" transform="rotate(15 4.00781 5.53418)" fill="black"/>
-            </svg>
-          </div>
+          <Logo />
           <span className="text-[26px] font-medium text-black">Hodleague</span>
         </div>
-        {/* Кнопка закрытия для мобильных */}
         <button
           onClick={onClose}
           className="md:hidden p-2 hover:bg-white/50 rounded-lg transition-colors"
@@ -84,15 +78,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </svg>
         </button>
       </div>
+      {/* Отступ сверху на мобильных при открытом сайдбаре — навбар перекрывает */}
+      {/* {isOpen && <div className="md:hidden h-16 shrink-0" aria-hidden />} */}
       
       {/* Navigation */}
-      <nav className="flex-1 px-4 pt-10">
+      <nav className="flex-1 px-4  pt-16 md:pt-10">
         <ul className="space-y-0">
           {/* Tournament */}
           <li>
             <Link
               href="/tournament"
-              className={`flex items-center gap-[5px] px-4 py-2 h-12 rounded-[30px] transition-colors ${
+              onClick={onClose}
+              className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
                 isTournamentActive
                   ? "bg-white text-black"
                   : "text-black/50 hover:text-black"
@@ -118,7 +115,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <li>
             <Link
               href="/leaderboard"
-              className={`flex items-center gap-[5px] px-4 py-2 h-12 rounded-[30px] transition-colors ${
+              onClick={onClose}
+              className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
                 isLeaderboardActive
                   ? "bg-white text-black"
                   : "text-black/50 hover:text-black"
@@ -139,7 +137,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <li>
             <Link
               href="/packs"
-              className={`flex items-center gap-[5px] px-4 py-2 h-12 rounded-[30px] transition-colors ${
+              onClick={onClose}
+              className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
                 isPacksActive
                   ? "bg-white text-black"
                   : "text-black/50 hover:text-black"
@@ -173,7 +172,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       </nav>
       
       {/* User Info */}
-      <UserInfo />
+      <UserInfo onNavClick={onClose} />
     </aside>
   );
 }

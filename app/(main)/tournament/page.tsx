@@ -1,6 +1,5 @@
 "use client";
 
-import { MainLayout } from "@/components/MainLayout";
 import { DeckSelectionModal } from "@/components/DeckSelectionModal";
 import { useTournaments, useTournamentDetails } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -208,10 +207,10 @@ function TournamentPageContent() {
   };
 
   return (
-    <MainLayout>
+    <>
       <div className="max-w-8xl mx-auto">
         {/* Фильтры: Эпоха + Недели */}
-        <div className="flex flex-col md:flex-row gap-4 md:gap-9 mb-8 md:pl-0">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-9 mb-8">
           {tournamentsLoading ? (
             <>
               <div className="h-10 w-40 bg-zinc-200 rounded-lg animate-pulse"></div>
@@ -226,7 +225,6 @@ function TournamentPageContent() {
           ) : (
             <>
               <EpochSelector
-                className="pl-14 md:pl-0"
                 epochs={epochKeys}
                 selectedEpoch={currentEpoch || epochKeys[0]}
                 onSelect={(epoch) => {
@@ -294,22 +292,20 @@ function TournamentPageContent() {
           isRegistering={isRegistering}
         />
       )}
-    </MainLayout>
+    </>
   );
 }
 
 export default function TournamentPage() {
   return (
     <Suspense fallback={
-      <MainLayout>
-        <div className="max-w-8xl mx-auto">
+      <div className="max-w-8xl mx-auto">
           <div className="space-y-5">
             <div className="h-48 bg-zinc-200 rounded-[30px] animate-pulse"></div>
             <div className="h-64 bg-zinc-200 rounded-[30px] animate-pulse"></div>
             <div className="h-64 bg-zinc-200 rounded-[30px] animate-pulse"></div>
           </div>
-        </div>
-      </MainLayout>
+      </div>
     }>
       <TournamentPageContent />
     </Suspense>

@@ -58,7 +58,7 @@ export function EpochSelector({ epochs, selectedEpoch, onSelect, className }: Ep
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-full bg-white border border-[rgba(34,0,239,0.08)] rounded-[15px] shadow-lg z-50 overflow-hidden">
+        <div className="absolute top-full left-0 mt-2 w-full bg-white border border-[rgba(34,0,239,0.08)] rounded-[15px] shadow-lg z-[70] overflow-hidden">
           <div className="max-h-60 overflow-y-auto">
             {epochs.map((epoch) => (
               <button

@@ -2,32 +2,61 @@
 
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
+import { PageHeader } from "./PageHeader";
 
-export function MainLayout({ children }: { children: React.ReactNode }) {
+interface MainLayoutProps {
+  children: React.ReactNode;
+  title?: string;
+}
+
+export function MainLayout({ children, title }: MainLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
   return (
     <div className="flex h-screen bg-white">
-      {/* Кнопка гамбургера для мобильных */}
-      <button
-        onClick={() => setIsSidebarOpen(true)}
-        className="md:hidden fixed top-4.5 left-4 z-50 p-2 bg-white rounded-lg shadow-md hover:bg-[#e6e6e6] transition-colors"
-        aria-label="Open menu"
-      >
-        <svg
-          className="w-6 h-6 text-black"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {/* Мобильная навигационная панель в стиле сайдбара */}
+      <div className={`md:hidden fixed top-0 left-0 right-0 z-[60] flex items-center justify-between px-6 py-4 ${isSidebarOpen ? "bg-[#f6f6f6]" : "bg-transparent"} backdrop-blur-[75px] rounded-br-[30px]`}>
+        <PageHeader title={title} isSidebarOpen={isSidebarOpen} />
+        <button
+          onClick={toggleSidebar}
+          className="relative p-2 -m-2 hover:bg-[#e6e6e6] rounded-lg transition-colors w-10 h-10 flex items-center justify-center"
+          aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 6h16M4 12h16M4 18h16"
-          />
-        </svg>
-      </button>
+          {/* Бургер — плавный переход в крестик */}
+          <svg
+            className={`absolute w-6 h-6 text-black transition-all duration-300 ${
+              isSidebarOpen ? "opacity-0 rotate-90 scale-0" : "opacity-100 rotate-0 scale-100"
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+          <svg
+            className={`absolute w-6 h-6 text-black transition-all duration-300 ${
+              isSidebarOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-0"
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
 
       {/* Overlay для мобильных */}
       {isSidebarOpen && (
@@ -43,7 +72,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
       {/* Основной контент */}
       <div className="flex flex-col flex-1">
-        <main className="flex-1 overflow-y-auto py-5 px-4 md:py-6 md:px-6">{children}</main>
+        <main className="flex-1 overflow-y-auto pt-16 py-5 px-4 md:py-6 md:px-6">{children}</main>
       </div>
     </div>
   );
