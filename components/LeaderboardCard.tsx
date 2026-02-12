@@ -76,7 +76,7 @@ export function LeaderboardCard({
       <div
         className={`flex flex-col md:flex-row md:items-center ${showSearch ? "md:justify-between pt-4 md:pt-6" : "pt-6"} gap-4 px-4 sm:px-6  pb-4 flex-shrink-0`}
       >
-        <div className={`min-w-0 ${showSearch ? "pl-10 md:pl-0" : ""}`}>
+        <div className={`min-w-0`}>
           <h2 className="text-xl md:text-2xl font-semibold leading-8 text-black break-words">
             {title}
             {subtitle && <span className="text-lg md:text-xl font-normal text-zinc-600 ml-2">{subtitle}</span>}

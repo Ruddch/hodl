@@ -26,7 +26,7 @@ function LeaderboardEmpty() {
       {/* Content */}
       <div className="relative flex flex-col items-center py-8 px-8">
         {/* Изображение пьедестала */}
-        <div className="mb-6">
+        <div className="mb-0">
           <Image
             src={"https://back.hodleague.com/static/card_templates/leaderboard_classic_common_20260120_215412.png"}
             alt="Podium"
@@ -36,7 +36,7 @@ function LeaderboardEmpty() {
           />
         </div>
 
-        <p className="text-2xl font-semibold text-black text-center">
+          <p className="text-normal md:text-xl font-semibold text-black text-center">
           You will see your results here after the tournament starts
         </p>
       </div>

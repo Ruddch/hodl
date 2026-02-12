@@ -22,7 +22,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-8xl mx-auto min-h-full">
+    <div className="w-full max-w-8xl min-w-0 mx-auto min-h-full">
         {!isAuthenticated ? (
           <p className="text-center text-zinc-500">Please connect your wallet to view your profile</p>
         ) : isLoading ? (
@@ -30,7 +30,7 @@ export default function ProfilePage() {
         ) : !profile ? (
           <p className="text-center text-zinc-500">Profile not found</p>
         ) : (
-          <div className="space-y-4 sm:space-y-5">
+          <div className="space-y-4 sm:space-y-5 min-w-0">
             {/* Баннер профиля */}
             <ProfileBanner 
               onLogout={handleLogout}

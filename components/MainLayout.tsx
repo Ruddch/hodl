@@ -71,8 +71,8 @@ export function MainLayout({ children, title }: MainLayoutProps) {
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* Основной контент */}
-      <div className="flex flex-col flex-1">
-        <main className="flex-1 overflow-y-auto overscroll-contain bg-white pt-16 py-5 px-4 md:py-6 md:px-6">{children}</main>
+      <div className="flex flex-col flex-1 min-w-0">
+        <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain bg-white pt-16 py-5 px-4 md:py-6 md:px-6">{children}</main>
       </div>
     </div>
   );
