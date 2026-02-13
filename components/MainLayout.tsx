@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { PageHeader } from "./PageHeader";
+import { WelcomeModal, useWelcomeModal } from "./WelcomeModal";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ children, title }: MainLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { showWelcome, closeWelcome } = useWelcomeModal();
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
@@ -74,6 +76,9 @@ export function MainLayout({ children, title }: MainLayoutProps) {
       <div className="flex flex-col flex-1 min-w-0">
         <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain bg-white pt-16 py-5 px-4 md:py-6 md:px-6">{children}</main>
       </div>
+
+      {/* Приветственная модалка для новых пользователей */}
+      {showWelcome && <WelcomeModal onClose={closeWelcome} />}
     </div>
   );
 }
