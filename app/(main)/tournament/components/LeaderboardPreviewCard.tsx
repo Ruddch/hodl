@@ -17,7 +17,8 @@ interface LeaderboardPreviewCardProps {
 // Состояние: турнир еще не стартовал (registration)
 function LeaderboardEmpty() {
   return (
-    <BlurCard backgroundColor="rgba(210, 247, 243, 0.8)">
+    <div data-onboarding="leaderboard-preview">
+      <BlurCard backgroundColor="rgba(210, 247, 243, 0.8)">
       {/* Header */}
       <div className="relative px-8 pt-8">
         <h3 className="text-2xl font-semibold leading-8 text-black">Leaderboard</h3>
@@ -41,6 +42,7 @@ function LeaderboardEmpty() {
         </p>
       </div>
     </BlurCard>
+    </div>
   );
 }
 
@@ -56,7 +58,7 @@ function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
   const allEntries = leaderboardData?.leaderboard || [];
 
   return (
-    <div className="relative">
+    <div data-onboarding="leaderboard-preview" className="relative">
       <LeaderboardCard
         entries={allEntries}
         title="Leaderboard"
@@ -85,6 +87,7 @@ export function LeaderboardPreviewCard({ tournamentStatus, tournamentId }: Leade
   if (!tournamentId) {
     return (
       <div
+        data-onboarding="leaderboard-preview"
         className="rounded-[30px] border border-white/10 p-8 text-center text-zinc-500"
         style={{
           backgroundColor: "rgba(242, 242, 242, 0.07)",

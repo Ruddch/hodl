@@ -75,6 +75,7 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
 
   return (
     <div 
+      data-onboarding="tournament-card"
       className="relative rounded-[16px] overflow-hidden border border-white/10"
       style={{
         boxShadow: "34px 243px 69px 0px rgba(214,214,214,0), 22px 156px 63px 0px rgba(214,214,214,0.01), 12px 88px 53px 0px rgba(214,214,214,0.05), 6px 39px 39px 0px rgba(214,214,214,0.09), 1px 10px 22px 0px rgba(214,214,214,0.1)"

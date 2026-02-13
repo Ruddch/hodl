@@ -28,7 +28,7 @@ export function StatsCards({ profile }: StatsCardsProps) {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-5 mb-6 sm:mb-8">
+    <div data-onboarding="profile-stats" className="space-y-4 sm:space-y-5 mb-6 sm:mb-8">
     <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
       {/* Balance */}
       <div className="bg-[#F2F2F2] rounded-[12px] sm:rounded-[16px] p-2 sm:p-6">

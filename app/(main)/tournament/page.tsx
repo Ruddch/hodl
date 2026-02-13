@@ -1,9 +1,12 @@
 "use client";
 
 import { DeckSelectionModal } from "@/components/DeckSelectionModal";
+import { Onboarding } from "@/components/Onboarding";
 import { useTournaments, useTournamentDetails } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useTournamentRegistration } from "@/lib/hooks/useTournamentRegistration";
+import { usePageOnboarding } from "@/lib/useOnboarding";
+import { TOURNAMENT_ONBOARDING } from "@/lib/onboarding-config";
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { Tournament } from "@/lib/types";
@@ -171,6 +174,12 @@ function TournamentPageContent() {
 
   const isLoading = tournamentsLoading || detailsLoading;
 
+  const { run, steps, start, close, complete } = usePageOnboarding(
+    "tournament",
+    TOURNAMENT_ONBOARDING,
+    !isLoading && !!currentTournament
+  );
+
   // Можно ли регистрироваться
   const canRegister = currentTournament?.status === "registration" && !currentTournament?.is_registered;
 
@@ -282,6 +291,9 @@ function TournamentPageContent() {
           </div>
         )}
       </div>
+
+      {/* Onboarding tour */}
+      <Onboarding steps={steps} run={run} onClose={close} onComplete={complete} />
 
       {/* Deck Selection Modal */}
       {showDeckModal && currentTournament && (

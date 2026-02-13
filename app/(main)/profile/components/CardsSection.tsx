@@ -50,7 +50,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
 
   return (
     <BlurCard backgroundColor="rgba(247, 238, 210, 1)">
-      <div className="p-4 sm:p-6 md:p-8">
+      <div data-onboarding="profile-cards" className="p-4 sm:p-6 md:p-8">
         {/* Toggle переключатель */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex gap-[1px] rounded-[16px] p-2 w-fit" style={{ backgroundColor: 'rgba(137, 137, 137, 0.14)' }}>

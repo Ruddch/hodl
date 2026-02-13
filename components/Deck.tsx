@@ -347,10 +347,12 @@ export function Deck({
 
   if (wrapInBlurCard) {
     return (
-      <BlurCard blurValue={150} backgroundColor="rgba(141, 121, 253, 0.5)">
-        {content}
-      </BlurCard>
+      <div data-onboarding="deck">
+        <BlurCard blurValue={150} backgroundColor="rgba(141, 121, 253, 0.5)">
+          {content}
+        </BlurCard>
+      </div>
     );
   }
-  return <>{content}</>;
+  return <div data-onboarding="deck">{content}</div>;
 }

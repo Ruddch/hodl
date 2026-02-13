@@ -8,6 +8,9 @@ import { ProfileBanner } from "./components/ProfileBanner";
 import { UserAvatar } from "./components/UserAvatar";
 import { StatsCards } from "./components/StatsCards";
 import { CardsSection } from "./components/CardsSection";
+import { Onboarding } from "@/components/Onboarding";
+import { usePageOnboarding } from "@/lib/useOnboarding";
+import { PROFILE_ONBOARDING } from "@/lib/onboarding-config";
 
 export default function ProfilePage() {
   const { isAuthenticated } = useAuth();
@@ -21,9 +24,17 @@ export default function ProfilePage() {
     router.push("/");
   };
 
+  const pageReady = isAuthenticated && !isLoading && !!profile;
+  const { run, steps, close, complete } = usePageOnboarding(
+    "profile",
+    PROFILE_ONBOARDING,
+    pageReady
+  );
+
   return (
     <div className="w-full max-w-8xl min-w-0 mx-auto min-h-full">
-        {!isAuthenticated ? (
+      <Onboarding steps={steps} run={run} onClose={close} onComplete={complete} />
+      {!isAuthenticated ? (
           <p className="text-center text-zinc-500">Please connect your wallet to view your profile</p>
         ) : isLoading ? (
           <p className="text-center text-zinc-500">Loading...</p>

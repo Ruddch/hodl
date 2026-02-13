@@ -1,22 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Sidebar } from "./Sidebar";
 import { PageHeader } from "./PageHeader";
 import { WelcomeModal, useWelcomeModal } from "./WelcomeModal";
+import { WelcomeClosedContext } from "@/lib/welcome-closed-context";
 
 interface MainLayoutProps {
   children: React.ReactNode;
   title?: string;
 }
 
-export function MainLayout({ children, title }: MainLayoutProps) {
+function MainLayoutInner({ children, title }: MainLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { showWelcome, closeWelcome } = useWelcomeModal();
+  const [welcomeJustClosed, setWelcomeJustClosed] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
+  /** При закрытии welcome — сигнал для онбординга на текущей странице */
+  const handleWelcomeClose = useCallback(() => {
+    closeWelcome();
+    setWelcomeJustClosed(true);
+  }, [closeWelcome, setWelcomeJustClosed]);
+
+  const welcomeClosedValue = {
+    welcomeJustClosed,
+    setWelcomeJustClosed,
+    welcomeVisible: showWelcome ?? false,
+  };
+
   return (
+    <WelcomeClosedContext.Provider value={welcomeClosedValue}>
     <div className="flex h-dvh bg-white">
       {/* Мобильная навигационная панель в стиле сайдбара */}
       <div className={`md:hidden fixed top-0 left-0 right-0 z-[60] flex items-center justify-between px-6 py-4 touch-none select-none ${isSidebarOpen ? "bg-[#f6f6f6]" : "bg-transparent"} backdrop-blur-[75px] rounded-br-[30px]`}>
@@ -78,8 +93,13 @@ export function MainLayout({ children, title }: MainLayoutProps) {
       </div>
 
       {/* Приветственная модалка для новых пользователей */}
-      {showWelcome && <WelcomeModal onClose={closeWelcome} />}
+      {showWelcome && <WelcomeModal onClose={handleWelcomeClose} />}
     </div>
+    </WelcomeClosedContext.Provider>
   );
+}
+
+export function MainLayout({ children, title }: MainLayoutProps) {
+  return <MainLayoutInner title={title}>{children}</MainLayoutInner>;
 }
 

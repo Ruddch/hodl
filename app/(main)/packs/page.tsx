@@ -7,6 +7,9 @@ import Image from "next/image";
 import type { OpenPackResponse } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
 import { OpenedPackModal } from "./components/OpenedPackModal";
+import { Onboarding } from "@/components/Onboarding";
+import { usePageOnboarding } from "@/lib/useOnboarding";
+import { PACKS_ONBOARDING } from "@/lib/onboarding-config";
 
 export default function PacksPage() {
   const { isAuthenticated, login } = useAuth();
@@ -15,6 +18,12 @@ export default function PacksPage() {
   const [openedPack, setOpenedPack] = useState<OpenPackResponse | null>(null);
 
   const totalPacks = packsData?.available_packs || 0;
+  const isLoading = !packsData;
+  const { run, steps, close, complete } = usePageOnboarding(
+    "packs",
+    PACKS_ONBOARDING,
+    !isLoading
+  );
 
   const handleOpenPack = async () => {
     if (!isAuthenticated) {
@@ -43,7 +52,8 @@ export default function PacksPage() {
 
   return (
     <>
-    <div className="max-w-8xl mx-auto">
+      <Onboarding steps={steps} run={run} onClose={close} onComplete={complete} />
+      <div className="max-w-8xl mx-auto">
         {/* Banner */}
         <div
           className="relative rounded-[16px] overflow-hidden"
@@ -62,8 +72,8 @@ export default function PacksPage() {
         </div>
 
         {/* Main Content */}
-        <BlurCard className="mt-6" backgroundColor="rgba(255, 179, 215, 1)"> 
-          <div className="px-8 py-8">
+        <BlurCard className="mt-6" backgroundColor="rgba(255, 179, 215, 1)">
+          <div data-onboarding="packs-section" className="px-8 py-8">
             <h2 className="text-xl md:text-2xl font-bold text-black mb-2">My packs</h2>
             <p className="text-base text-zinc-600 mb-8">
               In beta you will get 5 new packs to bet every week
@@ -98,6 +108,7 @@ export default function PacksPage() {
 
               {/* Open Packs Button */}
               <button
+                data-onboarding="open-packs-btn"
                 onClick={handleOpenPack}
                 disabled={!isAuthenticated || totalPacks === 0 || openPackMutation.isPending}
                 className={`my-7 flex flex-col items-center justify-center gap-2 w-[198px] h-12 pt-3 pb-3 rounded-[15px] text-base font-medium text-white leading-none tracking-normal text-center transition-colors ${
