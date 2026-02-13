@@ -24,16 +24,75 @@ interface CardStatsModalProps {
 }
 
 function formatPrice(price: number): string {
+  if (price >= 1_000) return Math.round(price).toLocaleString("en-US");
   if (price >= 1) return price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return price.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+  if (price >= 0.01) return price.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  // < 0.01: первые 4 значащих цифры (например 0.002045231231 -> 0.002045)
+  return parseFloat(price.toPrecision(4)).toString();
 }
 
-function formatMarketCap(value: number): string {
-  if (value >= 1_000_000) {
-    const m = value / 1_000_000;
-    return `${m % 1 === 0 ? m : m.toFixed(2)} M`;
+/** Одна длина для всех подписей оси цены — фиксированное кол-во знаков после запятой */
+function formatPriceForAxis(price: number, domainMax: number): string {
+  const decimals = domainMax >= 1_000 ? 0 : domainMax >= 1 ? 2 : domainMax >= 0.01 ? 3 : 4;
+  return price.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function formatMarketCap(marketCap: number): string {
+  if (marketCap >= 1_000_000_000) {
+    const value = marketCap / 1_000_000_000;
+    return `$${Math.round(value)}B`;
   }
-  return formatPrice(value);
+  if (marketCap >= 1_000_000) {
+    const value = marketCap / 1_000_000;
+    return `$${Math.round(value)}M`;
+  }
+  if (marketCap >= 1_000) {
+    const value = marketCap / 1_000;
+    return `$${Math.round(value)}K`;
+  }
+  return `$${Math.round(marketCap)}`;
+}
+
+/**
+ * Вычисляет domain и тики для оси цены:
+ * - min = ближайший дефолтный тик вниз от минимума данных
+ * - max = ближайший дефолтный тик вверх от максимума данных
+ * - тики равномерно распределены с "красивым" шагом
+ */
+function getPriceAxisConfig(values: number[]): { domain: [number, number]; ticks: number[] } | null {
+  if (values.length === 0) return null;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min;
+  if (range <= 0) return { domain: [min, max], ticks: [min, max] };
+
+  // "Красивый" шаг: 1, 2, 5 × 10^n
+  const roughStep = range / 5;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+  const normalized = roughStep / magnitude;
+  const stepMult = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  let step = stepMult * magnitude;
+
+  // Округляем step под форматирование
+  const roundStep = (s: number) =>
+    max >= 1_000 ? Math.max(1, Math.round(s)) : max >= 1 ? Math.round(s * 100) / 100 : max >= 0.01 ? Math.round(s * 10000) / 10000 : parseFloat(s.toPrecision(4));
+  step = roundStep(step);
+  if (step <= 0) step = magnitude;
+
+  const minDomain = roundStep(Math.floor(min / step) * step);
+  const maxDomain = roundStep(Math.ceil(max / step) * step);
+  // Если minDomain >= maxDomain (данные в узком диапазоне), расширяем
+  const finalMin = minDomain < maxDomain ? minDomain : roundStep(minDomain - step);
+  const finalMax = maxDomain > minDomain ? maxDomain : roundStep(maxDomain + step);
+
+  const ticks: number[] = [];
+  for (let t = finalMin; t <= finalMax + step * 0.001; t = roundStep(t + step)) {
+    ticks.push(t);
+    if (ticks.length > 15) break;
+  }
+  if (ticks.length < 2) ticks.push(finalMax);
+
+  return { domain: [finalMin, finalMax], ticks };
 }
 
 function formatWeekLabel(dateStr: string): string {
@@ -91,6 +150,12 @@ function StatChart({
   const formatValue = (v: number) => (mode === "price" ? formatPrice(v) : String(v));
   const tooltipLabel = mode === "price" ? "Price" : mode === "weight" ? "Weight" : "Score";
 
+  const priceAxisConfig = useMemo(() => {
+    if (mode !== "price" || chartData.length === 0) return null;
+    const values = chartData.map((d) => d.value);
+    return getPriceAxisConfig(values);
+  }, [mode, chartData]);
+
   if (chartData.length === 0) {
     return (
       <div className="flex items-center justify-center flex-1 min-h-[120px] text-black/40 text-sm">
@@ -141,7 +206,17 @@ function StatChart({
             tickLine={false}
             tick={{ fill: "#000000", fontSize: 14, textAnchor: "end", fontWeight: 400 }}
             width={55}
-            tickFormatter={(v) => formatValue(v)}
+            tickFormatter={(v) =>
+              mode === "price" && priceAxisConfig
+                ? formatPriceForAxis(v, priceAxisConfig.domain[1])
+                : formatValue(v)
+            }
+            domain={
+              mode === "score" ? [0, 1000] : mode === "weight" ? [0, 10] : priceAxisConfig?.domain
+            }
+            ticks={
+              mode === "weight" ? [0, 2, 4, 6, 8, 10] : priceAxisConfig?.ticks
+            }
           />
           <Tooltip
             contentStyle={{
