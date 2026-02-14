@@ -21,6 +21,7 @@ import type {
   VerifyRequest,
   AuthResponse,
   UserProfileResponse,
+  MyTournamentsResponse,
   CardCatalogResponse,
   CardDetailResponse,
   CardTournamentStatsResponse,
@@ -260,6 +261,10 @@ export async function getUserProfile(
 ): Promise<UserProfileResponse> {
   const params = includeCards ? "?include_cards=true" : "";
   return fetchApi(`/api/users/${walletAddress}${params}`);
+}
+
+export async function getMyTournaments(): Promise<MyTournamentsResponse> {
+  return fetchApi("/api/users/me/tournaments");
 }
 
 // ==================== Cards API ====================
@@ -516,6 +521,14 @@ export function useMyProfile(includeCards: boolean = false, enabled: boolean = t
   return useQuery({
     queryKey: ["myProfile", includeCards],
     queryFn: () => getMyProfile(includeCards),
+    enabled,
+  });
+}
+
+export function useMyTournaments(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ["myTournaments"],
+    queryFn: getMyTournaments,
     enabled,
   });
 }

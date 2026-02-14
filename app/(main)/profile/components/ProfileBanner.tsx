@@ -1,7 +1,7 @@
 "use client";
 
 interface ProfileBannerProps {
-  onLogout: () => void;
+  onLogout?: () => void;
 }
 
 export function ProfileBanner({ onLogout }: ProfileBannerProps) {
@@ -14,7 +14,8 @@ export function ProfileBanner({ onLogout }: ProfileBannerProps) {
           backgroundImage: "url('/profile_banner.png')"
         }}
       >
-        {/* Кнопка выхода */}
+        {/* Кнопка выхода (только для своего профиля) */}
+        {onLogout && (
         <button
           onClick={onLogout}
           className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[rgba(255,255,255,0.2)] transition-colors"
@@ -37,6 +38,7 @@ export function ProfileBanner({ onLogout }: ProfileBannerProps) {
             />
           </svg>
         </button>
+        )}
       </div>
     </div>
   );

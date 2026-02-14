@@ -7,9 +7,10 @@ import { CopyIcon, CheckIcon } from "@/components/Icons";
 
 interface UserAvatarProps {
   profile: UserProfileResponse;
+  showReferralLink?: boolean;
 }
 
-export function UserAvatar({ profile }: UserAvatarProps) {
+export function UserAvatar({ profile, showReferralLink = true }: UserAvatarProps) {
   const [copied, setCopied] = useState(false);
 
   const displayName = profile.nickname
@@ -31,7 +32,7 @@ export function UserAvatar({ profile }: UserAvatarProps) {
   };
 
   return (
-    <div className="relative z-10 ml-4 mr-4 flex items-end gap-4 -mt-12 mb-4 sm:mb-8 w-full max-w-[calc(100%-16px)] overflow-hidden min-w-0">
+    <div className="relative z-10 ml-4 mr-4 flex items-end gap-2 md:gap-4 -mt-12 mb-4 sm:mb-8 w-full max-w-[calc(100%-16px)] overflow-hidden min-w-0">
       {/* Аватар */}
       <Avatar 
         walletAddress={profile.wallet_address} 
@@ -46,7 +47,7 @@ export function UserAvatar({ profile }: UserAvatarProps) {
         <h1 className="text-xl mr-2 md:text-2xl font-semibold text-[var(--text-primary)] truncate min-w-0 max-w-[100%]" title={displayName}>
           {displayName}
         </h1>
-        {profile.referral_link && (
+        {showReferralLink && profile.referral_link && (
           <button
             type="button"
             onClick={handleCopyRefLink}

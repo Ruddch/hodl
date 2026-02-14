@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { LeaderboardEntry } from "@/lib/types";
@@ -145,21 +146,52 @@ function LeaderboardRow({
   const reward = formatReward(entry.prizes);
   const canOpenDeck = onDeckClick && entry.deck_id != null;
 
+  const profileHref =
+    entry.wallet_address
+      ? isCurrentUser
+        ? "/profile"
+        : `/profile?wallet=${encodeURIComponent(entry.wallet_address)}`
+      : null;
+
+  const playerCell = (
+    <div className="flex items-center gap-2 md:gap-[18px] min-w-0">
+      <PositionBadge position={entry.position} isCurrentUser={isCurrentUser} />
+      {profileHref ? (
+        <Link
+          href={profileHref}
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-2 md:gap-[18px] min-w-0 hover:opacity-80 transition-opacity group"
+        >
+          <PlayerAvatar
+            walletAddress={entry.wallet_address}
+            userId={entry.user_id}
+            avatarUrl={entry.avatar_url}
+          />
+          <span className="text-base font-medium text-[var(--text-primary)] truncate group-hover:underline">
+            {playerName}
+            {isCurrentUser && <span className="text-[var(--primary-muted)] ml-1">(you)</span>}
+          </span>
+        </Link>
+      ) : (
+        <>
+          <PlayerAvatar
+            walletAddress={entry.wallet_address}
+            userId={entry.user_id}
+            avatarUrl={entry.avatar_url}
+          />
+          <span className="text-base font-medium text-[var(--text-primary)] truncate">
+            {playerName}
+            {isCurrentUser && <span className="text-[var(--primary-muted)] ml-1">(you)</span>}
+          </span>
+        </>
+      )}
+    </div>
+  );
+
   const rowContent = (
     <>
       {/* Player */}
-      <div className="flex items-center gap-2 md:gap-[18px] min-w-0">
-        <PositionBadge position={entry.position} isCurrentUser={isCurrentUser} />
-        <PlayerAvatar
-          walletAddress={entry.wallet_address}
-          userId={entry.user_id}
-          avatarUrl={entry.avatar_url}
-        />
-        <span className="text-base font-medium text-[var(--text-primary)] truncate">
-          {playerName}
-          {isCurrentUser && <span className="text-[var(--primary-muted)] ml-1">(you)</span>}
-        </span>
-      </div>
+      {playerCell}
 
       {/* Score */}
       <div className="min-w-0 shrink-0">
@@ -189,23 +221,28 @@ function LeaderboardRow({
   const gridClasses =
     "grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4";
 
-  if (canOpenDeck) {
-    return (
-      <button
-        type="button"
-        onClick={() => onDeckClick(entry)}
-        className={`w-full text-left grid ${gridClasses} ${rowClassName}`}
-      >
-        {rowContent}
-      </button>
-    );
-  }
-
-  return (
-    <div className={`grid ${gridClasses} ${rowClassName}`}>
+  const rowElement = (
+    <div
+      role={canOpenDeck ? "button" : undefined}
+      tabIndex={canOpenDeck ? 0 : undefined}
+      onClick={canOpenDeck ? () => onDeckClick?.(entry) : undefined}
+      onKeyDown={
+        canOpenDeck
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onDeckClick?.(entry);
+              }
+            }
+          : undefined
+      }
+      className={`w-full text-left grid ${gridClasses} ${rowClassName}`}
+    >
       {rowContent}
     </div>
   );
+
+  return rowElement;
 }
 
 interface LeaderboardTableProps {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Instrument_Sans, League_Gothic } from "next/font/google";
+import { Instrument_Sans, League_Gothic, Rubik } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 
@@ -11,6 +11,12 @@ const instrumentSans = Instrument_Sans({
 
 const leagueGothic = League_Gothic({
   variable: "--font-league-gothic",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+const rubik = Rubik({
+  variable: "--font-rubik",
   subsets: ["latin"],
   weight: ["400"],
 });
@@ -35,7 +41,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${instrumentSans.variable} ${leagueGothic.variable} antialiased`}
+        className={`${instrumentSans.variable} ${leagueGothic.variable} ${rubik.variable} antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

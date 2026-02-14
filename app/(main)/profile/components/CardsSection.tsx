@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import type { UserProfileResponse } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
@@ -12,10 +12,19 @@ interface CardsSectionProps {
   profile: UserProfileResponse;
   activeTab: "cards" | "tournaments";
   onTabChange: (tab: "cards" | "tournaments") => void;
+  /** Показывать вкладку «Статистика турниров» — только для своего профиля */
+  showTournamentStats?: boolean;
 }
 
-export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionProps) {
+export function CardsSection({ profile, activeTab, onTabChange, showTournamentStats = true }: CardsSectionProps) {
   const cards = profile.cards || [];
+
+  // При просмотре чужого профиля переключаем на «Мои карты»
+  useEffect(() => {
+    if (!showTournamentStats && activeTab === "tournaments") {
+      onTabChange("cards");
+    }
+  }, [showTournamentStats, activeTab, onTabChange]);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [selectedCardInfo, setSelectedCardInfo] = useState<{ imageUrl?: string | null; name?: string } | null>(null);
 
@@ -64,16 +73,18 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
             >
               My cards
             </button>
-            <button
-              onClick={() => onTabChange("tournaments")}
-              className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors whitespace-nowrap ${
-                activeTab === "tournaments"
-                  ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
-            >
-              Tournament statistics
-            </button>
+            {showTournamentStats && (
+              <button
+                onClick={() => onTabChange("tournaments")}
+                className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors whitespace-nowrap ${
+                  activeTab === "tournaments"
+                    ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                Tournament statistics
+              </button>
+            )}
           </div>
 
           {activeTab === "cards" && (
@@ -163,7 +174,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
           </div>
         )}
 
-        {activeTab === "tournaments" && (
+        {activeTab === "tournaments" && showTournamentStats && (
           <TournamentStatisticsTable />
         )}
       </div>
