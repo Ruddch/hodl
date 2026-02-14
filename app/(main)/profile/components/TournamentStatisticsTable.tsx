@@ -8,6 +8,87 @@ import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { CardStatsModal } from "@/components/CardStatsModal";
 import type { MyTournamentEntry, MyTournamentCard } from "@/lib/types";
 
+const gridClasses =
+  "grid gap-3 md:gap-4 grid-cols-[minmax(0,1.2fr)_minmax(48px,0.5fr)_minmax(80px,1fr)_minmax(70px,0.6fr)_minmax(56px,0.5fr)]";
+
+function TournamentStatisticsSkeleton() {
+  return (
+    <div className="min-w-0 overflow-x-auto">
+      {/* Desktop skeleton */}
+      <div className="hidden md:block min-w-0">
+        <div className={`${gridClasses} grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2`}>
+          <div className="h-4 w-20 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-4 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-4 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-4 w-16 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-4 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+        </div>
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className={`${gridClasses} grid items-center py-3 border-b border-[var(--leaderboard-row-border)]`}
+          >
+            <div className="flex flex-col gap-1.5">
+              <div className="h-4 w-28 bg-[var(--surface-hover)] rounded animate-pulse" />
+              <div className="h-3.5 w-16 bg-[var(--surface-hover)] rounded animate-pulse" />
+            </div>
+            <div className="h-4 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
+            <div className="flex gap-1.5">
+              {[1, 2, 3, 4, 5].map((j) => (
+                <div
+                  key={j}
+            className="w-8 rounded-[7%] bg-[var(--surface-hover)] animate-pulse shrink-0"
+                    style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
+                />
+              ))}
+            </div>
+            <div className="h-4 w-20 bg-[var(--surface-hover)] rounded animate-pulse" />
+            <div className="h-4 w-10 bg-[var(--surface-hover)] rounded animate-pulse" />
+          </div>
+        ))}
+      </div>
+
+      {/* Mobile skeleton */}
+      <div className="md:hidden space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="p-4 rounded-xl border border-[var(--leaderboard-row-border)] bg-[var(--surface)]/50"
+          >
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex flex-col gap-1.5">
+                <div className="h-4 w-28 bg-[var(--surface-hover)] rounded animate-pulse" />
+                <div className="h-3 w-16 bg-[var(--surface-hover)] rounded animate-pulse" />
+              </div>
+              <div className="h-4 w-20 bg-[var(--surface-hover)] rounded animate-pulse shrink-0" />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-[var(--leaderboard-row-border)]">
+              <div className="h-3 w-12 bg-[var(--surface-hover)] rounded animate-pulse mb-2" />
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((j) => (
+                  <div
+                    key={j}
+                    className="w-8 rounded-[7%] bg-[var(--surface-hover)] animate-pulse shrink-0"
+                    style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -132,11 +213,7 @@ export function TournamentStatisticsTable() {
   }, [data]);
 
   if (isLoading && tableData.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-[var(--text-muted)]">Loading tournament statistics...</p>
-      </div>
-    );
+    return <TournamentStatisticsSkeleton />;
   }
 
   if (tableData.length === 0) {
@@ -147,8 +224,6 @@ export function TournamentStatisticsTable() {
     );
   }
 
-  const gridClasses =
-    "grid gap-3 md:gap-4 grid-cols-[minmax(0,1.2fr)_minmax(48px,0.5fr)_minmax(80px,1fr)_minmax(70px,0.6fr)_minmax(56px,0.5fr)]";
   const headerClasses =
     "grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0";
   const rowClasses =
