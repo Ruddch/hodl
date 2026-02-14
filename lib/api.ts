@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import type {
   TokenListResponse,
   TokenDetailResponse,
@@ -448,6 +448,23 @@ export function useTournamentLeaderboard(tournamentId: number | undefined, param
   return useQuery({
     queryKey: ["leaderboard", tournamentId, params],
     queryFn: () => getTournamentLeaderboard(tournamentId!, params),
+    enabled: !!tournamentId,
+    ...options,
+  });
+}
+
+const LEADERBOARD_PAGE_SIZE = 50;
+
+export function useTournamentLeaderboardInfinite(
+  tournamentId: number | undefined,
+  options?: { refetchInterval?: number }
+) {
+  return useInfiniteQuery({
+    queryKey: ["leaderboard", tournamentId, "infinite"],
+    queryFn: ({ pageParam }) =>
+      getTournamentLeaderboard(tournamentId!, { page: pageParam, limit: LEADERBOARD_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => (lastPage.has_next ? lastPage.page + 1 : undefined),
     enabled: !!tournamentId,
     ...options,
   });

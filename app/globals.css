@@ -153,7 +153,7 @@ html[data-theme="dark"] {
 
   /* Leaderboard table */
   --leaderboard-row-border: rgba(255, 255, 255, 0.06);
-  --leaderboard-current-user-bg: rgba(99, 102, 241, 0.08);
+  --leaderboard-current-user-bg: rgba(99, 102, 241, 0);
   --leaderboard-position-color: #818cf8;
   --leaderboard-position-border: rgba(129, 140, 248, 0.4);
 
@@ -241,7 +241,7 @@ html[data-theme="dark"] {
 
     /* Leaderboard table */
     --leaderboard-row-border: rgba(255, 255, 255, 0.06);
-    --leaderboard-current-user-bg: rgba(99, 102, 241, 0.08);
+    --leaderboard-current-user-bg: rgba(99, 102, 241, 0);
     --leaderboard-position-color: #818cf8;
     --leaderboard-position-border: rgba(129, 140, 248, 0.4);
 

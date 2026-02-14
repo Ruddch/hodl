@@ -9,6 +9,8 @@ import { BlurCard } from "@/components/BlurCard";
 interface LeaderboardPreviewCardProps {
   tournamentStatus: "registration" | "ongoing" | "finished";
   tournamentId: number | null;
+  /** Эпоха и tournamentId для ссылки View all (query params) */
+  epoch?: string | null;
 }
 
 
@@ -47,7 +49,7 @@ function LeaderboardEmpty() {
 }
 
 // Состояние: турнир идет (ongoing) или финишировал (finished)
-function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
+function LeaderboardActive({ tournamentId, epoch }: { tournamentId: number; epoch?: string | null }) {
   const { data: leaderboardData, isLoading } = useTournamentLeaderboard(
     tournamentId, 
     { limit: 100 },
@@ -70,7 +72,11 @@ function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
       />
       {/* View all link */}
       <Link
-        href="/leaderboard"
+        href={
+          epoch
+            ? `/leaderboard?epoch=${encodeURIComponent(epoch)}&tournamentId=${tournamentId}`
+            : `/leaderboard?tournamentId=${tournamentId}`
+        }
         className="absolute top-6 right-6 text-base font-medium text-[var(--primary-muted)] hover:text-[var(--primary-muted-hover)] transition-colors"
       >
         View all &gt;
@@ -79,7 +85,7 @@ function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
   );
 }
 
-export function LeaderboardPreviewCard({ tournamentStatus, tournamentId }: LeaderboardPreviewCardProps) {
+export function LeaderboardPreviewCard({ tournamentStatus, tournamentId, epoch }: LeaderboardPreviewCardProps) {
   if (tournamentStatus === "registration") {
     return <LeaderboardEmpty />;
   }
@@ -99,5 +105,5 @@ export function LeaderboardPreviewCard({ tournamentStatus, tournamentId }: Leade
     );
   }
 
-  return <LeaderboardActive tournamentId={tournamentId} />;
+  return <LeaderboardActive tournamentId={tournamentId} epoch={epoch} />;
 }

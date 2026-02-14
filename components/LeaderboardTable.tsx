@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { LeaderboardEntry } from "@/lib/types";
@@ -213,11 +213,36 @@ interface LeaderboardTableProps {
   height?: number;
   className?: string;
   onDeckClick?: (entry: LeaderboardEntry) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
-export function LeaderboardTable({ entries, height, className = "", onDeckClick }: LeaderboardTableProps) {
+export function LeaderboardTable({ entries, height, className = "", onDeckClick, onLoadMore, hasMore = false, isLoadingMore = false }: LeaderboardTableProps) {
   const { address } = useAccount();
   const parentRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // IntersectionObserver для подгрузки при скролле до конца
+  useEffect(() => {
+    if (!onLoadMore || !hasMore || isLoadingMore) return;
+
+    const sentinel = sentinelRef.current;
+    const scrollParent = parentRef.current;
+    if (!sentinel || !scrollParent) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { root: scrollParent, rootMargin: "100px", threshold: 0.1 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [onLoadMore, hasMore, isLoadingMore]);
 
   // Определяем, является ли запись текущим пользователем
   const isCurrentUser = (entry: LeaderboardEntry) => {
@@ -301,6 +326,18 @@ export function LeaderboardTable({ entries, height, className = "", onDeckClick 
             );
           })}
         </div>
+        {/* Сентинель для подгрузки при скролле */}
+        {onLoadMore && hasMore && (
+          <div ref={sentinelRef} className="flex justify-center py-4 min-h-[60px]">
+            {isLoadingMore && (
+              <div className="flex gap-1">
+                <span className="w-2 h-2 rounded-full bg-[var(--primary-muted)] animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-2 h-2 rounded-full bg-[var(--primary-muted)] animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-2 h-2 rounded-full bg-[var(--primary-muted)] animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

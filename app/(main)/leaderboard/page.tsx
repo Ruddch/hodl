@@ -1,57 +1,89 @@
 "use client";
 
-import { useTournaments, useTournamentLeaderboard } from "@/lib/api";
-import { useMemo } from "react";
+import { useTournamentLeaderboardInfinite } from "@/lib/api";
+import { useTournamentSelector } from "@/lib/hooks/useTournamentSelector";
 import { LeaderboardCard } from "@/components/LeaderboardCard";
+import { TournamentFilters } from "@/components/tournament";
+import { useMemo, Suspense } from "react";
 
-export default function LeaderboardPage() {
-  // Загружаем турниры
-  const { data: tournamentsData, isLoading: tournamentsLoading } = useTournaments({ limit: 50 });
+function LeaderboardPageContent() {
+  const selector = useTournamentSelector({ defaultStrategy: "finished" });
+  const {
+    epochKeys,
+    currentEpoch,
+    tournamentsInEpoch,
+    currentTournamentId,
+    selectedTournament,
+    isLoading: tournamentsLoading,
+    onSelectEpoch,
+    onSelectTournament,
+  } = selector;
 
-  // Определяем выбранный турнир: последний завершенный или текущий (ongoing)
-  const selectedTournament = useMemo(() => {
-    if (!tournamentsData?.items.length) return null;
+  const {
+    data: leaderboardData,
+    isLoading: leaderboardLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useTournamentLeaderboardInfinite(currentTournamentId ?? undefined, {
+    refetchInterval: 5 * 60 * 1000,
+  });
 
-    // Сначала ищем текущий турнир (ongoing)
-    const ongoing = tournamentsData.items.find((t) => t.status === "ongoing");
-    if (ongoing) return ongoing;
+  const allEntries = useMemo(() => {
+    if (!leaderboardData?.pages) return [];
+    return leaderboardData.pages.flatMap((p) => p.leaderboard);
+  }, [leaderboardData]);
 
-    // Если нет текущего, берем последний завершенный
-    const finished = tournamentsData.items
-      .filter((t) => t.status === "finished")
-      .sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime())[0];
+  const myPosition = leaderboardData?.pages[0]?.my_position;
 
-    return finished || tournamentsData.items[0];
-  }, [tournamentsData]);
+  const isLoading = tournamentsLoading || (leaderboardLoading && !leaderboardData);
 
-  // Загружаем лидерборд выбранного турнира
-  const { data: leaderboardData, isLoading: leaderboardLoading } = useTournamentLeaderboard(
-    selectedTournament?.id ?? undefined,
-    { limit: 100 }
-  );
-
-  const isLoading = tournamentsLoading || leaderboardLoading;
-
-  // Форматируем название турнира
   const tournamentSubtitle = selectedTournament
-    ? `${new Date(selectedTournament.start_date).toLocaleDateString("en-US", {
-        month: "long",
-      })} fire`
+    ? `${new Date(selectedTournament.start_date).toLocaleDateString("en-US", { month: "long" })} fire`
     : undefined;
 
   return (
-    <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0" style={{ height: 'calc(100vh - 3rem)' }}>
-        <LeaderboardCard
-          entries={leaderboardData?.leaderboard || []}
-          title="Leaderboard"
-          subtitle={tournamentSubtitle}
-          showSearch={true}
-          height="full"
-          isLoading={isLoading}
-          emptyMessage={!selectedTournament ? "No tournaments available" : "No participants yet"}
-          myPosition={leaderboardData?.my_position}
-          tournamentId={selectedTournament?.id}
-        />
+    <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0" style={{ height: "calc(100vh - 3rem)" }}>
+      <TournamentFilters
+        isLoading={tournamentsLoading}
+        epochKeys={epochKeys}
+        currentEpoch={currentEpoch}
+        tournamentsInEpoch={tournamentsInEpoch}
+        currentTournamentId={currentTournamentId}
+        onSelectEpoch={onSelectEpoch}
+        onSelectTournament={onSelectTournament}
+        className="mb-4 md:mb-6"
+      />
+
+      <LeaderboardCard
+        entries={allEntries}
+        title="Leaderboard"
+        subtitle={tournamentSubtitle}
+        showSearch={true}
+        height="full"
+        isLoading={isLoading}
+        emptyMessage={!selectedTournament ? "No tournaments available" : "No participants yet"}
+        myPosition={myPosition}
+        tournamentId={selectedTournament?.id}
+        onLoadMore={hasNextPage ? () => fetchNextPage() : undefined}
+        hasMore={!!hasNextPage}
+        isLoadingMore={isFetchingNextPage}
+      />
     </div>
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0" style={{ height: "calc(100vh - 3rem)" }}>
+          <div className="h-10 w-40 bg-[var(--surface-elevated)] rounded-lg animate-pulse mb-6" />
+          <div className="flex-1 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse" />
+        </div>
+      }
+    >
+      <LeaderboardPageContent />
+    </Suspense>
   );
 }

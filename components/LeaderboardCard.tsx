@@ -16,6 +16,10 @@ interface LeaderboardCardProps {
   emptyMessage?: string;
   myPosition?: LeaderboardEntry | null;
   tournamentId?: number;
+  /** Пагинация: подгрузка при скролле до конца */
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
 export function LeaderboardCard({
@@ -28,6 +32,9 @@ export function LeaderboardCard({
   emptyMessage = "No participants yet",
   myPosition,
   tournamentId,
+  onLoadMore,
+  hasMore = false,
+  isLoadingMore = false,
 }: LeaderboardCardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [deckModalOpen, setDeckModalOpen] = useState(false);
@@ -128,6 +135,9 @@ export function LeaderboardCard({
             height={height === "full" ? undefined : height}
             className={height === "full" ? "flex-1 min-h-0" : ""}
             onDeckClick={tournamentId != null ? handleDeckClick : undefined}
+            onLoadMore={onLoadMore}
+            hasMore={hasMore}
+            isLoadingMore={isLoadingMore}
           />
         )}
       </div>
