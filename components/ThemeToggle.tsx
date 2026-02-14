@@ -10,8 +10,8 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       className="p-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-primary)]"
-      aria-label={resolvedTheme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"}
-      title={resolvedTheme === "dark" ? "Светлая тема" : "Тёмная тема"}
+      aria-label={resolvedTheme === "dark" ? "Enable light theme" : "Enable dark theme"}
+      title={resolvedTheme === "dark" ? "Light theme" : "Dark theme"}
     >
       {resolvedTheme === "dark" ? (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
