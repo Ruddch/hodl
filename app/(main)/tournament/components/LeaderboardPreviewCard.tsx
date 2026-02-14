@@ -52,7 +52,7 @@ function LeaderboardEmpty() {
 function LeaderboardActive({ tournamentId, epoch }: { tournamentId: number; epoch?: string | null }) {
   const { data: leaderboardData, isLoading } = useTournamentLeaderboard(
     tournamentId, 
-    { limit: 100 },
+    { limit: 20 },
     { refetchInterval: 5 * 60 * 1000 } // Обновление каждые 5 минут
   );
 
