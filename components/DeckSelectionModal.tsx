@@ -162,26 +162,27 @@ export function DeckSelectionModal({
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0"
+        style={{ backgroundColor: "var(--overlay)" }}
         onClick={onClose}
       />
 
       {/* Modal - full screen на мобилке, центрированная на десктопе */}
-      <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-[1280px] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden sm:mx-4">
+      <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-[1280px] bg-[var(--surface)] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden sm:mx-4">
         {/* Header */}
         <div className="p-4 sm:p-6 pb-2 sm:pb-4 flex-shrink-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <h2 className="text-base sm:text-xl font-bold text-black leading-tight">
+              <h2 className="text-base sm:text-xl font-bold text-[var(--text-primary)] leading-tight">
                 Register pack for the {tournamentName} tournament
               </h2>
-              <p className="text-xs sm:text-sm text-zinc-500 mt-1">
+              <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-1">
                 Select {DECK_SIZE} cards you want to bet this week
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors flex-shrink-0"
+              className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0"
               aria-label="Close"
             >
               <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,7 +198,7 @@ export function DeckSelectionModal({
               placeholder="Search by card name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:max-w-sm px-3 sm:px-4 py-2 sm:py-2.5 bg-zinc-100 border border-zinc-200 rounded-xl text-sm text-black placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:max-w-sm px-3 sm:px-4 py-2 sm:py-2.5 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-placeholder)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-opacity-50"
             />
           </div>
         </div>
@@ -216,13 +217,13 @@ export function DeckSelectionModal({
               {Array.from({ length: Math.min(10, cardsPerRow * 2) }).map((_, i) => (
                 <div
                   key={i}
-                  className="bg-zinc-200 rounded-xl animate-pulse"
+                  className="bg-[var(--surface-elevated)] rounded-xl animate-pulse"
                   style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
                 />
               ))}
             </div>
           ) : filteredCards.length === 0 ? (
-            <div className="flex items-center justify-center h-48 text-zinc-500">
+            <div className="flex items-center justify-center h-48 text-[var(--text-muted)]">
               {searchQuery ? "No cards found" : "You don't have any cards yet"}
             </div>
           ) : (
@@ -264,7 +265,7 @@ export function DeckSelectionModal({
                           disabled={!canSelect && !isSelected}
                           className={`relative rounded-[10px] sm:rounded-[14px] overflow-visible transition-all ${
                             isSelected
-                              ? "ring-2 sm:ring-3 ring-[#2200EF] ring-offset-2 sm:ring-offset-6"
+                              ? "ring-2 sm:ring-3 ring-[var(--primary)] ring-offset-2 sm:ring-offset-6"
                               : canSelect
                               ? ""
                               : "opacity-40 cursor-not-allowed"
@@ -273,7 +274,7 @@ export function DeckSelectionModal({
                         >
                           {/* SELECTED label */}
                           {isSelected && (
-                            <div className="absolute flex items-center justify-center top-0 -translate-y-[14px] sm:-translate-y-[20px] left-1/2 -translate-x-1/2 z-10 px-2 py-1 sm:px-3 sm:py-2 bg-[#2200EF] rounded-[4px]">
+                            <div className="absolute flex items-center justify-center top-0 -translate-y-[14px] sm:-translate-y-[20px] left-1/2 -translate-x-1/2 z-10 px-2 py-1 sm:px-3 sm:py-2 bg-[var(--primary)] rounded-[4px]">
                               <span className="text-[8px] sm:text-[10px] leading-[8px] sm:leading-[10px] font-semibold text-white">SELECTED</span>
                             </div>
                           )}
@@ -285,11 +286,11 @@ export function DeckSelectionModal({
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-zinc-200 to-zinc-300 flex flex-col items-center justify-center p-2">
-                                <span className="text-sm font-bold text-zinc-600">
+                              <div className="w-full h-full bg-gradient-to-br from-[var(--surface-elevated)] to-[var(--surface-hover)] flex flex-col items-center justify-center p-2">
+                                <span className="text-sm font-bold text-[var(--text-muted)]">
                                   {card.token_symbol}
                                 </span>
-                                <span className="text-xs text-zinc-500">
+                                <span className="text-xs text-[var(--text-secondary)]">
                                   {card.rarity_name}
                                 </span>
                               </div>
@@ -326,14 +327,14 @@ export function DeckSelectionModal({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-zinc-200 flex items-center justify-center">
-                          <span className="text-xs text-zinc-500">{card.token_symbol}</span>
+                        <div className="w-full h-full bg-[var(--surface-elevated)] flex items-center justify-center">
+                          <span className="text-xs text-[var(--text-muted)]">{card.token_symbol}</span>
                         </div>
                       )}
                       {/* Remove button */}
                       <button
                         onClick={() => removeCard(card.user_card_id)}
-                        className="absolute cursor-pointer -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-7 h-7 sm:w-5 sm:h-5 bg-white border border-[#EBEBEB] rounded-md sm:rounded-lg flex items-center justify-center hover:bg-zinc-100 transition-colors backdrop-blur-[150px]"
+                        className="absolute cursor-pointer -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-7 h-7 sm:w-5 sm:h-5 bg-[var(--surface)] border border-[var(--border)] rounded-md sm:rounded-lg flex items-center justify-center hover:bg-[var(--surface-hover)] transition-colors backdrop-blur-[150px]"
                         style={{
                           boxShadow: '0px 1px 3px 0px rgba(79, 79, 79, 0.1)'
                         }}
@@ -349,7 +350,7 @@ export function DeckSelectionModal({
                         >
                           <path 
                             d="M9.32044 3.10693L3.10681 9.32057M3.10681 3.10693L9.32044 9.32057" 
-                            stroke="#2200EF" 
+                            stroke="var(--primary)" 
                             strokeLinecap="round" 
                             strokeLinejoin="round"
                           />
@@ -358,8 +359,8 @@ export function DeckSelectionModal({
                     </>
                   ) : (
                     /* Empty slot with blur background */
-                    <div className="w-full h-full rounded-lg sm:rounded-xl border-2 border-dashed border-zinc-300 bg-[#D8D4FF]/29 backdrop-blur-xl flex items-center justify-center">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-full h-full rounded-lg sm:rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--badge-purple-muted)] backdrop-blur-xl flex items-center justify-center">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
@@ -370,28 +371,28 @@ export function DeckSelectionModal({
           </div>
 
           {/* Footer content */}
-          <div className="bg-white border-t border-zinc-100 px-4 sm:px-8 py-4 sm:py-5">
+          <div className="bg-[var(--surface)] border-t border-[var(--border)] px-4 sm:px-8 py-4 sm:py-5">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-end gap-4 sm:gap-6">
               {/* Weight Info and Actions */}
               <div className="flex flex-col w-full sm:items-end sm:max-w-[470px] gap-3 sm:gap-4">
                 {/* Weight info with progress bar */}
                 <div className="w-full">
                   <div className="flex items-baseline justify-between mb-2">
-                    <span className="text-sm sm:text-[16px] font-semibold text-black">Weight of the pack</span>
-                    <span className="text-xs sm:text-sm font-bold text-black">
+                    <span className="text-sm sm:text-[16px] font-semibold text-[var(--text-primary)]">Weight of the pack</span>
+                    <span className="text-xs sm:text-sm font-bold text-[var(--text-primary)]">
                       {currentWeight}/{tournament.weight_limit}
                     </span>
                   </div>
-                  <div className="w-full h-2 bg-zinc-200 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-[var(--surface-elevated)] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-300"
                       style={{ 
                         width: `${Math.min((currentWeight / tournament.weight_limit) * 100, 100)}%`,
-                        backgroundColor: '#2200EF'
+                        backgroundColor: 'var(--primary)'
                       }}
                     />
                   </div>
-                  <p className="text-xs text-zinc-400 mt-1">
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
                     {selectedCards.length} cards selected
                   </p>
                 </div>
@@ -401,21 +402,18 @@ export function DeckSelectionModal({
                   <button
                     onClick={onClose}
                     disabled={isRegistering}
-                    className="flex-1 py-2.5 sm:py-3 bg-white rounded-xl sm:rounded-2xl text-sm sm:text-base font-medium text-[#2200EF] leading-none tracking-normal text-center transition-colors disabled:opacity-50"
-                    style={{ 
-                      border: '1px solid rgba(34, 0, 239, 0.08)',
-                      boxShadow: '0px 0px 1px 0px rgba(133, 109, 253, 0.1), 0px 1px 1px 0px rgba(133, 109, 253, 0.09)'
-                    }}
+                    className="flex-1 py-2.5 sm:py-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl sm:rounded-2xl text-sm sm:text-base font-medium text-[var(--primary)] leading-none tracking-normal text-center transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleRegister}
                     disabled={selectedCards.length !== DECK_SIZE || isRegistering}
-                    className="flex-1 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl border border-[#2200EF] disabled:border-zinc-300 disabled:bg-zinc-300 disabled:cursor-not-allowed text-sm sm:text-base leading-none text-white font-medium transition-colors hover:opacity-90"
-                    style={{ 
-                      backgroundColor: selectedCards.length === DECK_SIZE && !isRegistering ? '#2200EF' : undefined
-                    }}
+                    className={`flex-1 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl border text-sm sm:text-base leading-none font-medium transition-colors hover:opacity-90 disabled:cursor-not-allowed ${
+                      selectedCards.length === DECK_SIZE && !isRegistering
+                        ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                        : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--text-muted)] disabled:border-[var(--border)] disabled:bg-[var(--surface-elevated)]"
+                    }`}
                   >
                     {isRegistering ? "Registering..." : "Register"}
                   </button>

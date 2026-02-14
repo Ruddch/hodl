@@ -222,15 +222,15 @@ function TournamentPageContent() {
         <div className="flex flex-col md:flex-row gap-4 md:gap-9 mb-8">
           {tournamentsLoading ? (
             <>
-              <div className="h-10 w-40 bg-zinc-200 rounded-lg animate-pulse"></div>
+              <div className="h-10 w-40 bg-[var(--surface-elevated)] rounded-lg animate-pulse"></div>
               <div className="flex gap-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-10 w-20 bg-zinc-200 rounded-lg animate-pulse"></div>
+                  <div key={i} className="h-10 w-20 bg-[var(--surface-elevated)] rounded-lg animate-pulse"></div>
                 ))}
               </div>
             </>
           ) : epochKeys.length === 0 ? (
-            <p className="text-zinc-500">No tournaments available</p>
+            <p className="text-[var(--text-muted)]">No tournaments available</p>
           ) : (
             <>
               <EpochSelector
@@ -260,9 +260,9 @@ function TournamentPageContent() {
         {/* Основной контент */}
         {isLoading && !currentTournament ? (
           <div className="space-y-5">
-            <div className="h-48 bg-zinc-200 rounded-[30px] animate-pulse"></div>
-            <div className="h-64 bg-zinc-200 rounded-[30px] animate-pulse"></div>
-            <div className="h-64 bg-zinc-200 rounded-[30px] animate-pulse"></div>
+            <div className="h-48 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse"></div>
+            <div className="h-64 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse"></div>
+            <div className="h-64 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse"></div>
           </div>
         ) : currentTournament ? (
           <div className="space-y-5">
@@ -286,8 +286,8 @@ function TournamentPageContent() {
             />
           </div>
         ) : (
-          <div className="bg-white rounded-2xl p-8 text-center">
-            <p className="text-zinc-500">Select a tournament</p>
+          <div className="bg-[var(--surface)] rounded-2xl p-8 text-center">
+            <p className="text-[var(--text-muted)]">Select a tournament</p>
           </div>
         )}
       </div>
@@ -313,9 +313,9 @@ export default function TournamentPage() {
     <Suspense fallback={
       <div className="max-w-8xl mx-auto">
           <div className="space-y-5">
-            <div className="h-48 bg-zinc-200 rounded-[30px] animate-pulse"></div>
-            <div className="h-64 bg-zinc-200 rounded-[30px] animate-pulse"></div>
-            <div className="h-64 bg-zinc-200 rounded-[30px] animate-pulse"></div>
+            <div className="h-48 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse"></div>
+            <div className="h-64 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse"></div>
+            <div className="h-64 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse"></div>
           </div>
       </div>
     }>

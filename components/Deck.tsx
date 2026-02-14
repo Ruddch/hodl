@@ -34,7 +34,7 @@ function EmptyDeck({ onStartClick, canRegister }: EmptyDeckProps) {
     <>
       {/* Header */}
       <div className="relative px-8 pt-8">
-        <h3 className="text-2xl font-semibold leading-8 text-black">My deck</h3>
+        <h3 className="text-2xl font-semibold leading-8 text-[var(--text-primary)]">My deck</h3>
       </div>
 
       {/* Content */}
@@ -50,17 +50,17 @@ function EmptyDeck({ onStartClick, canRegister }: EmptyDeckProps) {
           />
         </div>
 
-        <p className="text-normal md:text-xl font-semibold text-black mb-6 ">
+        <p className="text-normal md:text-xl font-semibold text-[var(--text-primary)] mb-6 ">
           You haven&apos;t registered any deck yet
         </p>
 
         <button
           onClick={onStartClick}
           disabled={!canRegister}
-          className={`px-8 py-3 bg-white rounded-full text-base font-medium flex items-center gap-2 shadow-md transition-colors ${
+          className={`px-8 py-3 bg-[var(--surface)] rounded-full text-base font-medium flex items-center gap-2 shadow-md transition-colors ${
             canRegister 
-              ? "text-[#5B4AD9] hover:bg-gray-50 cursor-pointer" 
-              : "text-gray-400 cursor-not-allowed"
+              ? "text-[var(--primary-muted)] hover:bg-[var(--surface-hover)] cursor-pointer" 
+              : "text-[var(--text-muted)] cursor-not-allowed"
           }`}
         >
           Let&apos;s start
@@ -147,24 +147,24 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
     <>
       {/* Header */}
       <div className="flex items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-4 relative flex-wrap gap-2 sm:gap-4">
-        <h3 className="text-xl md:text-2xl font-semibold leading-8 text-black">{title}</h3>
+        <h3 className="text-xl md:text-2xl font-semibold leading-8 text-[var(--text-primary)]">{title}</h3>
         <div className="flex gap-1.5 sm:gap-4 ml-0 flex-nowrap">
           <span
             className={`px-1.5 sm:px-2.5 h-6 sm:h-8 flex items-center text-[10px] sm:text-[13px] font-semibold rounded whitespace-nowrap ${
-              badgesActive ? "text-[#171645] bg-[#CAC1F3]" : "text-[#171645] bg-[rgba(169,171,205,0.2)]"
+              badgesActive ? "text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)]" : "text-[var(--badge-purple-text)] bg-[var(--badge-purple-muted)]"
             }`}
           >
             {placeLabel}: {position != null ? position : "—"}
           </span>
           <span
             className={`px-1.5 sm:px-2.5 h-6 sm:h-8 flex items-center text-[10px] sm:text-[13px] font-semibold rounded whitespace-nowrap ${
-              badgesActive ? "text-[#171645] bg-[#CAC1F3]" : "text-[#171645] bg-[rgba(169,171,205,0.2)]"
+              badgesActive ? "text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)]" : "text-[var(--badge-purple-text)] bg-[var(--badge-purple-muted)]"
             }`}
           >
             DECK SCORE: {formatScore(finalScore)}
           </span>
           {prizes && prizes.length > 0 && (
-            <span className="px-1.5 sm:px-2.5 h-6 sm:h-8 flex items-center text-[10px] sm:text-[13px] font-semibold rounded text-[#171645] bg-[#CAC1F3] whitespace-nowrap">
+            <span className="px-1.5 sm:px-2.5 h-6 sm:h-8 flex items-center text-[10px] sm:text-[13px] font-semibold rounded text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)] whitespace-nowrap">
               REWARD: {formatReward(prizes)}
             </span>
           )}
@@ -172,7 +172,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
             <button
               onClick={onUnregister}
               disabled={isUnregistering}
-              className="cursor-pointer px-3 py-0 bg-[#2200EF] hover:opacity-90 text-white text-sm font-medium rounded-[5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer px-3 py-0 bg-[var(--primary)] hover:opacity-90 text-white text-sm font-medium rounded-[5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 boxShadow: "0px 4px 8px 0px rgba(74, 106, 255, 0.3), 0px 2px 4px 0px rgba(74, 106, 255, 0.2)"
               }}
@@ -182,7 +182,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
           )}
         </div>
         {!isOngoing && !isViewMode && (
-          <p className="text-[13px] font-medium text-black ml-auto">
+          <p className="text-[13px] font-medium text-[var(--text-primary)] ml-auto">
             Deck stats appears after the tournament&apos;s start
           </p>
         )}
@@ -195,7 +195,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="min-w-0 rounded-[14px] bg-white/50 animate-pulse sm:flex-1 sm:max-w-[220px]"
+                className="min-w-0 rounded-[14px] bg-[var(--surface-muted)] animate-pulse sm:flex-1 sm:max-w-[220px]"
                 style={{
                   aspectRatio: `${CARD_ASPECT_RATIO}`,
                   boxShadow:
@@ -236,7 +236,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
                           });
                         }
                       }}
-                      className="rounded-[7%] overflow-hidden bg-white mb-2 cursor-pointer hover:ring-2 hover:ring-[#5B4AD9]/50 hover:ring-offset-2 transition-shadow"
+                      className="rounded-[7%] overflow-hidden bg-[var(--surface)] mb-2 cursor-pointer hover:ring-2 hover:ring-[var(--primary-muted)]/50 hover:ring-offset-2 transition-shadow"
                       style={{
                         aspectRatio: `${CARD_ASPECT_RATIO}`,
                         boxShadow:
@@ -253,11 +253,11 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
                     </div>
                     {showCardStats && (
                       <div className="mt-0 gap-1 sm:gap-2 sm:mt-2 flex flex-col justify-center">
-                        <div className="text-xs sm:text-sm font-normal text-black/50 leading-4 tracking-normal flex justify-between items-center">
+                        <div className="text-xs sm:text-sm font-normal text-[var(--text-secondary)] leading-4 tracking-normal flex justify-between items-center">
                           <span>Score:</span>
-                          <span className="text-black">{formatScore(card.calculated_score)}</span>
+                          <span className="text-[var(--text-primary)]">{formatScore(card.calculated_score)}</span>
                         </div>
-                        <div className="text-xs sm:text-sm font-normal leading-[12px] sm:leading-[16px] tracking-normal flex justify-between items-center text-black/50">
+                        <div className="text-xs sm:text-sm font-normal leading-[12px] sm:leading-[16px] tracking-normal flex justify-between items-center text-[var(--text-secondary)]">
                           <span>Price change:</span>
                           <span className={`flex items-center gap-1 ${mcapChange.isPositive ? "text-green-600" : "text-red-600"}`}>
                             {mcapChange.isPositive ? (
@@ -284,7 +284,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="min-w-0 rounded-[14px] bg-white sm:flex-1 sm:max-w-[220px]"
+                className="min-w-0 rounded-[14px] bg-[var(--surface)] sm:flex-1 sm:max-w-[220px]"
                 style={{
                   aspectRatio: `${CARD_ASPECT_RATIO}`,
                   boxShadow:
@@ -348,7 +348,7 @@ export function Deck({
   if (wrapInBlurCard) {
     return (
       <div data-onboarding="deck">
-        <BlurCard blurValue={150} backgroundColor="rgba(141, 121, 253, 0.5)">
+        <BlurCard blurValue={150} backgroundColor="rgba(141, 121, 253, 0.7)">
           {content}
         </BlurCard>
       </div>

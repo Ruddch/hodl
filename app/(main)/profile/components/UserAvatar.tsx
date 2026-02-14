@@ -37,13 +37,13 @@ export function UserAvatar({ profile }: UserAvatarProps) {
         walletAddress={profile.wallet_address} 
         size={96} 
         border={true}
-        borderColor="white"
+        borderColor="var(--profile-avatar-border)"
         avatarUrl={profile.avatar_url}
       />
       
       {/* Имя и реферальная ссылка */}
       <div className="flex flex-row items-center gap-0 flex-wrap min-w-0 flex-1">
-        <h1 className="text-xl mr-2  md:text-2xl font-semibold text-black truncate min-w-0 max-w-[100%]" title={displayName}>
+        <h1 className="text-xl mr-2 md:text-2xl font-semibold text-[var(--text-primary)] truncate min-w-0 max-w-[100%]" title={displayName}>
           {displayName}
         </h1>
         {profile.referral_link && (
@@ -51,7 +51,7 @@ export function UserAvatar({ profile }: UserAvatarProps) {
             type="button"
             onClick={handleCopyRefLink}
             title="Copy ref link"
-            className="flex cursor-pointer items-center gap-1 md:gap-2 px-0 py-0 md:px-2 md:py-1.5 text-sm text-black/70 hover:text-black hover:bg-black/5 rounded-lg transition-colors"
+            className="flex cursor-pointer items-center gap-1 md:gap-2 px-0 py-0 md:px-2 md:py-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
           >
             <span>{copied ? "Copied!" : "Referral link"}</span>
             {copied ? (

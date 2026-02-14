@@ -158,24 +158,24 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
       {rect && (
         <div
           ref={tooltipRef}
-          className="absolute z-[81] bg-white rounded-xl shadow-lg border border-black/5 min-w-[280px] max-w-[400px] p-5 pointer-events-auto"
+          className="absolute z-[81] bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] min-w-[280px] max-w-[400px] p-5 pointer-events-auto"
           style={{ ...getTooltipPosition(rect, placement), ...transitionStyle }}
         >
           {/* Стрелка вверх (если placement bottom) */}
           {placement === "bottom" && (
             <div
-              className="absolute left-1/2 -translate-x-1/2 -top-2 w-4 h-4 bg-white rotate-45 border-l border-t border-black/5"
+              className="absolute left-1/2 -translate-x-1/2 -top-2 w-4 h-4 bg-[var(--surface)] rotate-45 border-l border-t border-[var(--border)]"
             />
           )}
           {placement === "top" && (
-            <div className="absolute left-1/2 -translate-x-1/2 -bottom-2 w-4 h-4 bg-white rotate-45 border-r border-b border-black/5" />
+            <div className="absolute left-1/2 -translate-x-1/2 -bottom-2 w-4 h-4 bg-[var(--surface)] rotate-45 border-r border-b border-[var(--border)]" />
           )}
 
           {/* Кнопка закрытия */}
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-black/5 text-black/60 hover:text-black transition-colors"
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             aria-label="Close"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,11 +183,11 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
             </svg>
           </button>
 
-          <h3 className="text-lg font-semibold text-black pr-10 mb-2">{currentStep.title}</h3>
-          <p className="text-[15px] text-black/70 leading-relaxed mb-5">{currentStep.content}</p>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] pr-10 mb-2">{currentStep.title}</h3>
+          <p className="text-[15px] text-[var(--text-muted)] leading-relaxed mb-5">{currentStep.content}</p>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-black/50">
+            <span className="text-sm text-[var(--text-secondary)]">
               {stepIndex + 1} of {steps.length} steps
             </span>
             <div className="flex gap-2">
@@ -195,7 +195,7 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="px-4 py-2 text-sm font-medium text-black/70 hover:text-black hover:bg-black/5 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
                 >
                   Back
                 </button>
@@ -203,7 +203,7 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-[#2200EF] hover:opacity-90 rounded-[15px] transition-opacity"
+                className="px-5 py-2.5 text-sm font-medium text-white bg-[var(--primary)] hover:opacity-90 rounded-[15px] transition-opacity"
               >
                 {isLastStep ? "Finish" : "Next"}
               </button>

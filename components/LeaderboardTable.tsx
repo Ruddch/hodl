@@ -38,12 +38,13 @@ function PositionBadge({ position }: { position: number; isCurrentUser: boolean 
     <>
       {/* Мобилка: без рамки */}
       <span
-        className="md:hidden shrink-0 text-[#4E6AFF]"
+        className="md:hidden shrink-0"
         style={{
           fontFamily: "var(--font-league-gothic), sans-serif",
           fontSize: "14px",
           fontWeight: 400,
           lineHeight: 1,
+          color: "var(--leaderboard-position-color)",
         }}
       >
         {position}
@@ -56,12 +57,12 @@ function PositionBadge({ position }: { position: number; isCurrentUser: boolean 
           minWidth: "32px",
           height: "32px",
           borderRadius: "8px",
-          border: "1px solid #CAC1F3",
+          border: "1px solid var(--leaderboard-position-border)",
           fontFamily: "var(--font-league-gothic), sans-serif",
           fontSize: "14px",
           fontWeight: 400,
           lineHeight: "32px",
-          color: "#4E6AFF",
+          color: "var(--leaderboard-position-color)",
           textAlign: "center",
         }}
       >
@@ -95,7 +96,7 @@ function PlayerCards({ cards }: { cards: LeaderboardEntry["cards"] }) {
         {emptyCards.map((i) => (
           <div
             key={i}
-            className="w-8 md:w-8 rounded-[7%] bg-white shrink-0"
+            className="w-8 md:w-8 rounded-[7%] bg-[var(--surface)] shrink-0"
             style={cardStyle}
           />
         ))}
@@ -108,7 +109,7 @@ function PlayerCards({ cards }: { cards: LeaderboardEntry["cards"] }) {
       {cards.slice(0, 5).map((card, index) => (
         <div
           key={card.card_id || index}
-          className="w-8 md:w-8 rounded-[7%] overflow-hidden bg-white shrink-0 relative"
+          className="w-8 md:w-8 rounded-[7%] overflow-hidden bg-[var(--surface)] shrink-0 relative"
           style={{ ...cardStyle, zIndex: index }}
         >
           {card.rendered_image_url && (
@@ -154,15 +155,15 @@ function LeaderboardRow({
           userId={entry.user_id}
           avatarUrl={entry.avatar_url}
         />
-        <span className="text-base font-medium text-black truncate">
+        <span className="text-base font-medium text-[var(--text-primary)] truncate">
           {playerName}
-          {isCurrentUser && <span className="text-[#5B4AD9] ml-1">(you)</span>}
+          {isCurrentUser && <span className="text-[var(--primary-muted)] ml-1">(you)</span>}
         </span>
       </div>
 
       {/* Score */}
       <div className="min-w-0 shrink-0">
-        <span className="text-base font-medium text-black">
+        <span className="text-base font-medium text-[var(--text-primary)]">
           {formatScore(entry.final_score)}
         </span>
       </div>
@@ -174,14 +175,16 @@ function LeaderboardRow({
 
       {/* Rewards */}
       <div className="min-w-0 shrink-0">
-        <span className="text-base font-medium text-black">{reward}</span>
+        <span className="text-base font-medium text-[var(--text-primary)]">{reward}</span>
       </div>
     </>
   );
 
-  const rowClassName = `items-center py-3 border-b border-[rgba(0,0,0,0.05)] ${
-    isCurrentUser ? "bg-[rgba(242,242,242,0.5)]" : ""
-  } ${canOpenDeck ? "cursor-pointer transition-colors leaderboard-row-hover" : ""}`;
+  const rowClassName = `items-center py-3 border-b border-[var(--leaderboard-row-border)] ${
+    isCurrentUser ? "bg-[var(--leaderboard-current-user-bg)]" : ""
+  } ${
+    canOpenDeck ? "cursor-pointer transition-colors leaderboard-row-hover" : ""
+  }`;
 
   const gridClasses =
     "grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4";
@@ -232,7 +235,7 @@ export function LeaderboardTable({ entries, height, className = "", onDeckClick 
 
   if (entries.length === 0) {
     return (
-      <div className="py-8 text-center text-zinc-500">
+      <div className="py-8 text-center text-[var(--text-muted)]">
         No participants yet
       </div>
     );
@@ -242,19 +245,19 @@ export function LeaderboardTable({ entries, height, className = "", onDeckClick 
     <div className={`min-w-0 overflow-hidden ${height === undefined ? `flex flex-col ${className}` : className || ""}`}>
       {/* Table Header */}
       <div
-        className="grid items-center py-2 border-b border-[rgba(0,0,0,0.1)] mb-2 flex-shrink-0 grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4"
+        className="grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4"
       >
         <div>
-          <span className="text-sm font-medium text-zinc-600">Player</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">Player</span>
         </div>
         <div>
-          <span className="text-sm font-medium text-zinc-600">Score</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">Score</span>
         </div>
         <div>
-          <span className="text-sm font-medium text-zinc-600">Cards</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">Cards</span>
         </div>
         <div>
-          <span className="text-sm font-medium text-zinc-600">Rewards</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">Rewards</span>
         </div>
       </div>
 

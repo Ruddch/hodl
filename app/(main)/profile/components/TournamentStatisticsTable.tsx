@@ -41,7 +41,7 @@ function RewardButton({
     return (
       <button
         disabled
-        className="px-4 py-2 bg-gray-400 text-white text-sm font-semibold rounded-lg cursor-not-allowed"
+        className="px-4 py-2 bg-[var(--surface-elevated)] text-[var(--text-muted)] text-sm font-semibold rounded-lg cursor-not-allowed"
       >
         CLAIMED
       </button>
@@ -50,13 +50,13 @@ function RewardButton({
 
   if (status === "soon") {
     return (
-      <span className="text-sm text-black/50">Soon</span>
+      <span className="text-sm text-[var(--text-secondary)]">Soon</span>
     );
   }
 
   return (
     <button
-      className="px-4 py-2 bg-[#4A6AFF] hover:bg-[#3A5AEF] text-white text-sm font-semibold rounded-lg transition-colors"
+      className="px-4 py-2 bg-[var(--primary)] hover:opacity-90 text-white text-sm font-semibold rounded-lg transition-colors"
     >
       Claim reward
     </button>
@@ -152,7 +152,7 @@ export function TournamentStatisticsTable() {
   if (true) {
     return (
       <div className="text-center py-12">
-        <p className="text-black/50">No tournament statistics available</p>
+        <p className="text-[var(--text-secondary)]">No tournament statistics available</p>
       </div>
     );
   }

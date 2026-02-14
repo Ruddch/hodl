@@ -35,11 +35,11 @@ export default function ProfilePage() {
     <div className="w-full max-w-8xl min-w-0 mx-auto min-h-full">
       <Onboarding steps={steps} run={run} onClose={close} onComplete={complete} />
       {!isAuthenticated ? (
-          <p className="text-center text-zinc-500">Please connect your wallet to view your profile</p>
+          <p className="text-center text-[var(--text-muted)]">Please connect your wallet to view your profile</p>
         ) : isLoading ? (
-          <p className="text-center text-zinc-500">Loading...</p>
+          <p className="text-center text-[var(--text-muted)]">Loading...</p>
         ) : !profile ? (
-          <p className="text-center text-zinc-500">Profile not found</p>
+          <p className="text-center text-[var(--text-muted)]">Profile not found</p>
         ) : (
           <div className="space-y-4 sm:space-y-5 min-w-0">
             {/* Баннер профиля */}

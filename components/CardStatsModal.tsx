@@ -158,7 +158,7 @@ function StatChart({
 
   if (chartData.length === 0) {
     return (
-      <div className="flex items-center justify-center flex-1 min-h-[120px] text-black/40 text-sm">
+      <div className="flex items-center justify-center flex-1 min-h-[120px] text-[var(--text-muted)] text-sm">
         No {mode} data
       </div>
     );
@@ -171,7 +171,7 @@ function StatChart({
           data={chartData}
           margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
         >
-          <CartesianGrid strokeDasharray="0" stroke="rgba(0,0,0,0.06)" vertical={false} />
+          <CartesianGrid strokeDasharray="0" stroke="var(--border)" vertical={false} />
           <XAxis
             dataKey="name"
             axisLine={false}
@@ -185,7 +185,7 @@ function StatChart({
                 <g transform={`translate(${Number(x)},${Number(y)})`}>
                   <text
                     textAnchor="middle"
-                    fill="#000000"
+                    fill="var(--text-primary)"
                     fontSize={12}
                     fontWeight={400}
                   >
@@ -204,7 +204,7 @@ function StatChart({
             dataKey="value"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#000000", fontSize: 14, textAnchor: "end", fontWeight: 400 }}
+            tick={{ fill: "var(--text-primary)", fontSize: 14, textAnchor: "end", fontWeight: 400 }}
             width={55}
             tickFormatter={(v) =>
               mode === "price" && priceAxisConfig
@@ -220,12 +220,12 @@ function StatChart({
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid rgba(0,0,0,0.08)",
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              boxShadow: "var(--modal-shadow)",
             }}
-            labelStyle={{ color: "rgba(0,0,0,0.7)", fontWeight: 600 }}
+            labelStyle={{ color: "var(--text-muted)", fontWeight: 600 }}
             formatter={(val: number | undefined) =>
               [val != null ? (mode === "price" ? formatPrice(val) : val.toLocaleString()) : "—", tooltipLabel]
             }
@@ -233,9 +233,9 @@ function StatChart({
           <Line
             type="monotone"
             dataKey="value"
-            stroke="#2200EF"
+            stroke="var(--primary)"
             strokeWidth={2.5}
-            dot={{ fill: "white", stroke: "#2200EF", strokeWidth: 2, r: 5 }}
+            dot={{ fill: "var(--surface)", stroke: "var(--primary)", strokeWidth: 2, r: 5 }}
             activeDot={{ r: 6 }}
           />
         </ComposedChart>
@@ -272,10 +272,14 @@ export function CardStatsModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div
+        className="absolute inset-0"
+        style={{ backgroundColor: "var(--overlay)" }}
+        onClick={onClose}
+      />
 
       <div
-        className="relative bg-white w-full max-w-[920px] max-h-[90vh] overflow-hidden mx-4 rounded-[30px] border border-white/10"
+        className="relative bg-[var(--surface)] w-full max-w-[920px] max-h-[90vh] overflow-hidden mx-4 rounded-[30px] border border-[var(--border-subtle)]"
         onClick={(e) => e.stopPropagation()}
       >
         <BlurCard
@@ -291,7 +295,7 @@ export function CardStatsModal({
           <div className="relative max-h-[90vh] flex flex-col">
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 z-20 shrink-0 p-2 cursor-pointer text-zinc-500 hover:text-black transition-colors rounded-lg hover:bg-black/5"
+              className="absolute top-4 right-4 z-20 shrink-0 p-2 cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-lg hover:bg-[var(--surface-hover)]"
               aria-label="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,7 +308,7 @@ export function CardStatsModal({
                 {/* Left skeleton: card + stats */}
                 <div className="flex-shrink-0 w-full sm:w-[230px] flex flex-row sm:flex-col items-end sm:items-start gap-3 sm:gap-0 sm:items-center">
                   <div
-                    className="rounded-[14px] shrink-0 w-[45%] sm:w-full sm:mb-4 bg-black/10 animate-pulse"
+                    className="rounded-[14px] shrink-0 w-[45%] sm:w-full sm:mb-4 bg-[var(--surface-hover)] animate-pulse"
                     style={{
                       aspectRatio: CARD_ASPECT_RATIO,
                       boxShadow:
@@ -314,20 +318,20 @@ export function CardStatsModal({
                   <div className="flex flex-col flex-1 min-w-0 sm:w-full gap-5 sm:gap-4">
                     {[1, 2, 3, 4, 5].map((i) => (
                       <div key={i} className="flex justify-between items-center gap-2">
-                        <div className="h-4 w-14 bg-black/10 rounded animate-pulse" />
-                        <div className="h-4 w-16 bg-black/10 rounded animate-pulse" />
+                        <div className="h-4 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+                        <div className="h-4 w-16 bg-[var(--surface-hover)] rounded animate-pulse" />
                       </div>
                     ))}
                   </div>
                 </div>
                 {/* Right skeleton: tabs + chart */}
                 <div className="flex-1 flex flex-col min-w-0 min-h-[320px] sm:min-h-0">
-                  <div className="flex gap-[1px] rounded-[10px] p-[2px] w-fit mb-4 flex-shrink-0" style={{ backgroundColor: "rgba(137, 137, 137, 0.14)" }}>
+                  <div className="flex gap-[1px] rounded-[10px] p-[2px] w-fit mb-4 flex-shrink-0" style={{ backgroundColor: "var(--input-bg)" }}>
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-10 w-16 sm:w-20 bg-black/10 rounded-[10px] animate-pulse" />
+                      <div key={i} className="h-10 w-16 sm:w-20 bg-[var(--surface-hover)] rounded-[10px] animate-pulse" />
                     ))}
                   </div>
-                  <div className="flex-1 min-h-[320px] sm:min-h-0 rounded-xl bg-black/10 animate-pulse" />
+                  <div className="flex-1 min-h-[320px] sm:min-h-0 rounded-xl bg-[var(--surface-hover)] animate-pulse" />
                 </div>
               </div>
             ) : error ? (
@@ -356,7 +360,7 @@ export function CardStatsModal({
                   )}
                   <div className="flex flex-col flex-1 min-w-0 sm:w-full text-[14px] sm:text-[14px] leading-7 sm:leading-8 font-normal">
                     <div className="flex justify-between items-center">
-                      <span className="text-black/50">Rarity</span>
+                      <span className="text-[var(--text-secondary)]">Rarity</span>
                       <span
                         className="text-right font-medium"
                         style={{ color: rarityColor ?? "inherit" }}
@@ -365,33 +369,33 @@ export function CardStatsModal({
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-black/50">Score</span>
-                      <span className="text-black text-right">{calculatedScore != null ? calculatedScore.toLocaleString() : "—"}</span>
+                      <span className="text-[var(--text-secondary)]">Score</span>
+                      <span className="text-[var(--text-primary)] text-right">{calculatedScore != null ? calculatedScore.toLocaleString() : "—"}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-black/50">Current price</span>
-                      <span className="text-black text-right">{currentPrice != null ? formatPrice(currentPrice) : "—"}</span>
+                      <span className="text-[var(--text-secondary)]">Current price</span>
+                      <span className="text-[var(--text-primary)] text-right">{currentPrice != null ? formatPrice(currentPrice) : "—"}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-black/50">Market cap</span>
-                      <span className="text-black text-right">{marketCap != null ? formatMarketCap(marketCap) : "—"}</span>
+                      <span className="text-[var(--text-secondary)]">Market cap</span>
+                      <span className="text-[var(--text-primary)] text-right">{marketCap != null ? formatMarketCap(marketCap) : "—"}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-black/50">Weight</span>
-                      <span className="text-black text-right">{currentWeight != null ? currentWeight : "—"}</span>
+                      <span className="text-[var(--text-secondary)]">Weight</span>
+                      <span className="text-[var(--text-primary)] text-right">{currentWeight != null ? currentWeight : "—"}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Chart — min-h нужен, иначе в flex-col (мобилка) блок получает 0 высоты и ResponsiveContainer возвращает null */}
                 <div className="flex-1 flex flex-col min-w-0 min-h-[320px] sm:min-h-0">
-                  <div className="flex gap-[1px] rounded-[10px] p-[2px] w-fit mb-4 flex-shrink-0" style={{ backgroundColor: "rgba(137, 137, 137, 0.14)" }}>
+                  <div className="flex gap-[1px] rounded-[10px] p-[2px] w-fit mb-4 flex-shrink-0 bg-[var(--input-bg)]">
                     <button
                       onClick={() => setChartMode("price")}
                       className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
                         chartMode === "price"
-                          ? "bg-white text-black border border-[rgba(0,0,0,0.08)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
-                          : "text-black/50 hover:text-black"
+                          ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
+                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                       }`}
                     >
                       Price
@@ -400,8 +404,8 @@ export function CardStatsModal({
                       onClick={() => setChartMode("score")}
                       className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
                         chartMode === "score"
-                          ? "bg-white text-black border border-[rgba(0,0,0,0.08)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
-                          : "text-black/50 hover:text-black"
+                          ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
+                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                       }`}
                     >
                       Score
@@ -410,8 +414,8 @@ export function CardStatsModal({
                       onClick={() => setChartMode("weight")}
                       className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
                         chartMode === "weight"
-                          ? "bg-white text-black border border-[rgba(0,0,0,0.08)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
-                          : "text-black/50 hover:text-black"
+                          ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
+                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                       }`}
                     >
                       Weight

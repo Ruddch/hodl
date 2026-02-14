@@ -17,7 +17,7 @@ export function ProfileBanner({ onLogout }: ProfileBannerProps) {
         {/* Кнопка выхода */}
         <button
           onClick={onLogout}
-          className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors"
+          className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[rgba(255,255,255,0.2)] transition-colors"
           aria-label="Logout"
         >
           <svg

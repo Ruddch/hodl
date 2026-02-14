@@ -53,13 +53,13 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
       <div data-onboarding="profile-cards" className="p-4 sm:p-6 md:p-8">
         {/* Toggle переключатель */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex gap-[1px] rounded-[16px] p-2 w-fit" style={{ backgroundColor: 'rgba(137, 137, 137, 0.14)' }}>
+          <div className="flex gap-[1px] rounded-[16px] p-2 w-fit bg-[var(--input-bg)]">
             <button
               onClick={() => onTabChange("cards")}
               className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
                 activeTab === "cards"
-                  ? "bg-white text-black border border-[rgba(0,0,0,0.08)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
-                  : "text-black/50 hover:text-black"
+                  ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               My cards
@@ -68,8 +68,8 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
               onClick={() => onTabChange("tournaments")}
               className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors whitespace-nowrap ${
                 activeTab === "tournaments"
-                  ? "bg-white text-black border border-[rgba(0,0,0,0.08)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
-                  : "text-black/50 hover:text-black"
+                  ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               Tournament statistics
@@ -77,7 +77,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
           </div>
 
           {activeTab === "cards" && (
-            <p className="text-xs sm:text-sm text-black/50">
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
               {expiresLabel
                 ? `Cards will be available till ${expiresLabel}`
                 : "Cards will be available till next tournament"}
@@ -90,7 +90,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
           <div>
             {groupedCards.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-black/50">No cards yet</p>
+                <p className="text-[var(--text-secondary)]">No cards yet</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
@@ -121,9 +121,9 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
                         });
                       }
                     }}
-                    className="relative rounded-2xl overflow-hidden border border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-[#5B4AD9]/50 hover:ring-offset-2 transition-shadow"
+                    className="relative rounded-2xl overflow-hidden border border-[var(--border-subtle)] shadow-sm cursor-pointer hover:ring-2 hover:ring-[var(--primary-muted)]/50 hover:ring-offset-2 transition-shadow"
                     style={{
-                      background: "linear-gradient(135deg, rgba(242, 242, 242, 0.5) 0%, rgba(200, 180, 255, 0.3) 100%)"
+                      background: "var(--profile-card-bg)"
                     }}
                   >
                     {/* Изображение карты */}
@@ -136,7 +136,7 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
                           className="object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-200 to-purple-200 p-4">
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[var(--surface-elevated)] to-[var(--badge-purple-muted)] p-4">
                           {group.token_image_url && (
                             <Image
                               src={group.token_image_url}
@@ -146,10 +146,10 @@ export function CardsSection({ profile, activeTab, onTabChange }: CardsSectionPr
                               className="mb-3"
                             />
                           )}
-                          <p className="text-sm font-semibold text-black uppercase text-center">
+                          <p className="text-sm font-semibold text-[var(--text-primary)] uppercase text-center">
                             {group.token_name}
                           </p>
-                          <p className="text-xs text-black/60 mt-1 uppercase">
+                          <p className="text-xs text-[var(--text-secondary)] mt-1 uppercase">
                             {group.token_symbol}
                           </p>
                         </div>

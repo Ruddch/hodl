@@ -17,8 +17,8 @@ export function WeekSelector({ tournaments, selectedId, onSelect }: WeekSelector
             onClick={() => onSelect(t.id)}
             className={`cursor-pointer text-base font-medium leading-none tracking-normal transition-colors ${
               isSelected
-                ? "text-black"
-                : "text-black/50 hover:text-black/70"
+                ? "text-[var(--text-primary)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-muted)]"
             }`}
           >
             Week {tournaments.length - index}

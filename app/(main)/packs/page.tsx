@@ -74,8 +74,8 @@ export default function PacksPage() {
         {/* Main Content */}
         <BlurCard className="mt-6" backgroundColor="rgba(255, 179, 215, 1)">
           <div data-onboarding="packs-section" className="px-8 py-8">
-            <h2 className="text-xl md:text-2xl font-bold text-black mb-2">My packs</h2>
-            <p className="text-base text-zinc-600 mb-8">
+            <h2 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] mb-2">My packs</h2>
+            <p className="text-base text-[var(--text-muted)] mb-8">
               In beta you will get 5 new packs to bet every week
             </p>
           
@@ -94,7 +94,7 @@ export default function PacksPage() {
                   <div 
                     className="absolute w-12 h-12 flex items-center justify-center shadow-lg z-10"
                     style={{
-                      backgroundColor: 'rgba(222, 94, 87, 1)',
+                      backgroundColor: 'var(--badge-count)',
                       borderRadius: '11px',
                       border: '1px solid rgba(255, 255, 255, 0.44)',
                       top: '-12px',
@@ -113,8 +113,8 @@ export default function PacksPage() {
                 disabled={!isAuthenticated || totalPacks === 0 || openPackMutation.isPending}
                 className={`my-7 flex flex-col items-center justify-center gap-2 w-[198px] h-12 pt-3 pb-3 rounded-[15px] text-base font-medium text-white leading-none tracking-normal text-center transition-colors ${
                   isAuthenticated && totalPacks > 0 && !openPackMutation.isPending
-                    ? "bg-[#2200EF] hover:opacity-90 cursor-pointer"
-                    : "bg-gray-400 cursor-not-allowed"
+                    ? "bg-[var(--primary)] hover:opacity-90 cursor-pointer"
+                    : "bg-[var(--text-muted)] cursor-not-allowed"
                 }`}
               >
                 {openPackMutation.isPending

@@ -21,7 +21,7 @@ function LeaderboardEmpty() {
       <BlurCard backgroundColor="rgba(210, 247, 243, 0.8)">
       {/* Header */}
       <div className="relative px-8 pt-8">
-        <h3 className="text-2xl font-semibold leading-8 text-black">Leaderboard</h3>
+        <h3 className="text-2xl font-semibold leading-8 text-[var(--text-primary)]">Leaderboard</h3>
       </div>
 
       {/* Content */}
@@ -37,7 +37,7 @@ function LeaderboardEmpty() {
           />
         </div>
 
-          <p className="text-normal md:text-xl font-semibold text-black text-center">
+          <p className="text-normal md:text-xl font-semibold text-[var(--text-primary)] text-center">
           You will see your results here after the tournament starts
         </p>
       </div>
@@ -71,7 +71,7 @@ function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
       {/* View all link */}
       <Link
         href="/leaderboard"
-        className="absolute top-6 right-6 text-base font-medium text-[#5B4AD9] hover:text-[#4a3bb8] transition-colors"
+        className="absolute top-6 right-6 text-base font-medium text-[var(--primary-muted)] hover:text-[var(--primary-muted-hover)] transition-colors"
       >
         View all &gt;
       </Link>
@@ -88,9 +88,9 @@ export function LeaderboardPreviewCard({ tournamentStatus, tournamentId }: Leade
     return (
       <div
         data-onboarding="leaderboard-preview"
-        className="rounded-[30px] border border-white/10 p-8 text-center text-zinc-500"
+        className="rounded-[30px] border border-[var(--border-subtle)] p-8 text-center text-[var(--text-muted)]"
         style={{
-          backgroundColor: "rgba(242, 242, 242, 0.07)",
+          backgroundColor: "var(--surface-elevated)",
           backdropFilter: "blur(75px)",
         }}
       >

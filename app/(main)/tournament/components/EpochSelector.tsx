@@ -40,7 +40,7 @@ export function EpochSelector({ epochs, selectedEpoch, onSelect, className }: Ep
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`appearance-none bg-white border border-[rgba(34,0,239,0.08)] rounded-[15px] px-4 py-3 text-base font-medium text-black leading-none tracking-normal cursor-pointer focus:outline-none min-w-[198px] h-12 flex items-center justify-between w-full transition-all hover:ring-2 hover:ring-purple-400/20 ${
+        className={`appearance-none bg-[var(--surface)] border border-[var(--border)] rounded-[15px] px-4 py-3 text-base font-medium text-[var(--text-primary)] leading-none tracking-normal cursor-pointer focus:outline-none min-w-[198px] h-12 flex items-center justify-between w-full transition-all hover:ring-2 hover:ring-purple-400/20 ${
           isOpen 
             ? "ring-2 ring-purple-400/30 shadow-[0px_7px_2px_0px_rgba(133,109,253,0),0px_5px_2px_0px_rgba(133,109,253,0.01),0px_3px_2px_0px_rgba(133,109,253,0.05),0px_1px_1px_0px_rgba(133,109,253,0.09),0px_0px_1px_0px_rgba(133,109,253,0.1),0_0_0_2px_rgba(168,85,247,0.2)]" 
             : "shadow-[0px_7px_2px_0px_rgba(133,109,253,0),0px_5px_2px_0px_rgba(133,109,253,0.01),0px_3px_2px_0px_rgba(133,109,253,0.05),0px_1px_1px_0px_rgba(133,109,253,0.09),0px_0px_1px_0px_rgba(133,109,253,0.1)]"
@@ -48,7 +48,7 @@ export function EpochSelector({ epochs, selectedEpoch, onSelect, className }: Ep
       >
         <span>{selectedEpoch.charAt(0).toUpperCase() + selectedEpoch.slice(1)}</span>
         <svg
-          className={`w-4 h-4 text-black transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`w-4 h-4 text-[var(--text-primary)] transition-transform ${isOpen ? "rotate-180" : ""}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -58,17 +58,17 @@ export function EpochSelector({ epochs, selectedEpoch, onSelect, className }: Ep
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-full bg-white border border-[rgba(34,0,239,0.08)] rounded-[15px] shadow-lg z-[70] overflow-hidden">
+        <div className="absolute top-full left-0 mt-2 w-full bg-[var(--surface)] border border-[var(--border)] rounded-[15px] shadow-lg z-[70] overflow-hidden">
           <div className="max-h-60 overflow-y-auto">
             {epochs.map((epoch) => (
               <button
                 key={epoch}
                 type="button"
                 onClick={() => handleSelect(epoch)}
-                className={`w-full text-left px-4 py-3 text-base font-medium text-black leading-none tracking-normal transition-colors ${
+                className={`w-full text-left px-4 py-3 text-base font-medium text-[var(--text-primary)] leading-none tracking-normal transition-colors ${
                   selectedEpoch === epoch
-                    ? "bg-blue-50"
-                    : "hover:bg-zinc-50"
+                    ? "bg-[var(--surface-hover)]"
+                    : "hover:bg-[var(--surface-hover)]"
                 }`}
               >
                 {epoch.charAt(0).toUpperCase() + epoch.slice(1)}
