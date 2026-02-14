@@ -10,7 +10,7 @@ export const TournamentIcon: React.FC<{
   width = 22,
   height = 22,
   className,
-  strokeColor = 'black',
+  strokeColor = 'var(--nav-item-inactive)',
   strokeOpacity = 0.5,
 }) => {
   return (
@@ -51,7 +51,7 @@ export const LeaderboardIcon: React.FC<{
   width = 16,
   height = 16,
   className,
-  strokeColor = 'black',
+  strokeColor = 'var(--nav-item-inactive)',
   strokeOpacity = 1,
 }) => {
   return (
@@ -93,9 +93,9 @@ export const PacksIcon: React.FC<{
   width = 16,
   height = 16,
   className,
-  strokeColor = 'black',
+  strokeColor = 'var(--nav-item-inactive)',
   strokeOpacity = 0.5,
-  fillColor = '#F6F6F6',
+  fillColor = 'var(--icon-bg)',
 }) => {
   return (
     <svg

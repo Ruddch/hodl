@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { UserInfo } from "./UserInfo";
 import { Logo } from "./Logo";
+import { ThemeToggle } from "./ThemeToggle";
 import { useTournaments, useAvailablePacks } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { TournamentIcon, LeaderboardIcon, PacksIcon } from "./Icons";
@@ -31,10 +32,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const isLeaderboardActive = pathname === "/leaderboard" || pathname?.startsWith("/leaderboard");
   const isPacksActive = pathname === "/packs" || pathname?.startsWith("/packs");
 
-  // Цвета для иконок
-  const tournamentIconColor = isTournamentActive ? "black" : "rgba(0, 0, 0, 0.5)";
-  const leaderboardIconColor = isLeaderboardActive ? "black" : "rgba(0, 0, 0, 0.5)";
-  const packsIconColor = isPacksActive ? "black" : "rgba(0, 0, 0, 0.5)";
+  // Цвета для иконок (используем CSS-переменные для поддержки тёмной темы)
+  const tournamentIconColor = isTournamentActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
+  const leaderboardIconColor = isLeaderboardActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
+  const packsIconColor = isPacksActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
 
   // Закрываем меню при переходе на другую страницу на мобильных
   useEffect(() => {
@@ -46,25 +47,28 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <aside
       className={`
-        w-72 bg-[#f6f6f6] flex flex-col h-dvh fixed left-0 top-0 rounded-r-[30px] border border-white/10 backdrop-blur-[75px] z-50
+        w-72 bg-[var(--sidebar-bg)] flex flex-col h-dvh fixed left-0 top-0 rounded-r-[30px] border border-[var(--border-subtle)] backdrop-blur-[75px] z-50
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0 md:static
       `}
     >
       {/* Logo и кнопка закрытия — скрыты на мобильных при открытом сайдбаре (есть в навбаре) */}
-      <div className={`px-8 pt-8 flex items-center justify-between shrink-0 hidden display-none md:block md:flex`}>
+      <div className={`px-8 pt-8 flex items-center justify-between shrink-0 hidden display-none md:flex`}>
         <div className="flex items-center gap-1">
           <Logo />
-          <span className="text-[26px] font-medium text-black">Hodleague</span>
+          <span className="text-[26px] font-medium text-[var(--text-primary)]">Hodleague</span>
+        </div>
+        <div className="hidden md:block shrink-0">
+          <ThemeToggle />
         </div>
         <button
           onClick={onClose}
-          className="md:hidden p-2 hover:bg-white/50 rounded-lg transition-colors"
+          className="md:hidden p-2 hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
           aria-label="Close menu"
         >
           <svg
-            className="w-6 h-6 text-black"
+            className="w-6 h-6 text-[var(--text-primary)]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -91,8 +95,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               onClick={onClose}
               className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
                 isTournamentActive
-                  ? "bg-white text-black"
-                  : "text-black/50 hover:text-black"
+                  ? "bg-[var(--nav-item-active-bg)] text-[var(--nav-item-active-text)]"
+                  : "text-[var(--nav-item-inactive)] hover:text-[var(--nav-item-inactive-hover)]"
               }`}
             >
               {/* Tournament icon */}
@@ -100,11 +104,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 width={16} 
                 height={16} 
                 strokeColor={tournamentIconColor}
-                strokeOpacity={1}
+                strokeOpacity={isTournamentActive ? 1 : 0.5}
               />
               <span className="text-[16px]">Tournament</span>
               {hasOpenTournament && (
-                <span className="ml-auto px-2.5 py-1 leading-[16px] text-[10px] font-semibold rounded bg-[#BAFFD9] text-black">
+                <span className="ml-auto px-2.5 py-1 leading-[16px] text-[10px] font-semibold rounded bg-[var(--badge-opened)] text-[var(--badge-opened-text)]">
                   OPENED
                 </span>
               )}
@@ -118,8 +122,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               onClick={onClose}
               className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
                 isLeaderboardActive
-                  ? "bg-white text-black"
-                  : "text-black/50 hover:text-black"
+                  ? "bg-[var(--nav-item-active-bg)] text-[var(--nav-item-active-text)]"
+                  : "text-[var(--nav-item-inactive)] hover:text-[var(--nav-item-inactive-hover)]"
               }`}
             >
               {/* Leaderboard icon */}
@@ -127,7 +131,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 width={16} 
                 height={16} 
                 strokeColor={leaderboardIconColor}
-                strokeOpacity={1}
+                strokeOpacity={isLeaderboardActive ? 1 : 0.5}
               />
               <span className="text-[16px]">Leaderboard</span>
             </Link>
@@ -140,8 +144,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               onClick={onClose}
               className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
                 isPacksActive
-                  ? "bg-white text-black"
-                  : "text-black/50 hover:text-black"
+                  ? "bg-[var(--nav-item-active-bg)] text-[var(--nav-item-active-text)]"
+                  : "text-[var(--nav-item-inactive)] hover:text-[var(--nav-item-inactive-hover)]"
               }`}
             >
               {/* Packs icon */}
@@ -150,6 +154,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 height={16} 
                 strokeColor={packsIconColor}
                 strokeOpacity={isPacksActive ? 1 : 0.5}
+                fillColor="var(--icon-bg)"
               />
               <span className="text-[16px]">Packs</span>
               {availablePacks > 0 && (
@@ -158,9 +163,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   style={{
                     width: '20px',
                     height: '20px',
-                    backgroundColor: 'rgba(222, 94, 87, 1)',
+                    backgroundColor: 'var(--badge-count)',
                     borderRadius: '4px',
-                    border: '1px solid rgba(255, 255, 255, 0.44)',
+                    border: '1px solid var(--packs-badge-border)',
                   }}
                 >
                   {availablePacks}

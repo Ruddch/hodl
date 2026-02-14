@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import type {
   TokenListResponse,
   TokenDetailResponse,
@@ -21,6 +21,7 @@ import type {
   VerifyRequest,
   AuthResponse,
   UserProfileResponse,
+  MyTournamentsResponse,
   CardCatalogResponse,
   CardDetailResponse,
   CardTournamentStatsResponse,
@@ -262,6 +263,10 @@ export async function getUserProfile(
   return fetchApi(`/api/users/${walletAddress}${params}`);
 }
 
+export async function getMyTournaments(): Promise<MyTournamentsResponse> {
+  return fetchApi("/api/users/me/tournaments");
+}
+
 // ==================== Cards API ====================
 export interface GetCardsParams {
   rarity?: string | null;
@@ -453,6 +458,23 @@ export function useTournamentLeaderboard(tournamentId: number | undefined, param
   });
 }
 
+const LEADERBOARD_PAGE_SIZE = 50;
+
+export function useTournamentLeaderboardInfinite(
+  tournamentId: number | undefined,
+  options?: { refetchInterval?: number }
+) {
+  return useInfiniteQuery({
+    queryKey: ["leaderboard", tournamentId, "infinite"],
+    queryFn: ({ pageParam }) =>
+      getTournamentLeaderboard(tournamentId!, { page: pageParam, limit: LEADERBOARD_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => (lastPage.has_next ? lastPage.page + 1 : undefined),
+    enabled: !!tournamentId,
+    ...options,
+  });
+}
+
 export function useTournamentDeck(tournamentId: number | undefined, deckId: number | undefined) {
   return useQuery({
     queryKey: ["deck", tournamentId, deckId],
@@ -499,6 +521,14 @@ export function useMyProfile(includeCards: boolean = false, enabled: boolean = t
   return useQuery({
     queryKey: ["myProfile", includeCards],
     queryFn: () => getMyProfile(includeCards),
+    enabled,
+  });
+}
+
+export function useMyTournaments(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ["myTournaments"],
+    queryFn: getMyTournaments,
     enabled,
   });
 }

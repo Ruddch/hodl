@@ -24,11 +24,14 @@ export function DeckDetailModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div
+        className="absolute inset-0"
+        style={{ backgroundColor: "var(--overlay)" }}
+        onClick={onClose}
+      />
      
       <div
-        className="relative bg-white w-full max-w-[900px] max-h-[90vh] overflow-hidden mx-4 rounded-[30px] border border-white/10"
-
+        className="relative bg-[var(--surface)] w-full max-w-[900px] max-h-[90vh] overflow-hidden mx-4 rounded-[30px] border border-[var(--border-subtle)]"
         onClick={(e) => e.stopPropagation()}
       >
         <BlurCard blurValue={150} backgroundColor="rgba(141, 121, 253, 0.5)">
@@ -42,7 +45,7 @@ export function DeckDetailModal({
                   size={40}
                   avatarUrl={deck.avatar_url ?? undefined}
                 />
-                <span className="text-base font-medium text-black truncate">
+                <span className="text-base font-medium text-[var(--text-primary)] truncate">
                   {deck.nickname ||
                     (deck.wallet_address
                       ? `${deck.wallet_address.slice(0, 6)}...${deck.wallet_address.slice(-4)}`
@@ -54,7 +57,7 @@ export function DeckDetailModal({
             )}
             <button
               onClick={onClose}
-              className="p-2 cursor-pointer text-zinc-500 hover:text-black transition-colors rounded-lg hover:bg-black/5 flex-shrink-0"
+              className="p-2 cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-lg hover:bg-[var(--surface-hover)] flex-shrink-0"
               aria-label="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,7 +72,7 @@ export function DeckDetailModal({
               wrapInBlurCard={false}
             />
           ) : (
-            <div className="px-6 pb-8 text-zinc-500">Deck not found</div>
+            <div className="px-6 pb-8 text-[var(--text-muted)]">Deck not found</div>
           )}
           </div>
           </BlurCard>

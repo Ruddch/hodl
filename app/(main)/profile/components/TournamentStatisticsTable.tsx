@@ -1,20 +1,92 @@
 "use client";
 
-import Image from "next/image";
-import { useTournaments, getTournamentLeaderboard } from "@/lib/api";
+import { useMyTournaments } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
-import type { Tournament, LeaderboardEntry } from "@/lib/types";
+import { CardStatsModal } from "@/components/CardStatsModal";
+import type { MyTournamentEntry, MyTournamentCard } from "@/lib/types";
 
-interface TournamentStatsRow {
-  tournament: Tournament;
-  position: number;
-  score: number;
-  cards: LeaderboardEntry["cards"];
-  date: string;
-  rewards: number;
-  rewardStatus: "available" | "claimed" | "soon";
+const gridClasses =
+  "grid gap-3 md:gap-4 grid-cols-[minmax(0,1.2fr)_minmax(48px,0.5fr)_minmax(80px,1fr)_minmax(70px,0.6fr)_minmax(56px,0.5fr)]";
+
+function TournamentStatisticsSkeleton() {
+  return (
+    <div className="min-w-0 overflow-x-auto">
+      {/* Desktop skeleton */}
+      <div className="hidden md:block min-w-0">
+        <div className={`${gridClasses} grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2`}>
+          <div className="h-4 w-20 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-4 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-4 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-4 w-16 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-4 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+        </div>
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className={`${gridClasses} grid items-center py-3 border-b border-[var(--leaderboard-row-border)]`}
+          >
+            <div className="flex flex-col gap-1.5">
+              <div className="h-4 w-28 bg-[var(--surface-hover)] rounded animate-pulse" />
+              <div className="h-3.5 w-16 bg-[var(--surface-hover)] rounded animate-pulse" />
+            </div>
+            <div className="h-4 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
+            <div className="flex gap-1.5">
+              {[1, 2, 3, 4, 5].map((j) => (
+                <div
+                  key={j}
+            className="w-8 rounded-[7%] bg-[var(--surface-hover)] animate-pulse shrink-0"
+                    style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
+                />
+              ))}
+            </div>
+            <div className="h-4 w-20 bg-[var(--surface-hover)] rounded animate-pulse" />
+            <div className="h-4 w-10 bg-[var(--surface-hover)] rounded animate-pulse" />
+          </div>
+        ))}
+      </div>
+
+      {/* Mobile skeleton */}
+      <div className="md:hidden space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="p-4 rounded-xl border border-[var(--leaderboard-row-border)] bg-[var(--surface)]/50"
+          >
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex flex-col gap-1.5">
+                <div className="h-4 w-28 bg-[var(--surface-hover)] rounded animate-pulse" />
+                <div className="h-3 w-16 bg-[var(--surface-hover)] rounded animate-pulse" />
+              </div>
+              <div className="h-4 w-20 bg-[var(--surface-hover)] rounded animate-pulse shrink-0" />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-[var(--leaderboard-row-border)]">
+              <div className="h-3 w-12 bg-[var(--surface-hover)] rounded animate-pulse mb-2" />
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((j) => (
+                  <div
+                    key={j}
+                    className="w-8 rounded-[7%] bg-[var(--surface-hover)] animate-pulse shrink-0"
+                    style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function formatDate(dateString: string): string {
@@ -26,223 +98,317 @@ function formatDate(dateString: string): string {
   });
 }
 
-function getTournamentName(tournament: Tournament): string {
-  const date = new Date(tournament.start_date);
+function getOrdinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function getTournamentName(entry: MyTournamentEntry): string {
+  const date = new Date(entry.end_date || entry.start_date);
   const month = date.toLocaleString("en-US", { month: "long" });
   return `${month.charAt(0).toUpperCase() + month.slice(1)} fire`;
 }
 
-function RewardButton({ 
-  status 
-}: { 
-  status: "available" | "claimed" | "soon" 
-}) {
-  if (status === "claimed") {
-    return (
-      <button
-        disabled
-        className="px-4 py-2 bg-gray-400 text-white text-sm font-semibold rounded-lg cursor-not-allowed"
-      >
-        CLAIMED
-      </button>
-    );
-  }
-
-  if (status === "soon") {
-    return (
-      <span className="text-sm text-black/50">Soon</span>
-    );
-  }
-
-  return (
-    <button
-      className="px-4 py-2 bg-[#4A6AFF] hover:bg-[#3A5AEF] text-white text-sm font-semibold rounded-lg transition-colors"
-    >
-      Claim reward
-    </button>
-  );
+function formatScore(score: number): string {
+  return score.toLocaleString("en-US", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+  });
 }
 
-export function TournamentStatisticsTable() {
-  // const { user } = useAuth();
-  // const [tableData, setTableData] = useState<TournamentStatsRow[]>([]);
-  // const [loadingTournaments, setLoadingTournaments] = useState<Set<number>>(new Set());
-  
-  // // Получаем все турниры, в которых пользователь участвовал
-  // const { data: tournamentsData, isLoading: tournamentsLoading } = useTournaments({
-  //   limit: 50,
-  // });
+interface TournamentCardsProps {
+  cards: MyTournamentCard[];
+  onCardClick?: (card: MyTournamentCard) => void;
+}
 
-  // // Получаем турниры, в которых пользователь зарегистрирован (первые 10 для оптимизации)
-  // const userTournaments = useMemo(() => {
-  //   const tournaments = tournamentsData?.items
-  //     .filter(t => t.is_registered === true)
-  //     .sort((a, b) => new Date(b.end_date || b.start_date).getTime() - new Date(a.end_date || a.start_date).getTime())
-  //     .slice(0, 10) || [];
-  //   return tournaments;
-  // }, [tournamentsData]);
+function TournamentCards({ cards, onCardClick }: TournamentCardsProps) {
+  const cardStyle = { aspectRatio: `${CARD_ASPECT_RATIO}` };
+  const emptyCards = [1, 2, 3, 4, 5];
 
-  // // Загружаем данные для каждого турнира
-  // useEffect(() => {
-  //   if (!user || userTournaments.length === 0) return;
-
-  //   const loadTournamentData = async (tournament: Tournament) => {
-  //     // Помечаем турнир как загружаемый
-  //     setLoadingTournaments(prev => new Set(prev).add(tournament.id));
-
-  //     try {
-  //       const leaderboardData = await getTournamentLeaderboard(tournament.id, { limit: 100 });
-  //       const myPosition = leaderboardData.my_position;
-
-  //       if (myPosition) {
-  //         const rewards = myPosition.prizes?.reduce(
-  //           (sum, prize) => sum + Number(prize.amount || 0),
-  //           0
-  //         ) || 0;
-
-  //         // Определяем статус награды (пока заглушка - всегда "available")
-  //         // TODO: Добавить проверку статуса награды из API
-  //         const rewardStatus: "available" | "claimed" | "soon" = "available";
-
-  //         const rowData: TournamentStatsRow = {
-  //           tournament,
-  //           position: myPosition.position,
-  //           score: myPosition.final_score,
-  //           cards: myPosition.cards || [],
-  //           date: tournament.start_date,
-  //           rewards,
-  //           rewardStatus,
-  //         };
-
-  //         setTableData(prev => {
-  //           const filtered = prev.filter(row => row.tournament.id !== tournament.id);
-  //           const updated = [...filtered, rowData];
-  //           return updated.sort((a, b) => 
-  //             new Date(b.date).getTime() - new Date(a.date).getTime()
-  //           );
-  //         });
-  //       }
-  //     } catch (error) {
-  //       console.error(`Failed to load tournament ${tournament.id}:`, error);
-  //     } finally {
-  //       setLoadingTournaments(prev => {
-  //         const next = new Set(prev);
-  //         next.delete(tournament.id);
-  //         return next;
-  //       });
-  //     }
-  //   };
-
-  //   // Загружаем данные для всех турниров параллельно
-  //   userTournaments.forEach(tournament => {
-  //     loadTournamentData(tournament);
-  //   });
-  // }, [user, userTournaments]);
-
-  // const isLoading = tournamentsLoading || loadingTournaments.size > 0;
-
-  // if (isLoading && tableData.length === 0) {
-  //   return (
-  //     <div className="text-center py-12">
-  //       <p className="text-black/50">Loading tournament statistics...</p>
-  //     </div>
-  //   );
-  // }
-
-  if (true) {
+  if (!cards || cards.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-black/50">No tournament statistics available</p>
+      <div className="flex gap-1.5">
+        {emptyCards.slice(0, 5).map((i) => (
+          <div
+            key={i}
+            className="w-8 rounded-[7%] bg-[var(--surface)] shrink-0"
+            style={cardStyle}
+          />
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      {/* <table className="w-full">
-        <thead>
-          <tr className="border-b border-black/10">
-            <th className="text-left py-3 px-4 text-sm font-medium text-black">Tournament</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-black">Score</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-black">Cards</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-black">Date</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-black">Rewards</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tableData.map((row) => (
-            <tr key={row.tournament.id} className="border-b border-black/5">
-              <td className="py-4 px-4">
-                <div>
-                  <p className="text-base font-medium text-black">{getTournamentName(row.tournament)}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M8 2L10 6L14 7L11 10L11.5 14L8 12L4.5 14L5 10L2 7L6 6L8 2Z"
-                        fill="rgba(0, 0, 0, 0.5)"
-                      />
-                    </svg>
-                    <p className="text-sm text-black/50">{row.position} place</p>
-                  </div>
-                </div>
-              </td>
-
-              <td className="py-4 px-4">
-                <p className="text-base font-medium text-black">
-                  {row.score.toLocaleString("en-US")}
-                </p>
-              </td>
-
-              <td className="py-4 px-4">
-                <div className="flex gap-1.5">
-                  {row.cards.slice(0, 4).map((card, index) => (
-                    <div
-                      key={card.card_id || index}
-                      className="w-8 rounded-[7%] overflow-hidden bg-white"
-                      style={{
-                        aspectRatio: `${CARD_ASPECT_RATIO}`,
-                      }}
-                    >
-                      {card.rendered_image_url ? (
-                        <Image
-                          src={card.rendered_image_url}
-                          alt={card.token_name}
-                          width={32}
-                          height={Math.round(32 / CARD_ASPECT_RATIO)}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-zinc-200" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </td>
-
-              <td className="py-4 px-4">
-                <p className="text-base font-medium text-black">
-                  {formatDate(row.date)}
-                </p>
-              </td>
-
-              <td className="py-4 px-4">
-                <div className="flex items-center gap-3">
-                  <p className="text-base font-medium text-black">
-                    {row.rewards.toLocaleString("en-US")}
-                  </p>
-                  <RewardButton status={row.rewardStatus} />
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table> */}
+    <div className="flex gap-1.5">
+      {cards.slice(0, 5).map((card, index) => {
+        const CardWrapper = onCardClick ? "button" : "div";
+        const wrapperProps = onCardClick
+          ? {
+              onClick: () => onCardClick(card),
+              className: "w-8 rounded-[7%] overflow-hidden bg-[var(--surface)] shrink-0 relative cursor-pointer hover:ring-2 hover:ring-[var(--primary-muted)]/50 hover:ring-offset-1 transition-shadow focus:outline-none focus:ring-2 focus:ring-[var(--primary-muted)]",
+              type: "button" as const,
+            }
+          : {
+              className: "w-8 rounded-[7%] overflow-hidden bg-[var(--surface)] shrink-0 relative",
+            };
+        return (
+          <CardWrapper
+            key={card.card_id || index}
+            style={{ ...cardStyle, zIndex: index }}
+            {...wrapperProps}
+          >
+            {card.rendered_image_url && (
+              <img
+                style={cardStyle}
+                src={card.rendered_image_url}
+                alt={card.token_name}
+                className="w-full h-full object-cover pointer-events-none"
+              />
+            )}
+          </CardWrapper>
+        );
+      })}
     </div>
+  );
+}
+
+export function TournamentStatisticsTable() {
+  const { isAuthenticated } = useAuth();
+  const { data, isLoading } = useMyTournaments(isAuthenticated);
+  const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  const [selectedCardInfo, setSelectedCardInfo] = useState<{
+    imageUrl?: string | null;
+    name?: string;
+    rarity?: string;
+  } | null>(null);
+
+  const handleCardClick = (card: MyTournamentCard) => {
+    setSelectedCardId(card.card_id);
+    setSelectedCardInfo({
+      imageUrl: card.rendered_image_url,
+      name: card.token_name,
+      rarity: card.rarity_name,
+    });
+  };
+
+  const tableData = useMemo(() => {
+    const tournaments = data?.tournaments ?? [];
+    return tournaments
+      .filter((t) => t.status === "finished")
+      .map((t) => ({
+        entry: t,
+        position: t.position,
+        score: t.final_score,
+        cards: t.cards,
+        date: t.end_date || t.start_date,
+        rewards:
+          t.prizes?.reduce((sum, p) => sum + Number(p.amount || 0), 0) ?? 0,
+      }))
+      .sort(
+        (a, b) =>
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+  }, [data]);
+
+  if (isLoading && tableData.length === 0) {
+    return <TournamentStatisticsSkeleton />;
+  }
+
+  if (tableData.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-[var(--text-secondary)]">No tournament statistics available</p>
+      </div>
+    );
+  }
+
+  const headerClasses =
+    "grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0";
+  const rowClasses =
+    "grid items-center py-3 border-b border-[var(--leaderboard-row-border)]";
+
+  return (
+    <>
+    <div className="min-w-0 overflow-x-auto">
+      {/* Desktop: таблица */}
+      <div className="hidden md:block min-w-0">
+        {/* Header */}
+        <div className={`${gridClasses} ${headerClasses}`}>
+          <div>
+            <span className="text-sm font-medium text-[var(--text-muted)]">
+              Tournament
+            </span>
+          </div>
+          <div>
+            <span className="text-sm font-medium text-[var(--text-muted)]">
+              Score
+            </span>
+          </div>
+          <div>
+            <span className="text-sm font-medium text-[var(--text-muted)]">
+              Cards
+            </span>
+          </div>
+          <div>
+            <span className="text-sm font-medium text-[var(--text-muted)]">
+              Date
+            </span>
+          </div>
+          <div>
+            <span className="text-sm font-medium text-[var(--text-muted)]">
+              Rewards
+            </span>
+          </div>
+        </div>
+
+        {/* Rows */}
+        {tableData.map((row) => (
+          <div
+            key={row.entry.tournament_id}
+            className={`${gridClasses} ${rowClasses}`}
+          >
+            <div className="min-w-0">
+              <Link
+                href={`/leaderboard?tournamentId=${row.entry.tournament_id}`}
+                className="text-base font-semibold text-[var(--text-primary)] truncate block hover:underline focus:underline focus:outline-none"
+              >
+                {getTournamentName(row.entry)}
+              </Link>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <svg width="17" height="8" viewBox="0 0 17 8" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0" aria-hidden>
+                  <mask id="chart-1-inside" fill="white">
+                    <rect y="3" width="5" height="5" rx="1" />
+                  </mask>
+                  <rect y="3" width="5" height="5" rx="1" stroke="currentColor" strokeOpacity="0.5" strokeWidth="2.6" mask="url(#chart-1-inside)" fill="transparent" />
+                  <mask id="chart-2-inside" fill="white">
+                    <rect x="12" y="5" width="5" height="3" rx="1" />
+                  </mask>
+                  <rect x="12" y="5" width="5" height="3" rx="1" stroke="currentColor" strokeOpacity="0.5" strokeWidth="2.6" mask="url(#chart-2-inside)" fill="transparent" />
+                  <mask id="chart-3-inside" fill="white">
+                    <rect x="6" width="5" height="8" rx="1" />
+                  </mask>
+                  <rect x="6" width="5" height="8" rx="1" stroke="currentColor" strokeOpacity="0.5" strokeWidth="2.6" mask="url(#chart-3-inside)" fill="transparent" />
+                </svg>
+                <span
+                  className="text-[var(--text-secondary)]"
+                  style={{
+                    fontWeight: 400,
+                    fontSize: "16px",
+                    lineHeight: "32px",
+                    letterSpacing: "0%",
+                  }}
+                >
+                  {getOrdinal(row.position)} place
+                </span>
+              </div>
+            </div>
+            <div className="min-w-0 shrink-0">
+              <span className="text-base font-medium text-[var(--text-primary)]">
+                {formatScore(row.score)}
+              </span>
+            </div>
+            <div>
+              <TournamentCards cards={row.cards} onCardClick={handleCardClick} />
+            </div>
+            <div className="min-w-0 shrink-0">
+              <span className="text-base font-medium text-[var(--text-primary)]">
+                {formatDate(row.date)}
+              </span>
+            </div>
+            <div className="min-w-0 shrink-0">
+              <span className="text-base font-medium text-[var(--text-primary)]">
+                {row.rewards.toLocaleString("en-US")}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Mobile: карточки */}
+      <div className="md:hidden space-y-3">
+        {tableData.map((row) => (
+          <div
+            key={row.entry.tournament_id}
+            className="p-4 rounded-xl border border-[var(--leaderboard-row-border)] bg-[var(--surface)]/50"
+          >
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="min-w-0">
+                <Link
+                  href={`/leaderboard?tournamentId=${row.entry.tournament_id}`}
+                  className="text-base font-semibold text-[var(--text-primary)] block hover:underline focus:underline focus:outline-none"
+                >
+                  {getTournamentName(row.entry)}
+                </Link>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <svg width="17" height="8" viewBox="0 0 17 8" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0" aria-hidden>
+                    <mask id="chart-m1-inside" fill="white">
+                      <rect y="3" width="5" height="5" rx="1" />
+                    </mask>
+                    <rect y="3" width="5" height="5" rx="1" stroke="currentColor" strokeOpacity="0.5" strokeWidth="2.6" mask="url(#chart-m1-inside)" fill="transparent" />
+                    <mask id="chart-m2-inside" fill="white">
+                      <rect x="12" y="5" width="5" height="3" rx="1" />
+                    </mask>
+                    <rect x="12" y="5" width="5" height="3" rx="1" stroke="currentColor" strokeOpacity="0.5" strokeWidth="2.6" mask="url(#chart-m2-inside)" fill="transparent" />
+                    <mask id="chart-m3-inside" fill="white">
+                      <rect x="6" width="5" height="8" rx="1" />
+                    </mask>
+                    <rect x="6" width="5" height="8" rx="1" stroke="currentColor" strokeOpacity="0.5" strokeWidth="2.6" mask="url(#chart-m3-inside)" fill="transparent" />
+                  </svg>
+                  <span
+                    className="text-[var(--text-secondary)]"
+                    style={{
+                      fontWeight: 400,
+                      fontSize: "16px",
+                      lineHeight: "32px",
+                      letterSpacing: "0%",
+                    }}
+                  >
+                    {getOrdinal(row.position)} place
+                  </span>
+                </div>
+              </div>
+              <span className="text-sm font-medium text-[var(--text-primary)] shrink-0">
+                {formatDate(row.date)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[var(--text-secondary)]">Score:</span>
+                <span className="text-sm font-medium text-[var(--text-primary)]">
+                  {formatScore(row.score)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[var(--text-secondary)]">Rewards:</span>
+                <span className="text-sm font-medium text-[var(--text-primary)]">
+                  {row.rewards.toLocaleString("en-US")}
+                </span>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-[var(--leaderboard-row-border)]">
+              <span className="text-sm text-[var(--text-secondary)] block mb-2">
+                Cards
+              </span>
+              <TournamentCards cards={row.cards} onCardClick={handleCardClick} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <CardStatsModal
+      open={selectedCardId != null}
+      onClose={() => {
+        setSelectedCardId(null);
+        setSelectedCardInfo(null);
+      }}
+      cardId={selectedCardId}
+      cardImageUrl={selectedCardInfo?.imageUrl}
+      cardName={selectedCardInfo?.name}
+      cardRarity={selectedCardInfo?.rarity}
+    />
+    </>
   );
 }

@@ -9,6 +9,8 @@ import { BlurCard } from "@/components/BlurCard";
 interface LeaderboardPreviewCardProps {
   tournamentStatus: "registration" | "ongoing" | "finished";
   tournamentId: number | null;
+  /** Эпоха и tournamentId для ссылки View all (query params) */
+  epoch?: string | null;
 }
 
 
@@ -17,10 +19,11 @@ interface LeaderboardPreviewCardProps {
 // Состояние: турнир еще не стартовал (registration)
 function LeaderboardEmpty() {
   return (
-    <BlurCard backgroundColor="rgba(210, 247, 243, 0.8)">
+    <div data-onboarding="leaderboard-preview">
+      <BlurCard backgroundColor="rgba(210, 247, 243, 0.8)">
       {/* Header */}
       <div className="relative px-8 pt-8">
-        <h3 className="text-2xl font-semibold leading-8 text-black">Leaderboard</h3>
+        <h3 className="text-2xl font-semibold leading-8 text-[var(--text-primary)]">Leaderboard</h3>
       </div>
 
       {/* Content */}
@@ -36,19 +39,20 @@ function LeaderboardEmpty() {
           />
         </div>
 
-          <p className="text-normal md:text-xl font-semibold text-black text-center">
+          <p className="text-normal md:text-xl font-semibold text-[var(--text-primary)] text-center">
           You will see your results here after the tournament starts
         </p>
       </div>
     </BlurCard>
+    </div>
   );
 }
 
 // Состояние: турнир идет (ongoing) или финишировал (finished)
-function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
+function LeaderboardActive({ tournamentId, epoch }: { tournamentId: number; epoch?: string | null }) {
   const { data: leaderboardData, isLoading } = useTournamentLeaderboard(
     tournamentId, 
-    { limit: 100 },
+    { limit: 20 },
     { refetchInterval: 5 * 60 * 1000 } // Обновление каждые 5 минут
   );
 
@@ -56,7 +60,7 @@ function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
   const allEntries = leaderboardData?.leaderboard || [];
 
   return (
-    <div className="relative">
+    <div data-onboarding="leaderboard-preview" className="relative">
       <LeaderboardCard
         entries={allEntries}
         title="Leaderboard"
@@ -68,8 +72,12 @@ function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
       />
       {/* View all link */}
       <Link
-        href="/leaderboard"
-        className="absolute top-6 right-6 text-base font-medium text-[#5B4AD9] hover:text-[#4a3bb8] transition-colors"
+        href={
+          epoch
+            ? `/leaderboard?epoch=${encodeURIComponent(epoch)}&tournamentId=${tournamentId}`
+            : `/leaderboard?tournamentId=${tournamentId}`
+        }
+        className="absolute top-6 right-6 text-base font-medium text-[var(--primary-muted)] hover:text-[var(--primary-muted-hover)] transition-colors"
       >
         View all &gt;
       </Link>
@@ -77,7 +85,7 @@ function LeaderboardActive({ tournamentId }: { tournamentId: number }) {
   );
 }
 
-export function LeaderboardPreviewCard({ tournamentStatus, tournamentId }: LeaderboardPreviewCardProps) {
+export function LeaderboardPreviewCard({ tournamentStatus, tournamentId, epoch }: LeaderboardPreviewCardProps) {
   if (tournamentStatus === "registration") {
     return <LeaderboardEmpty />;
   }
@@ -85,9 +93,10 @@ export function LeaderboardPreviewCard({ tournamentStatus, tournamentId }: Leade
   if (!tournamentId) {
     return (
       <div
-        className="rounded-[30px] border border-white/10 p-8 text-center text-zinc-500"
+        data-onboarding="leaderboard-preview"
+        className="rounded-[30px] border border-[var(--border-subtle)] p-8 text-center text-[var(--text-muted)]"
         style={{
-          backgroundColor: "rgba(242, 242, 242, 0.07)",
+          backgroundColor: "var(--surface-elevated)",
           backdropFilter: "blur(75px)",
         }}
       >
@@ -96,5 +105,5 @@ export function LeaderboardPreviewCard({ tournamentStatus, tournamentId }: Leade
     );
   }
 
-  return <LeaderboardActive tournamentId={tournamentId} />;
+  return <LeaderboardActive tournamentId={tournamentId} epoch={epoch} />;
 }

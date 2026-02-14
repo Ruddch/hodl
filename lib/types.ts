@@ -416,6 +416,54 @@ export interface PackHistoryResponse {
 }
 
 // ==================== Users ====================
+export interface MyTournamentCard {
+  user_card_id: number;
+  card_id: number;
+  token_symbol: string;
+  token_name: string;
+  token_image_url: string;
+  rendered_image_url: string;
+  design_type: string;
+  rarity_name: string;
+}
+
+export interface MyTournamentPrize {
+  reward_type_id: number;
+  reward_name: string;
+  reward_category: string;
+  currency_type: string;
+  amount: string;
+  claim_status: string;
+  earned_at: string;
+  claimed_at: string | null;
+  expires_at: string | null;
+}
+
+export interface MyTournamentEntry {
+  tournament_id: number;
+  tournament_number: number;
+  status: string;
+  start_date: string;
+  end_date: string;
+  position: number;
+  final_score: number;
+  deck_id: number;
+  deck_composition: number[];
+  cards: MyTournamentCard[];
+  prizes: MyTournamentPrize[];
+  registered_at: string;
+  calculated_at: string;
+}
+
+export interface MyTournamentsResponse {
+  user_id: number;
+  wallet_address: string;
+  tournaments: MyTournamentEntry[];
+  total_tournaments: number;
+  best_position: number;
+  best_score: number;
+}
+
 export interface UserCard {
   user_card_id: number;
   card_id: number;

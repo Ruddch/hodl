@@ -38,8 +38,8 @@ export function BlurCard({
       className={`relative w-full overflow-hidden ${className}`}
       style={{
         borderRadius: `${borderRadius}px`,
-        background: "linear-gradient(135deg, rgba(255, 255, 255, 0.53) 0%, rgba(255, 255, 255, 0) 100%)",
-        boxShadow: "1px 10px 22px 0px rgba(214, 214, 214, 0.1)",
+        background: "var(--blurcard-gradient)",
+        boxShadow: "var(--blurcard-shadow)",
       }}
     >
       {/* Inner container with border radius */}
@@ -54,6 +54,7 @@ export function BlurCard({
           className="absolute w-[50%] h-[50%] top-[25%] left-[25%] right-0 bottom-0 inset-0"
           style={{
             background: backgroundColor,
+            opacity: "var(--blurcard-bg-layer-opacity)",
           }}
         />
         
@@ -61,7 +62,7 @@ export function BlurCard({
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "rgba(161, 161, 161, 0.07)",
+            background: "var(--blurcard-overlay)",
             backdropFilter: `blur(${blurValue}px)`,
             WebkitBackdropFilter: `blur(${blurValue}px)`,
           }}

@@ -14,7 +14,7 @@ export function PageHeader({ title, isSidebarOpen, onClick }: PageHeaderProps) {
   return (
     <div onClick={onClick ? () => onClick() : () => {} } className="flex items-center gap-2 min-w-0 flex-1">
       <Logo />
-      <span className="text-xl font-medium text-black truncate">
+      <span className="text-xl font-medium text-[var(--text-primary)] truncate">
         {displayText}
       </span>
     </div>

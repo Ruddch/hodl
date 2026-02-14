@@ -1,44 +1,322 @@
 @import "tailwindcss";
 
+/* ========== Light theme (default) ========== */
 :root {
+  /* Base */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Sidebar & navigation */
+  --sidebar-bg: #f6f6f6;
+  --sidebar-hover: #e6e6e6;
+  --nav-item-active-bg: #ffffff;
+  --nav-item-active-text: #000000;
+  --nav-item-inactive: rgba(0, 0, 0, 0.5);
+  --nav-item-inactive-hover: #000000;
+
+  /* Surfaces */
+  --surface: #ffffff;
+  --surface-elevated: #f2f2f2;
+  --surface-muted: #f7f7f7;
+  --surface-hover: #f5f5f5;
+
+  /* Borders */
+  --border: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+
+  /* Text */
+  --text-primary: #000000;
+  --text-secondary: rgba(0, 0, 0, 0.5);
+  --text-muted: rgba(0, 0, 0, 0.7);
+  --text-placeholder: rgba(0, 0, 0, 0.5);
+
+  /* Icon color (for SVG) */
+  --icon-color: rgba(0, 0, 0, 0.5);
+  --icon-bg: #f7f7f7;
+
+  /* Primary accent */
+  --primary: #2200ef;
+  --primary-hover: rgba(34, 0, 239, 0.9);
+  --primary-muted: #5b4ad9;
+  --primary-muted-hover: #4a3bb8;
+
+  /* Badges & semantic */
+  --badge-opened: #baffd9;
+  --badge-opened-text: #000000;
+  --badge-count: rgba(222, 94, 87, 1);
+  --notification-dot-ring: #ffffff;
+  --packs-badge-border: rgba(255, 255, 255, 0.44);
+  --badge-purple-bg: #cac1f3;
+  --badge-purple-text: #171645;
+  --badge-purple-muted: rgba(169, 171, 205, 0.2);
+
+  /* BlurCard */
+  --blurcard-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.53) 0%, rgba(255, 255, 255, 0) 100%);
+  --blurcard-overlay: rgba(161, 161, 161, 0.07);
+  --blurcard-shadow: 1px 10px 22px 0px rgba(214, 214, 214, 0.1);
+  --blurcard-bg-layer-opacity: 1;
+
+  /* Leaderboard row hover */
+  --leaderboard-hover: linear-gradient(
+    94deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.05) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+
+  /* Overlay */
+  --overlay: rgba(0, 0, 0, 0.5);
+
+  /* User info card (sidebar) */
+  --userinfo-bg: #efeff0;
+
+  /* Input fields */
+  --input-bg: rgba(137, 137, 137, 0.14);
+  --input-border: rgba(255, 255, 255, 0.09);
+  --input-text: rgba(0, 0, 0, 0.5);
+
+  /* Profile card background */
+  --profile-card-bg: linear-gradient(135deg, rgba(242, 242, 242, 0.5) 0%, rgba(200, 180, 255, 0.3) 100%);
+  --profile-avatar-border: #ffffff;
+
+  /* Leaderboard table */
+  --leaderboard-row-border: rgba(0, 0, 0, 0.05);
+  --leaderboard-current-user-bg: rgba(242, 242, 242, 0);
+  --leaderboard-position-color: #4e6aff;
+  --leaderboard-position-border: #cac1f3;
+
+  /* Modal / tooltip shadow */
+  --modal-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* Tournament card gradient */
+  --tournament-card-bg: linear-gradient(112deg, rgba(211, 247, 255, 1) 57.8%, rgba(21, 0, 211, 1) 168.7%);
+  --tournament-card-overlay1: linear-gradient(108deg, rgba(78, 106, 255, 0.06) 22.4%, rgba(21, 0, 211, 0.06) 104.7%);
+  --tournament-card-overlay2: linear-gradient(107deg, rgba(208, 203, 255, 0.06) 60.8%, rgba(21, 0, 211, 0.06) 227.6%);
+  --tournament-card-accent: rgba(202, 233, 254, 0.8);
+  --tournament-card-shadow: 34px 243px 69px 0px rgba(214,214,214,0), 22px 156px 63px 0px rgba(214,214,214,0.01), 12px 88px 53px 0px rgba(214,214,214,0.05), 6px 39px 39px 0px rgba(214,214,214,0.09), 1px 10px 22px 0px rgba(214,214,214,0.1);
+}
+
+/* ========== Dark theme ========== */
+/* Принудительная тёмная тема (переключатель) */
+html[data-theme="dark"] {
+  /* Base */
+  --background: #0d0e14;
+  --foreground: #f4f4f5;
+  /* Sidebar & navigation */
+  --sidebar-bg: #13141a;
+  --sidebar-hover: #1e1f28;
+  --nav-item-active-bg: #1e1f2a;
+  --nav-item-active-text: #f4f4f5;
+  --nav-item-inactive: rgba(244, 244, 245, 0.55);
+  --nav-item-inactive-hover: #f4f4f5;
+  /* Surfaces */
+  --surface: #16171f;
+  --surface-elevated: #1a1b24;
+  --surface-muted: #1e1f2a;
+  --surface-hover: #22242e;
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  /* Text */
+  --text-primary: #f4f4f5;
+  --text-secondary: rgba(244, 244, 245, 0.7);
+  --text-muted: rgba(244, 244, 245, 0.55);
+  --text-placeholder: rgba(244, 244, 245, 0.45);
+  /* Icon color */
+  --icon-color: rgba(244, 244, 245, 0.6);
+  --icon-bg: #25262e;
+  /* Primary accent */
+  --primary: #6366f1;
+  --primary-hover: #818cf8;
+  --primary-muted: #818cf8;
+  --primary-muted-hover: #a5b4fc;
+  /* Badges & semantic */
+  --badge-opened: rgba(34, 197, 94, 0.25);
+  --badge-opened-text: #4ade80;
+  --badge-count: #ef4444;
+  --notification-dot-ring: #13141a;
+  --packs-badge-border: #13141a;
+  --badge-purple-bg: rgba(99, 102, 241, 0.25);
+  --badge-purple-text: #c7d2fe;
+  --badge-purple-muted: rgba(99, 102, 241, 0.15);
+  /* Modal / tooltip shadow */
+  --modal-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+  /* BlurCard */
+  --blurcard-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%);
+  --blurcard-overlay: rgba(0, 0, 0, 0.2);
+  --blurcard-shadow: 1px 10px 22px 0px rgba(0, 0, 0, 0.3);
+  --blurcard-bg-layer-opacity: 0.8;
+  /* Profile card background */
+  --profile-card-bg: linear-gradient(135deg, rgba(30, 30, 45, 0.6) 0%, rgba(99, 102, 241, 0.15) 100%);
+  --profile-avatar-border: #000000;
+
+  /* Leaderboard table */
+  --leaderboard-row-border: rgba(255, 255, 255, 0.06);
+  --leaderboard-current-user-bg: rgba(99, 102, 241, 0);
+  --leaderboard-position-color: #818cf8;
+  --leaderboard-position-border: rgba(129, 140, 248, 0.4);
+
+  /* Leaderboard row hover */
+  --leaderboard-hover: linear-gradient(94deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.04) 50%, rgba(255, 255, 255, 0) 100%);
+  /* Overlay */
+  --overlay: rgba(0, 0, 0, 0.7);
+  /* Tournament card gradient */
+  --tournament-card-bg: linear-gradient(112deg, rgba(30, 41, 59, 0.98) 57.8%, rgba(49, 46, 129, 0.95) 168.7%);
+  --tournament-card-overlay1: linear-gradient(108deg, rgba(99, 102, 241, 0.12) 22.4%, rgba(79, 70, 229, 0.12) 104.7%);
+  --tournament-card-overlay2: linear-gradient(107deg, rgba(129, 140, 248, 0.08) 60.8%, rgba(99, 102, 241, 0.08) 227.6%);
+  --tournament-card-accent: rgba(99, 102, 241, 0.25);
+  --tournament-card-shadow: 34px 243px 69px 0px rgba(0,0,0,0.3), 22px 156px 63px 0px rgba(0,0,0,0.25), 12px 88px 53px 0px rgba(0,0,0,0.2), 6px 39px 39px 0px rgba(0,0,0,0.15), 1px 10px 22px 0px rgba(0,0,0,0.1);
+  /* User info card */
+  --userinfo-bg: #1a1b24;
+  /* Input fields */
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --input-border: rgba(255, 255, 255, 0.08);
+  --input-text: rgba(244, 244, 245, 0.7);
+}
+
+/* Тёмная тема по системным настройкам (если пользователь не выбрал светлую) */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    /* Base */
+    --background: #0d0e14;
+    --foreground: #f4f4f5;
+
+    /* Sidebar & navigation */
+    --sidebar-bg: #13141a;
+    --sidebar-hover: #1e1f28;
+    --nav-item-active-bg: #1e1f2a;
+    --nav-item-active-text: #f4f4f5;
+    --nav-item-inactive: rgba(244, 244, 245, 0.55);
+    --nav-item-inactive-hover: #f4f4f5;
+
+    /* Surfaces */
+    --surface: #16171f;
+    --surface-elevated: #1a1b24;
+    --surface-muted: #1e1f2a;
+    --surface-hover: #22242e;
+
+    /* Borders */
+    --border: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+
+    /* Text */
+    --text-primary: #f4f4f5;
+    --text-secondary: rgba(244, 244, 245, 0.7);
+    --text-muted: rgba(244, 244, 245, 0.55);
+    --text-placeholder: rgba(244, 244, 245, 0.45);
+
+    /* Icon color */
+    --icon-color: rgba(244, 244, 245, 0.6);
+    --icon-bg: #25262e;
+
+    /* Primary accent — яркий индиго для тёмной темы */
+    --primary: #6366f1;
+    --primary-hover: #818cf8;
+    --primary-muted: #818cf8;
+    --primary-muted-hover: #a5b4fc;
+
+    /* Badges & semantic */
+    --badge-opened: rgba(34, 197, 94, 0.25);
+    --badge-opened-text: #4ade80;
+    --badge-count: #ef4444;
+    --notification-dot-ring: #13141a;
+    --packs-badge-border: #13141a;
+    --badge-purple-bg: rgba(99, 102, 241, 0.25);
+    --badge-purple-text: #c7d2fe;
+    --badge-purple-muted: rgba(99, 102, 241, 0.15);
+
+    /* Modal / tooltip shadow */
+    --modal-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+    /* BlurCard */
+    --blurcard-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%);
+    --blurcard-overlay: rgba(0, 0, 0, 0.2);
+    --blurcard-shadow: 1px 10px 22px 0px rgba(0, 0, 0, 0.3);
+    --blurcard-bg-layer-opacity: 0.6;
+
+    /* Profile card background */
+    --profile-card-bg: linear-gradient(135deg, rgba(30, 30, 45, 0.6) 0%, rgba(99, 102, 241, 0.15) 100%);
+    --profile-avatar-border: #000000;
+
+    /* Leaderboard table */
+    --leaderboard-row-border: rgba(255, 255, 255, 0.06);
+    --leaderboard-current-user-bg: rgba(99, 102, 241, 0);
+    --leaderboard-position-color: #818cf8;
+    --leaderboard-position-border: rgba(129, 140, 248, 0.4);
+
+    /* Leaderboard row hover */
+    --leaderboard-hover: linear-gradient(
+      94deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.04) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+
+    /* Overlay */
+    --overlay: rgba(0, 0, 0, 0.7);
+
+    /* Tournament card gradient — тёмная версия */
+    --tournament-card-bg: linear-gradient(112deg, rgba(30, 41, 59, 0.98) 57.8%, rgba(49, 46, 129, 0.95) 168.7%);
+    --tournament-card-overlay1: linear-gradient(108deg, rgba(99, 102, 241, 0.12) 22.4%, rgba(79, 70, 229, 0.12) 104.7%);
+    --tournament-card-overlay2: linear-gradient(107deg, rgba(129, 140, 248, 0.08) 60.8%, rgba(99, 102, 241, 0.08) 227.6%);
+    --tournament-card-accent: rgba(99, 102, 241, 0.25);
+    --tournament-card-shadow: 34px 243px 69px 0px rgba(0,0,0,0.3), 22px 156px 63px 0px rgba(0,0,0,0.25), 12px 88px 53px 0px rgba(0,0,0,0.2), 6px 39px 39px 0px rgba(0,0,0,0.15), 1px 10px 22px 0px rgba(0,0,0,0.1);
+
+    /* User info card */
+    --userinfo-bg: #1a1b24;
+
+    /* Input fields */
+    --input-bg: rgba(255, 255, 255, 0.06);
+    --input-border: rgba(255, 255, 255, 0.08);
+    --input-text: rgba(244, 244, 245, 0.7);
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-hover: var(--surface-hover);
+  --color-primary: var(--primary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
   --font-sans: var(--font-instrument-sans);
   --font-league-gothic: var(--font-league-gothic);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-rubik: var(--font-rubik);
 }
 
 html {
-  /* Фикс iOS overscroll: предотвращаем скролл body, чтобы overscroll всегда был одного цвета */
   overflow: hidden;
   height: 100%;
 }
 
 body {
-  background: #ffffff;
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-instrument-sans), sans-serif;
   overflow: hidden;
   height: 100%;
 }
 
-/* Hover для кликабельной строки лидерборда — градиент в валидном CSS */
+/* Hover для кликабельной строки лидерборда */
 .leaderboard-row-hover:hover {
-  background-image: linear-gradient(
-    94deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.05) 50%,
-    rgba(0, 0, 0, 0) 100%
-  );
+  background-image: var(--leaderboard-hover);
 }
+
+/* Плавное появление контента после скелетона */
+@keyframes content-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.leaderboard-content-fade-in {
+  animation: content-fade-in 150ms ease-out;
+}
+
