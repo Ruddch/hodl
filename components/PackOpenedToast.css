@@ -1,0 +1,29 @@
+@keyframes toastSlideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOutToRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.pack-opened-toast-enter {
+  animation: toastSlideInFromRight 0.4s ease-out both;
+}
+
+.pack-opened-toast-exit {
+  animation: toastSlideOutToRight 0.4s ease-in forwards;
+}

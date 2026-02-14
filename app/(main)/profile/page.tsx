@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMyProfile, useLogout } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useUnviewedCards } from "@/lib/unviewed-cards-context";
 import { useRouter } from "next/navigation";
 import { ProfileBanner } from "./components/ProfileBanner";
 import { UserAvatar } from "./components/UserAvatar";
@@ -15,9 +16,14 @@ import { PROFILE_ONBOARDING } from "@/lib/onboarding-config";
 export default function ProfilePage() {
   const { isAuthenticated } = useAuth();
   const { data: profile, isLoading } = useMyProfile(true, isAuthenticated);
+  const { clearUnviewedCards } = useUnviewedCards();
   const [activeTab, setActiveTab] = useState<"cards" | "tournaments">("cards");
   const logout = useLogout();
   const router = useRouter();
+
+  useEffect(() => {
+    clearUnviewedCards();
+  }, [clearUnviewedCards]);
 
   const handleLogout = async () => {
     await logout.mutateAsync();

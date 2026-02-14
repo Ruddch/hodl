@@ -5,6 +5,7 @@ import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useAuth } from "@/lib/auth-context";
 import { useMyProfile } from "@/lib/api";
+import { useUnviewedCards } from "@/lib/unviewed-cards-context";
 import { formatBalance } from "@/lib/balance";
 import { Avatar } from "./Avatar";
 
@@ -16,6 +17,7 @@ export function UserInfo({ onNavClick }: UserInfoProps) {
   const { address, isConnected } = useAccount();
   const { isAuthenticated, isLoading, login, disconnect } = useAuth();
   const { data: profile } = useMyProfile(isAuthenticated);
+  const { hasUnviewedCards } = useUnviewedCards();
 
   // Используем nickname если есть, иначе генерируем короткое имя из адреса
   const displayName = profile?.nickname 
@@ -47,11 +49,19 @@ export function UserInfo({ onNavClick }: UserInfoProps) {
           </div>
 
           {/* My Cards */}
-          <Link href="/profile" onClick={onNavClick} className="bg-[var(--surface)] rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity">
+          <Link href="/profile" onClick={onNavClick} className="relative bg-[var(--surface)] rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity overflow-visible">
             <span className="text-sm text-[var(--text-primary)]">My cards</span>
             <span className="text-sm font-semibold text-[var(--text-primary)]">
               {profile?.total_cards ?? profile?.cards?.length ?? 0}
             </span>
+            {hasUnviewedCards && (
+              <span
+                className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full translate-x-1/2 -translate-y-1/2 shrink-0"
+                style={{ backgroundColor: "var(--badge-count)", boxShadow: "0 0 0 2px var(--notification-dot-ring)" }}
+                title="New cards to view"
+                aria-label="New cards to view"
+              />
+            )}
           </Link>
 
           {/* Auth button if not authenticated */}

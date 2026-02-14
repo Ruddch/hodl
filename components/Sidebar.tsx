@@ -165,7 +165,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     height: '20px',
                     backgroundColor: 'var(--badge-count)',
                     borderRadius: '4px',
-                    border: '1px solid rgba(255, 255, 255, 0.44)',
+                    border: '1px solid var(--packs-badge-border)',
                   }}
                 >
                   {availablePacks}
@@ -175,11 +175,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </li>
         </ul>
       </nav>
-
-      {/* Переключатель темы — только на мобильных (на десктопе — в шапке рядом с лого) */}
-      <div className="px-4 pb-2 md:hidden">
-        <ThemeToggle />
-      </div>
       
       {/* User Info */}
       <UserInfo onNavClick={onClose} />

@@ -44,6 +44,8 @@
   --badge-opened: #baffd9;
   --badge-opened-text: #000000;
   --badge-count: rgba(222, 94, 87, 1);
+  --notification-dot-ring: #ffffff;
+  --packs-badge-border: rgba(255, 255, 255, 0.44);
   --badge-purple-bg: #cac1f3;
   --badge-purple-text: #171645;
   --badge-purple-muted: rgba(169, 171, 205, 0.2);
@@ -132,6 +134,8 @@ html[data-theme="dark"] {
   --badge-opened: rgba(34, 197, 94, 0.25);
   --badge-opened-text: #4ade80;
   --badge-count: #ef4444;
+  --notification-dot-ring: #13141a;
+  --packs-badge-border: #13141a;
   --badge-purple-bg: rgba(99, 102, 241, 0.25);
   --badge-purple-text: #c7d2fe;
   --badge-purple-muted: rgba(99, 102, 241, 0.15);
@@ -216,6 +220,8 @@ html[data-theme="dark"] {
     --badge-opened: rgba(34, 197, 94, 0.25);
     --badge-opened-text: #4ade80;
     --badge-count: #ef4444;
+    --notification-dot-ring: #13141a;
+    --packs-badge-border: #13141a;
     --badge-purple-bg: rgba(99, 102, 241, 0.25);
     --badge-purple-text: #c7d2fe;
     --badge-purple-muted: rgba(99, 102, 241, 0.15);
@@ -299,3 +305,4 @@ body {
 .leaderboard-row-hover:hover {
   background-image: var(--leaderboard-hover);
 }
+

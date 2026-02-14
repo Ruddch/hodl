@@ -2,11 +2,13 @@
 
 import { useAvailablePacks, useOpenPack } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useUnviewedCards } from "@/lib/unviewed-cards-context";
 import { useState } from "react";
 import Image from "next/image";
 import type { OpenPackResponse } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
 import { OpenedPackModal } from "./components/OpenedPackModal";
+import { PackOpenedToast } from "@/components/PackOpenedToast";
 import { Onboarding } from "@/components/Onboarding";
 import { usePageOnboarding } from "@/lib/useOnboarding";
 import { PACKS_ONBOARDING } from "@/lib/onboarding-config";
@@ -15,7 +17,9 @@ export default function PacksPage() {
   const { isAuthenticated, login } = useAuth();
   const { data: packsData, refetch } = useAvailablePacks(isAuthenticated);
   const openPackMutation = useOpenPack();
+  const { setUnviewedCards } = useUnviewedCards();
   const [openedPack, setOpenedPack] = useState<OpenPackResponse | null>(null);
+  const [showPackOpenedToast, setShowPackOpenedToast] = useState(false);
 
   const totalPacks = packsData?.available_packs || 0;
   const isLoading = !packsData;
@@ -96,7 +100,6 @@ export default function PacksPage() {
                     style={{
                       backgroundColor: 'var(--badge-count)',
                       borderRadius: '11px',
-                      border: '1px solid rgba(255, 255, 255, 0.44)',
                       top: '-12px',
                       right: '-12px',
                     }}
@@ -131,8 +134,20 @@ export default function PacksPage() {
     </div>
 
     {openedPack && (
-        <OpenedPackModal result={openedPack} onClose={() => setOpenedPack(null)} />
+        <OpenedPackModal
+          result={openedPack}
+          onClose={() => {
+            setOpenedPack(null);
+            setUnviewedCards();
+            setShowPackOpenedToast(true);
+          }}
+        />
     )}
+
+      <PackOpenedToast
+        visible={showPackOpenedToast}
+        onDismiss={() => setShowPackOpenedToast(false)}
+      />
     </>
   );
 }
