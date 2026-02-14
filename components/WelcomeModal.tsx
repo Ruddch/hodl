@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { WELCOME_SCREEN_ENABLED } from "@/lib/feature-flags";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import Image from "next/image";
@@ -216,7 +217,8 @@ const STORAGE_KEY = WELCOME_SEEN_KEY;
 
 export function useWelcomeModal() {
   const [showWelcome, setShowWelcome] = useState(() => {
-    if (typeof window === "undefined") return false ;
+    if (!WELCOME_SCREEN_ENABLED) return false;
+    if (typeof window === "undefined") return false;
     const seen = localStorage.getItem(STORAGE_KEY);
     if (!seen) {
       return true;

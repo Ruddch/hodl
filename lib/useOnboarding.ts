@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import type { OnboardingConfig } from "./onboarding-types";
 import { useWelcomeClosed } from "./welcome-closed-context";
+import { ONBOARDING_ENABLED } from "./feature-flags";
 
 const STORAGE_KEY_PREFIX = "hodleague_onboarding_seen_";
 
@@ -64,7 +65,7 @@ export function usePageOnboarding(
   const { welcomeJustClosed, setWelcomeJustClosed, welcomeVisible } = useWelcomeClosed();
 
   useEffect(() => {
-    if (!shouldShow()) return;
+    if (!ONBOARDING_ENABLED || !shouldShow()) return;
 
     // Пока welcome открыт — не стартуем онбординг
     if (welcomeVisible) return;
