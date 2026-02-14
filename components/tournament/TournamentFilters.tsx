@@ -28,7 +28,7 @@ export function TournamentFilters({
   if (isLoading) {
     return (
       <div className={`flex flex-col md:flex-row gap-4 md:gap-9 ${className}`}>
-        <div className="h-10 w-40 bg-[var(--surface-elevated)] rounded-lg animate-pulse" />
+        <div className="h-12 min-w-[198px] w-40 bg-[var(--surface-elevated)] rounded-[15px] animate-pulse" />
         <div className="flex gap-2">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-10 w-20 bg-[var(--surface-elevated)] rounded-lg animate-pulse" />

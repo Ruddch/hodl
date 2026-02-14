@@ -27,9 +27,13 @@ export interface DeckProps {
 interface EmptyDeckProps {
   onStartClick: () => void;
   canRegister: boolean;
+  tournamentStatus?: "registration" | "ongoing" | "finished";
 }
 
-function EmptyDeck({ onStartClick, canRegister }: EmptyDeckProps) {
+function EmptyDeck({ onStartClick, canRegister, tournamentStatus }: EmptyDeckProps) {
+  const isTournamentFinished = tournamentStatus === "finished";
+  const showButton = !isTournamentFinished;
+
   return (
     <>
       {/* Header */}
@@ -51,23 +55,25 @@ function EmptyDeck({ onStartClick, canRegister }: EmptyDeckProps) {
         </div>
 
         <p className="text-normal md:text-xl font-semibold text-[var(--text-primary)] mb-6 ">
-          You haven&apos;t registered any deck yet
+          {isTournamentFinished ? "You haven't registered any deck" : "You haven't registered any deck yet"}
         </p>
 
-        <button
-          onClick={onStartClick}
-          disabled={!canRegister}
-          className={`px-8 py-3 bg-[var(--surface)] rounded-full text-base font-medium flex items-center gap-2 shadow-md transition-colors ${
-            canRegister 
-              ? "text-[var(--primary-muted)] hover:bg-[var(--surface-hover)] cursor-pointer" 
-              : "text-[var(--text-muted)] cursor-not-allowed"
-          }`}
-        >
-          Let&apos;s start
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+        {showButton && (
+          <button
+            onClick={onStartClick}
+            disabled={!canRegister}
+            className={`px-8 py-3 bg-[var(--surface)] rounded-full text-base font-medium flex items-center gap-2 shadow-md transition-colors ${
+              canRegister 
+                ? "text-[var(--primary-muted)] hover:bg-[var(--surface-hover)] cursor-pointer" 
+                : "text-[var(--text-muted)] cursor-not-allowed"
+            }`}
+          >
+            Let&apos;s start
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
       </div>
     </>
   );
@@ -342,7 +348,11 @@ export function Deck({
       isUnregistering={isUnregistering}
     />
   ) : (
-    <EmptyDeck onStartClick={onStartClick ?? (() => {})} canRegister={canRegister} />
+    <EmptyDeck
+      onStartClick={onStartClick ?? (() => {})}
+      canRegister={canRegister}
+      tournamentStatus={tournamentStatus}
+    />
   );
 
   if (wrapInBlurCard) {
