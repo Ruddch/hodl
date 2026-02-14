@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMyProfile, useUserProfile, useLogout } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -15,7 +15,7 @@ import { Onboarding } from "@/components/Onboarding";
 import { usePageOnboarding } from "@/lib/useOnboarding";
 import { PROFILE_ONBOARDING } from "@/lib/onboarding-config";
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const searchParams = useSearchParams();
   const walletParam = searchParams.get("wallet");
   const { address } = useAccount();
@@ -111,5 +111,13 @@ export default function ProfilePage() {
           </div>
         )}
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<p className="text-center text-[var(--text-muted)]">Loading...</p>}>
+      <ProfilePageContent />
+    </Suspense>
   );
 }
