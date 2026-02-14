@@ -213,7 +213,7 @@ function LeaderboardRow({
   );
 
   const rowClassName = `items-center py-3 border-b border-[var(--leaderboard-row-border)] ${
-    isCurrentUser ? "bg-[var(--leaderboard-current-user-bg)]" : ""
+    isCurrentUser ? "" : ""
   } ${
     canOpenDeck ? "cursor-pointer transition-colors leaderboard-row-hover" : ""
   }`;
