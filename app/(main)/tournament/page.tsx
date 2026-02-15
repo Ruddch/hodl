@@ -1,7 +1,7 @@
 "use client";
 
 import { DeckSelectionModal } from "@/components/DeckSelectionModal";
-import { Onboarding } from "@/components/Onboarding";
+import { Onboarding } from "@/components/OnboardingLazy";
 import { useTournamentDetails } from "@/lib/api";
 import { useTournamentSelector } from "@/lib/hooks/useTournamentSelector";
 import { useAuth } from "@/lib/auth-context";

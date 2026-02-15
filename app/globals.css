@@ -286,7 +286,6 @@ html[data-theme="dark"] {
   --color-text-muted: var(--text-muted);
   --font-sans: var(--font-instrument-sans);
   --font-league-gothic: var(--font-league-gothic);
-  --font-rubik: var(--font-rubik);
 }
 
 html {

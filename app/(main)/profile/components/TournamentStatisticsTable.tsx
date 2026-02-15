@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
-import { CardStatsModal } from "@/components/CardStatsModal";
+import { CardStatsModal } from "@/components/CardStatsModalLazy";
 import type { MyTournamentEntry, MyTournamentCard } from "@/lib/types";
 
 const gridClasses =
@@ -398,17 +398,19 @@ export function TournamentStatisticsTable() {
       </div>
     </div>
 
-    <CardStatsModal
-      open={selectedCardId != null}
-      onClose={() => {
-        setSelectedCardId(null);
-        setSelectedCardInfo(null);
-      }}
-      cardId={selectedCardId}
-      cardImageUrl={selectedCardInfo?.imageUrl}
-      cardName={selectedCardInfo?.name}
-      cardRarity={selectedCardInfo?.rarity}
-    />
+    {selectedCardId != null && (
+      <CardStatsModal
+        open
+        onClose={() => {
+          setSelectedCardId(null);
+          setSelectedCardInfo(null);
+        }}
+        cardId={selectedCardId}
+        cardImageUrl={selectedCardInfo?.imageUrl}
+        cardName={selectedCardInfo?.name}
+        cardRarity={selectedCardInfo?.rarity}
+      />
+    )}
     </>
   );
 }

@@ -3,17 +3,19 @@
 import { useAvailablePacks, useOpenPack } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useUnviewedCards } from "@/lib/unviewed-cards-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import type { OpenPackResponse } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
 import { OpenedPackModal } from "./components/OpenedPackModal";
 import { PackOpenedToast } from "@/components/PackOpenedToast";
-import { Onboarding } from "@/components/Onboarding";
+import { Onboarding } from "@/components/OnboardingLazy";
 import { usePageOnboarding } from "@/lib/useOnboarding";
 import { PACKS_ONBOARDING } from "@/lib/onboarding-config";
+import { BASE_PATH } from "@/lib/constants";
 
 export default function PacksPage() {
+  const base = BASE_PATH ? `${BASE_PATH}/` : "";
   const { isAuthenticated, login } = useAuth();
   const { data: packsData, refetch } = useAvailablePacks(isAuthenticated);
   const openPackMutation = useOpenPack();
@@ -23,6 +25,26 @@ export default function PacksPage() {
 
   const totalPacks = packsData?.available_packs || 0;
   const isLoading = !packsData;
+
+  // Предзагрузка изображений для анимации открытия пака
+  useEffect(() => {
+    const localPaths = [
+      "packs.png",
+      "pack-top.png",
+      "pack-top copy.png",
+      "pack-bottom-3.png",
+      "pattern.svg",
+      "card1.png",
+    ];
+    const path = (p: string) => (base ? `${base}${p}` : `/${p}`);
+    [...localPaths.map(path), "https://back.hodleague.com/static/card_templates/packs_background_classic_common_20260120_215426.png"].forEach(
+      (url) => {
+        const img = new window.Image();
+        img.src = url;
+      }
+    );
+  }, [base]);
+
   const { run, steps, close, complete } = usePageOnboarding(
     "packs",
     PACKS_ONBOARDING,

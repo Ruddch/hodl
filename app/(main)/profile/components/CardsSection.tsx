@@ -5,7 +5,7 @@ import Image from "next/image";
 import type { UserProfileResponse } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { BlurCard } from "@/components/BlurCard";
-import { CardStatsModal } from "@/components/CardStatsModal";
+import { CardStatsModal } from "@/components/CardStatsModalLazy";
 import { TournamentStatisticsTable } from "./TournamentStatisticsTable";
 
 interface CardsSectionProps {
@@ -179,16 +179,18 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
         )}
       </div>
 
-      <CardStatsModal
-        open={selectedCardId != null}
-        onClose={() => {
-          setSelectedCardId(null);
-          setSelectedCardInfo(null);
-        }}
-        cardId={selectedCardId}
-        cardImageUrl={selectedCardInfo?.imageUrl}
-        cardName={selectedCardInfo?.name}
-      />
+      {selectedCardId != null && (
+        <CardStatsModal
+          open
+          onClose={() => {
+            setSelectedCardId(null);
+            setSelectedCardInfo(null);
+          }}
+          cardId={selectedCardId}
+          cardImageUrl={selectedCardInfo?.imageUrl}
+          cardName={selectedCardInfo?.name}
+        />
+      )}
     </BlurCard>
   );
 }

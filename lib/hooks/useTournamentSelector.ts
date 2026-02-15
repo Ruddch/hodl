@@ -39,7 +39,7 @@ export function useTournamentSelector(
   const [isInitialized, setIsInitialized] = useState(false);
 
   const { data: tournamentsData, isLoading: tournamentsLoading, refetch: refetchTournaments } =
-    useTournaments({ limit: 50 });
+    useTournaments({ limit: 20 });
 
   const epochs = useMemo(() => {
     if (!tournamentsData?.items.length) return {};
