@@ -2,6 +2,12 @@
   "name": "hodl",
   "version": "0.1.0",
   "private": true,
+  "browserslist": [
+    "Chrome >= 91",
+    "Firefox >= 89",
+    "Safari >= 15",
+    "Edge >= 91"
+  ],
   "scripts": {
     "dev": "NEXT_PUBLIC_ENV=development next dev",
     "build": "next build",
