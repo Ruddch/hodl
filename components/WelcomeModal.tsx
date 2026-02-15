@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { WELCOME_SCREEN_ENABLED } from "@/lib/feature-flags";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
@@ -136,34 +136,35 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
               {STEPS.map((s, idx) => (
                 <div
                   key={idx}
-                  className="w-full flex-shrink-0 flex flex-col min-h-[420px] px-10 py-8 md:px-18 md:py-12"
+                  className="w-full flex-shrink-0 flex flex-col min-h-[420px] px-10 py-8 md:px-16 md:py-12"
                 >
                   {/* Контент — растягивается */}
                   <div className="flex-1 flex flex-col items-center text-center">
-                    <div className="w-full max-w-[380px] mx-auto mb-6 min-h-[140px] flex items-center justify-center">
+                    <div className="w-full max-w-[380px] mx-auto mb-6 aspect-[276/201] min-h-[140px] flex items-center justify-center">
                       {s.image ? (
                         <Image
                           src={s.image}
                           alt=""
-                          width={280}
-                          height={140}
+                          width={276}
+                          height={201}
                           className="w-full h-auto object-contain"
+                          sizes="380px"
                         />
                       ) : null}
                     </div>
 
-                    <h2 className="mb-3 text-center font-medium text-[22px] leading-[28px] md:text-[36px] md:leading-[44px] tracking-[0] text-[#FBFBFF]">
+                    <h2 className="mb-3 text-center font-medium text-[22px] leading-[28px] md:text-[36px] md:leading-[44px] tracking-[0] text-[#FBFBFF] min-h-[28px] md:min-h-[44px]">
                       {getText(s.title, isConnected)}
                     </h2>
 
-                    <p className="mb-4 text-center font-normal text-[16px] leading-[24px] md:text-[20px] md:leading-[32px] tracking-[0] text-white">
+                    <p className="mb-4 text-center font-normal text-[16px] leading-[24px] md:text-[20px] md:leading-[32px] tracking-[0] text-white min-h-[72px] md:min-h-[96px]">
                       {getText(s.description, isConnected)}
                     </p>
                   </div>
 
-                  {/* Точки и кнопки — прибиты к низу */}
+                  {/* Точки и кнопки — прибиты к низу. min-h резервирует место под 2 кнопки — избегаем layout shift при переключении isConnected */}
                   <div className="mt-auto flex flex-col items-center">
-                    
+                    <div className="w-full flex flex-col items-center min-h-[48px]">
                     {/* Action button — withWallet && !connected: Connect Wallet + Maybe Later; иначе обычная кнопка */}
                     {s.withWallet && !isConnected ? (
                       <div className="w-full max-w-[320px] flex flex-col sm:flex-row gap-3">
@@ -192,6 +193,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
                         {getText(s.buttonText, isConnected)}
                       </button>
                     )}
+                    </div>
                     <div className="flex gap-2 mt-6">
                       {STEPS.map((_, i) => (
                         <div

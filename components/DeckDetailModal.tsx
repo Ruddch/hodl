@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useTournamentDeck } from "@/lib/api";
 import { Deck } from "@/components/Deck";
 import { Avatar } from "@/components/Avatar";
 import { BlurCard } from "./BlurCard";
+import { useAccount } from "wagmi";
 
 interface DeckDetailModalProps {
   open: boolean;
@@ -19,6 +21,14 @@ export function DeckDetailModal({
   deckId,
 }: DeckDetailModalProps) {
   const { data: deck, isLoading } = useTournamentDeck(tournamentId, deckId);
+  const { address } = useAccount();
+
+  const profileHref =
+    deck?.wallet_address
+      ? address && deck.wallet_address.toLowerCase() === address.toLowerCase()
+        ? "/profile"
+        : `/profile?wallet=${encodeURIComponent(deck.wallet_address)}`
+      : null;
 
   if (!open) return null;
 
@@ -36,21 +46,43 @@ export function DeckDetailModal({
       >
         <BlurCard blurValue={150} backgroundColor="rgba(141, 121, 253, 0.5)">
         <div className="relative flex flex-col max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between px-6 pt-6 pb-2 flex-shrink-0 min-w-0">
+          <div className="flex items-center justify-between px-4 pt-4 sm:px-6 sm:pt-6 pb-0 flex-shrink-0 min-w-0">
             {deck ? (
               <div className="flex items-center gap-3 min-w-0">
-                <Avatar
-                  walletAddress={deck.wallet_address ?? undefined}
-                  fallbackSeed={deck.user_id}
-                  size={40}
-                  avatarUrl={deck.avatar_url ?? undefined}
-                />
-                <span className="text-base font-medium text-[var(--text-primary)] truncate">
-                  {deck.nickname ||
-                    (deck.wallet_address
-                      ? `${deck.wallet_address.slice(0, 6)}...${deck.wallet_address.slice(-4)}`
-                      : `User #${deck.user_id}`)}
-                </span>
+                {profileHref ? (
+                  <Link
+                    href={profileHref}
+                    className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity group"
+                  >
+                    <Avatar
+                      walletAddress={deck.wallet_address ?? undefined}
+                      fallbackSeed={deck.user_id}
+                      size={40}
+                      avatarUrl={deck.avatar_url ?? undefined}
+                    />
+                    <span className="text-base font-medium text-[var(--text-primary)] truncate group-hover:underline">
+                      {deck.nickname ||
+                        (deck.wallet_address
+                          ? `${deck.wallet_address.slice(0, 6)}...${deck.wallet_address.slice(-4)}`
+                          : `User #${deck.user_id}`)}
+                    </span>
+                  </Link>
+                ) : (
+                  <>
+                    <Avatar
+                      walletAddress={deck.wallet_address ?? undefined}
+                      fallbackSeed={deck.user_id}
+                      size={40}
+                      avatarUrl={deck.avatar_url ?? undefined}
+                    />
+                    <span className="text-base font-medium text-[var(--text-primary)] truncate">
+                      {deck.nickname ||
+                        (deck.wallet_address
+                          ? `${deck.wallet_address.slice(0, 6)}...${deck.wallet_address.slice(-4)}`
+                          : `User #${deck.user_id}`)}
+                    </span>
+                  </>
+                )}
               </div>
             ) : (
               <div />

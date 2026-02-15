@@ -1,7 +1,7 @@
 "use client";
 
 import { DeckSelectionModal } from "@/components/DeckSelectionModal";
-import { Onboarding } from "@/components/Onboarding";
+import { Onboarding } from "@/components/OnboardingLazy";
 import { useTournamentDetails } from "@/lib/api";
 import { useTournamentSelector } from "@/lib/hooks/useTournamentSelector";
 import { useAuth } from "@/lib/auth-context";
@@ -14,6 +14,7 @@ import { TournamentFilters } from "@/components/tournament";
 import { TournamentInfoCard } from "./components/TournamentInfoCard";
 import { Deck } from "@/components/Deck";
 import { LeaderboardPreviewCard } from "./components/LeaderboardPreviewCard";
+import { TournamentPageSkeleton } from "./components/TournamentPageSkeleton";
 
 function TournamentPageContent() {
   const { isAuthenticated, login } = useAuth();
@@ -89,11 +90,7 @@ function TournamentPageContent() {
         />
 
         {isLoading && !tournamentDisplay ? (
-          <div className="space-y-5">
-            <div className="h-48 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse" />
-            <div className="h-64 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse" />
-            <div className="h-64 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse" />
-          </div>
+          <TournamentPageSkeleton />
         ) : tournamentDisplay ? (
           <div className="space-y-5">
             <TournamentInfoCard tournament={tournamentDisplay} onRegisterClick={handleOpenDeckModal} />
@@ -139,11 +136,7 @@ export default function TournamentPage() {
     <Suspense
       fallback={
         <div className="max-w-8xl mx-auto">
-          <div className="space-y-5">
-            <div className="h-48 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse" />
-            <div className="h-64 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse" />
-            <div className="h-64 bg-[var(--surface-elevated)] rounded-[30px] animate-pulse" />
-          </div>
+          <TournamentPageSkeleton />
         </div>
       }
     >

@@ -17,7 +17,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { data: tournamentsData } = useTournaments({ limit: 10 });
+  const { data: tournamentsData } = useTournaments({ limit: 20 });
   const { isAuthenticated } = useAuth();
   const { data: packsData } = useAvailablePacks(isAuthenticated);
   

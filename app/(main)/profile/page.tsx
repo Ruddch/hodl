@@ -11,7 +11,7 @@ import { ProfileBanner } from "./components/ProfileBanner";
 import { UserAvatar } from "./components/UserAvatar";
 import { StatsCards } from "./components/StatsCards";
 import { CardsSection } from "./components/CardsSection";
-import { Onboarding } from "@/components/Onboarding";
+import { Onboarding } from "@/components/OnboardingLazy";
 import { usePageOnboarding } from "@/lib/useOnboarding";
 import { PROFILE_ONBOARDING } from "@/lib/onboarding-config";
 

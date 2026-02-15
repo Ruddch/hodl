@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { CardInDeckInfo, DeckDetailResponse } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
-import { CardStatsModal } from "@/components/CardStatsModal";
+import { CardStatsModal } from "@/components/CardStatsModalLazy";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { useTournamentLeaderboard } from "@/lib/api";
 
@@ -152,7 +152,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
   return (
     <>
       {/* Header */}
-      <div className="flex items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-4 relative flex-wrap gap-2 sm:gap-4">
+      <div className="flex items-center px-4 sm:px-6 pt-4 sm:pt-4 pb-4 relative flex-wrap gap-2 sm:gap-4">
         <h3 className="text-xl md:text-2xl font-semibold leading-8 text-[var(--text-primary)]">{title}</h3>
         <div className="flex gap-1.5 sm:gap-4 ml-0 flex-nowrap">
           <span
@@ -302,17 +302,19 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
         )}
       </div>
 
-      <CardStatsModal
-        open={selectedCardId != null}
-        onClose={() => {
-          setSelectedCardId(null);
-          setSelectedCardInfo(null);
-        }}
-        cardId={selectedCardId}
-        cardImageUrl={selectedCardInfo?.imageUrl}
-        cardName={selectedCardInfo?.name}
-        cardRarity={selectedCardInfo?.rarity}
-      />
+      {selectedCardId != null && (
+        <CardStatsModal
+          open
+          onClose={() => {
+            setSelectedCardId(null);
+            setSelectedCardInfo(null);
+          }}
+          cardId={selectedCardId}
+          cardImageUrl={selectedCardInfo?.imageUrl}
+          cardName={selectedCardInfo?.name}
+          cardRarity={selectedCardInfo?.rarity}
+        />
+      )}
     </>
   );
 }

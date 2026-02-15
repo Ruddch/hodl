@@ -16,7 +16,7 @@ interface UserInfoProps {
 export function UserInfo({ onNavClick }: UserInfoProps) {
   const { address, isConnected } = useAccount();
   const { isAuthenticated, isLoading, login, disconnect } = useAuth();
-  const { data: profile } = useMyProfile(isAuthenticated);
+  const { data: profile } = useMyProfile(true, isAuthenticated);
   const { hasUnviewedCards } = useUnviewedCards();
 
   // Используем nickname если есть, иначе генерируем короткое имя из адреса
