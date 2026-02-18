@@ -20,11 +20,6 @@ interface ToastProps {
 
 export function Toast({ visible, onDismiss, variant = "success", message }: ToastProps) {
   const [isExiting, setIsExiting] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!visible) return;
@@ -47,7 +42,7 @@ export function Toast({ visible, onDismiss, variant = "success", message }: Toas
     return () => clearTimeout(timer);
   }, [isExiting, onDismiss]);
 
-  if (!visible || !mounted || typeof document === "undefined") return null;
+  if (!visible || typeof document === "undefined") return null;
 
   const isError = variant === "error";
   const displayMessage =
