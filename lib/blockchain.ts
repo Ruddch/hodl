@@ -45,3 +45,10 @@ const PREFERRED_NETWORK_TO_CHAIN_ID: Record<PreferredNetwork, SupportedChainId> 
 export function getChainIdFromPreferredNetwork(network: PreferredNetwork): SupportedChainId {
   return PREFERRED_NETWORK_TO_CHAIN_ID[network];
 }
+
+/** Получить название сети по chainId */
+export function getNetworkFromChainId(chainId: number): PreferredNetwork | undefined {
+  if (chainId === CHAIN_ID_ABSTRACT) return "abstract";
+  if (chainId === CHAIN_ID_AVALANCHE) return "avalanche";
+  return undefined;
+}

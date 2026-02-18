@@ -344,6 +344,8 @@ export interface DeckValidateResponse {
 export interface DeckRegisterRequest {
   deck_composition: number[];
   tx_hash: string;
+  /** Название сети, в которой происходила регистрация */
+  network?: "abstract" | "avalanche";
 }
 
 export interface DeckRegisterResponse {
@@ -358,6 +360,8 @@ export interface DeckRegisterResponse {
 
 export interface DeckUnregisterRequest {
   tx_hash: string;
+  /** Название сети, в которой происходила отмена регистрации */
+  network?: "abstract" | "avalanche";
 }
 
 export interface DeckUnregisterResponse {

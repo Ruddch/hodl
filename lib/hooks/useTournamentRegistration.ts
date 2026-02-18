@@ -8,6 +8,7 @@ import {
   CHAIN_ID_ABSTRACT,
   isChainSupported,
   getChainIdFromPreferredNetwork,
+  getNetworkFromChainId,
 } from "@/lib/blockchain";
 import type { Tournament } from "@/lib/types";
 
@@ -98,11 +99,13 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
       });
 
       // 4. Отправляем tx_hash на бэкенд для подтверждения регистрации
+      const networkName = getNetworkFromChainId(targetChainId);
       await registerMutation.mutateAsync({
         tournamentId: tournament.id,
         data: {
           deck_composition: selectedCardIds,
           tx_hash: txHash,
+          ...(networkName && { network: networkName }),
         },
       });
 
@@ -150,10 +153,12 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
       });
 
       // 2. Отправляем tx_hash на бэкенд для подтверждения отмены регистрации
+      const networkName = getNetworkFromChainId(chainIdForUnregister);
       await unregisterMutation.mutateAsync({
         tournamentId: tournament.id,
         data: {
           tx_hash: txHash,
+          ...(networkName && { network: networkName }),
         },
       });
 
