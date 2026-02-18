@@ -322,6 +322,12 @@ export interface DeckValidateRequest {
   deck_composition: number[];
 }
 
+/** Информация о балансе на блокчейне (от бэкенда) */
+export interface ChainBalanceInfo {
+  chain_id: number;
+  has_sufficient_balance: boolean;
+}
+
 export interface DeckValidateResponse {
   valid: boolean;
   deck_hash: string;
@@ -329,6 +335,10 @@ export interface DeckValidateResponse {
   weight_limit: number;
   cards: CardInDeckResponse[];
   message: string;
+  /** Цепочка, на которой у пользователя достаточно средств для транзакции. Бэкенд выбирает по балансу. */
+  recommended_chain_id?: number;
+  /** Информация о балансе по блокчейнам (если бэкенд её возвращает) */
+  chain_balances?: ChainBalanceInfo[];
 }
 
 export interface DeckRegisterRequest {

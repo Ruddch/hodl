@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useAccount, useConfig } from "wagmi";
+import { useAccount, useConfig, useSwitchChain } from "wagmi";
 import { waitForTransactionReceipt } from "wagmi/actions";
 import { useAuth } from "@/lib/auth-context";
 import { useValidateDeck, useRegisterForTournament, useUnregisterFromTournament } from "@/lib/api";
 import { useRegisterDeckOnChain, useUnregisterDeckOnChain } from "@/lib/contracts/tournament-registry";
+import { CHAIN_ID_ABSTRACT, isChainSupported } from "@/lib/blockchain";
 import type { Tournament } from "@/lib/types";
 
 interface UseTournamentRegistrationOptions {
@@ -13,8 +14,9 @@ interface UseTournamentRegistrationOptions {
 
 export function useTournamentRegistration(options?: UseTournamentRegistrationOptions) {
   const { signedWalletAddress } = useAuth();
-  const { address } = useAccount();
+  const { address, chainId: currentChainId } = useAccount();
   const config = useConfig();
+  const switchChain = useSwitchChain();
   const [isRegistering, setIsRegistering] = useState(false);
   const [isUnregistering, setIsUnregistering] = useState(false);
 
@@ -52,16 +54,27 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
         return;
       }
 
-      // 2. Регистрируем колоду в смарт-контракте
-      // deck_hash возвращается от бэкенда в формате bytes32
+      // 2. Выбираем цепочку: бэкенд возвращает recommended_chain_id при наличии баланса
+      const targetChainId =
+        validation.recommended_chain_id && isChainSupported(validation.recommended_chain_id)
+          ? validation.recommended_chain_id
+          : CHAIN_ID_ABSTRACT;
+
+      // 2.1. Переключаем цепочку, если нужно
+      if (currentChainId !== targetChainId && switchChain.switchChainAsync) {
+        await switchChain.switchChainAsync({ chainId: targetChainId });
+      }
+
+      // 3. Регистрируем колоду в смарт-контракте
       const deckHash = validation.deck_hash as `0x${string}`;
-      
+
       console.log("Registering deck on blockchain...", {
         tournamentId: tournament.id,
         deckHash,
+        chainId: targetChainId,
       });
 
-      const txHash = await registerDeckOnChain(tournament.id, deckHash);
+      const txHash = await registerDeckOnChain(tournament.id, deckHash, targetChainId);
       
       console.log("Transaction submitted:", txHash);
 
@@ -76,7 +89,7 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
         status: receipt.status,
       });
 
-      // 3. Отправляем tx_hash на бэкенд для подтверждения регистрации
+      // 4. Отправляем tx_hash на бэкенд для подтверждения регистрации
       await registerMutation.mutateAsync({
         tournamentId: tournament.id,
         data: {
