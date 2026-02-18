@@ -4,12 +4,18 @@ import { waitForTransactionReceipt } from "wagmi/actions";
 import { useAuth } from "@/lib/auth-context";
 import { useValidateDeck, useRegisterForTournament, useUnregisterFromTournament } from "@/lib/api";
 import { useRegisterDeckOnChain, useUnregisterDeckOnChain } from "@/lib/contracts/tournament-registry";
-import { CHAIN_ID_ABSTRACT, isChainSupported } from "@/lib/blockchain";
+import {
+  CHAIN_ID_ABSTRACT,
+  isChainSupported,
+  getChainIdFromPreferredNetwork,
+} from "@/lib/blockchain";
 import type { Tournament } from "@/lib/types";
+
+export type RegistrationErrorContext = "register" | "unregister";
 
 interface UseTournamentRegistrationOptions {
   onSuccess?: () => void;
-  onError?: (error: Error) => void;
+  onError?: (error: Error, context: RegistrationErrorContext) => void;
 }
 
 export function useTournamentRegistration(options?: UseTournamentRegistrationOptions) {
@@ -26,10 +32,11 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
   const { registerDeck: registerDeckOnChain } = useRegisterDeckOnChain();
   const { unregisterDeck: unregisterDeckOnChain } = useUnregisterDeckOnChain();
 
-  // Проверка кошелька
+  const WALLET_MISMATCH_MESSAGE =
+    "The active wallet does not match the wallet you signed with. Please switch to the correct address in your wallet (Rabi Wallet) that you used for authorization.";
+
   const validateWallet = (): boolean => {
     if (signedWalletAddress && address && address.toLowerCase() !== signedWalletAddress.toLowerCase()) {
-      alert("Активный кошелек не совпадает с кошельком, на который вы подписывали. Пожалуйста, переключите кошелек в вашем кошельке (Rabi Wallet) на адрес, который вы использовали для авторизации.");
       return false;
     }
     return true;
@@ -37,7 +44,10 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
 
   // Регистрация на турнир
   const register = async (tournament: Tournament, selectedCardIds: number[]) => {
-    if (!validateWallet()) return;
+    if (!validateWallet()) {
+      options?.onError?.(new Error(WALLET_MISMATCH_MESSAGE), "register");
+      return;
+    }
 
     setIsRegistering(true);
     try {
@@ -49,20 +59,18 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
 
       if (!validation.valid) {
         const error = new Error(validation.message || "Deck validation failed");
-        alert(error.message);
-        options?.onError?.(error);
+        options?.onError?.(error, "register");
         return;
       }
 
-      // 2. Выбираем цепочку: бэкенд возвращает recommended_chain_id при наличии баланса
-      const targetChainId =
-        validation.recommended_chain_id && isChainSupported(validation.recommended_chain_id)
-          ? validation.recommended_chain_id
-          : CHAIN_ID_ABSTRACT;
+      // 2. Выбираем цепочку по preferred_network
+      const targetChainId = validation.preferred_network
+        ? getChainIdFromPreferredNetwork(validation.preferred_network)
+        : CHAIN_ID_ABSTRACT;
 
       // 2.1. Переключаем цепочку, если нужно
-      if (currentChainId !== targetChainId && switchChain.switchChainAsync) {
-        await switchChain.switchChainAsync({ chainId: targetChainId });
+      if (currentChainId !== targetChainId && switchChain.mutateAsync) {
+        await switchChain.mutateAsync({ chainId: targetChainId });
       }
 
       // 3. Регистрируем колоду в смарт-контракте
@@ -100,10 +108,8 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
 
       options?.onSuccess?.();
     } catch (error) {
-      console.error("Registration failed:", error);
       const errorMessage = error instanceof Error ? error.message : "Registration failed";
-      alert(errorMessage);
-      options?.onError?.(error instanceof Error ? error : new Error(errorMessage));
+      options?.onError?.(error instanceof Error ? error : new Error(errorMessage), "register");
     } finally {
       setIsRegistering(false);
     }
@@ -111,16 +117,24 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
 
   // Отмена регистрации на турнир
   const unregister = async (tournament: Tournament) => {
-    if (!validateWallet()) return;
+    if (!validateWallet()) {
+      options?.onError?.(new Error(WALLET_MISMATCH_MESSAGE), "unregister");
+      return;
+    }
 
     setIsUnregistering(true);
     try {
-      // 1. Отменяем регистрацию в смарт-контракте
+      // 1. Используем текущую сеть (пользователь регистрировался на ней)
+      const chainIdForUnregister =
+        currentChainId && isChainSupported(currentChainId) ? currentChainId : CHAIN_ID_ABSTRACT;
+
+      // 2. Отменяем регистрацию в смарт-контракте
       console.log("Unregistering deck on blockchain...", {
         tournamentId: tournament.id,
+        chainId: chainIdForUnregister,
       });
 
-      const txHash = await unregisterDeckOnChain(tournament.id);
+      const txHash = await unregisterDeckOnChain(tournament.id, chainIdForUnregister);
       
       console.log("Transaction submitted:", txHash);
 
@@ -145,10 +159,8 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
 
       options?.onSuccess?.();
     } catch (error) {
-      console.error("Unregistration failed:", error);
       const errorMessage = error instanceof Error ? error.message : "Unregistration failed";
-      alert(errorMessage);
-      options?.onError?.(error instanceof Error ? error : new Error(errorMessage));
+      options?.onError?.(error instanceof Error ? error : new Error(errorMessage), "unregister");
     } finally {
       setIsUnregistering(false);
     }

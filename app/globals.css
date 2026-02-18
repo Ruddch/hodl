@@ -34,6 +34,11 @@
   --icon-color: rgba(0, 0, 0, 0.5);
   --icon-bg: #f7f7f7;
 
+  /* Icon button (deck reset, etc.) — light theme */
+  --icon-button-bg: #ffffff;
+  --icon-button-border: #ebebeb;
+  --icon-button-hover: #f2f2f2;
+
   /* Primary accent */
   --primary: #2200ef;
   --primary-hover: rgba(34, 0, 239, 0.9);
@@ -43,6 +48,8 @@
   /* Badges & semantic */
   --badge-opened: #baffd9;
   --badge-opened-text: #000000;
+  --badge-error: rgba(185, 28, 28, 0.15);
+  --badge-error-text: #991b1b;
   --badge-count: rgba(222, 94, 87, 1);
   --notification-dot-ring: #ffffff;
   --packs-badge-border: rgba(255, 255, 255, 0.44);
@@ -125,6 +132,11 @@ html[data-theme="dark"] {
   /* Icon color */
   --icon-color: rgba(244, 244, 245, 0.6);
   --icon-bg: #25262e;
+
+  /* Icon button (deck reset, etc.) — dark theme */
+  --icon-button-bg: #25262e;
+  --icon-button-border: rgba(255, 255, 255, 0.12);
+  --icon-button-hover: #2e3039;
   /* Primary accent */
   --primary: #6366f1;
   --primary-hover: #818cf8;
@@ -133,6 +145,8 @@ html[data-theme="dark"] {
   /* Badges & semantic */
   --badge-opened: rgba(34, 197, 94, 0.25);
   --badge-opened-text: #4ade80;
+  --badge-error: rgba(239, 68, 68, 0.2);
+  --badge-error-text: #fca5a5;
   --badge-count: #ef4444;
   --notification-dot-ring: #13141a;
   --packs-badge-border: #13141a;
@@ -210,6 +224,11 @@ html[data-theme="dark"] {
     --icon-color: rgba(244, 244, 245, 0.6);
     --icon-bg: #25262e;
 
+    /* Icon button (deck reset, etc.) — dark theme */
+    --icon-button-bg: #25262e;
+    --icon-button-border: rgba(255, 255, 255, 0.12);
+    --icon-button-hover: #2e3039;
+
     /* Primary accent — яркий индиго для тёмной темы */
     --primary: #6366f1;
     --primary-hover: #818cf8;
@@ -219,6 +238,8 @@ html[data-theme="dark"] {
     /* Badges & semantic */
     --badge-opened: rgba(34, 197, 94, 0.25);
     --badge-opened-text: #4ade80;
+    --badge-error: rgba(239, 68, 68, 0.2);
+    --badge-error-text: #fca5a5;
     --badge-count: #ef4444;
     --notification-dot-ring: #13141a;
     --packs-badge-border: #13141a;
@@ -299,6 +320,14 @@ body {
   font-family: var(--font-instrument-sans), sans-serif;
   overflow: hidden;
   height: 100%;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 /* Hover для кликабельной строки лидерборда */

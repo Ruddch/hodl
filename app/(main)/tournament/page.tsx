@@ -1,11 +1,15 @@
 "use client";
 
 import { DeckSelectionModal } from "@/components/DeckSelectionModal";
+import { Toast } from "@/components/Toast";
 import { Onboarding } from "@/components/OnboardingLazy";
 import { useTournamentDetails } from "@/lib/api";
 import { useTournamentSelector } from "@/lib/hooks/useTournamentSelector";
 import { useAuth } from "@/lib/auth-context";
-import { useTournamentRegistration } from "@/lib/hooks/useTournamentRegistration";
+import {
+  useTournamentRegistration,
+  type RegistrationErrorContext,
+} from "@/lib/hooks/useTournamentRegistration";
 import { usePageOnboarding } from "@/lib/useOnboarding";
 import { TOURNAMENT_ONBOARDING } from "@/lib/onboarding-config";
 import { useState, Suspense } from "react";
@@ -16,9 +20,33 @@ import { Deck } from "@/components/Deck";
 import { LeaderboardPreviewCard } from "./components/LeaderboardPreviewCard";
 import { TournamentPageSkeleton } from "./components/TournamentPageSkeleton";
 
+function getFriendlyErrorMessage(rawMessage: string, context: RegistrationErrorContext): string {
+  const m = rawMessage.toLowerCase();
+  if (
+    m.includes("reject") ||
+    m.includes("denied") ||
+    m.includes("deny") ||
+    m.includes("cancel") ||
+    m.includes("user denied") ||
+    m.includes("user rejected")
+  ) {
+    return "Transaction was cancelled by the user.";
+  }
+  if (m.includes("кошелек") || m.includes("wallet") || m.includes("mismatch")) {
+    return "Wallet mismatch. Please switch to the correct wallet.";
+  }
+  if (context === "register") return "Registration error. Try again later.";
+  if (context === "unregister") return "Unregistration failed. Try again later.";
+  return "Something went wrong. Try again later.";
+}
+
 function TournamentPageContent() {
   const { isAuthenticated, login } = useAuth();
   const [showDeckModal, setShowDeckModal] = useState(false);
+  const [toastError, setToastError] = useState<{ visible: boolean; message: string }>({
+    visible: false,
+    message: "",
+  });
 
   const selector = useTournamentSelector({ defaultStrategy: "active" });
   const {
@@ -55,6 +83,10 @@ function TournamentPageContent() {
       refetchDetails();
       setShowDeckModal(false);
     },
+    onError: (error, context) => {
+      const message = getFriendlyErrorMessage(error.message, context);
+      setToastError({ visible: true, message });
+    },
   });
 
   const handleOpenDeckModal = () => {
@@ -64,6 +96,8 @@ function TournamentPageContent() {
     }
     setShowDeckModal(true);
   };
+
+  const handleCloseDeckModal = () => setShowDeckModal(false);
 
   const handleRegister = async (selectedCardIds: number[]) => {
     if (!tournamentDisplay) return;
@@ -93,7 +127,10 @@ function TournamentPageContent() {
           <TournamentPageSkeleton />
         ) : tournamentDisplay ? (
           <div className="space-y-5">
-            <TournamentInfoCard tournament={tournamentDisplay} onRegisterClick={handleOpenDeckModal} />
+            <TournamentInfoCard
+              tournament={tournamentDisplay}
+              onRegisterClick={handleOpenDeckModal}
+            />
             <Deck
               isRegistered={tournamentDisplay.is_registered || false}
               onStartClick={handleOpenDeckModal}
@@ -122,11 +159,18 @@ function TournamentPageContent() {
       {showDeckModal && tournamentDisplay && (
         <DeckSelectionModal
           tournament={tournamentDisplay}
-          onClose={() => setShowDeckModal(false)}
+          onClose={handleCloseDeckModal}
           onRegister={handleRegister}
           isRegistering={isRegistering}
         />
       )}
+
+      <Toast
+        visible={toastError.visible}
+        onDismiss={() => setToastError((p) => ({ ...p, visible: false }))}
+        variant="error"
+        message={toastError.message}
+      />
     </>
   );
 }

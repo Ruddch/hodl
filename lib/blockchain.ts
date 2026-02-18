@@ -1,6 +1,6 @@
 /**
  * Конфигурация поддерживаемых блокчейнов и адресов смарт-контрактов.
- * Бэкенд при валидации колоды возвращает recommended_chain_id — цепочку,
+ * Бэкенд при валидации колоды возвращает preferred_network — сеть,
  * на которой у пользователя достаточно средств для транзакции.
  */
 
@@ -22,7 +22,7 @@ export type SupportedChainId = (typeof SUPPORTED_REGISTRATION_CHAINS)[number]["i
 /** Адреса контракта TournamentRegistry по цепочкам */
 export const TOURNAMENT_REGISTRY_ADDRESSES: Record<SupportedChainId, `0x${string}`> = {
   [CHAIN_ID_ABSTRACT]: "0x507Db3dfd3695270D7F2b08a25906e171C07B4C4" as `0x${string}`,
-  [CHAIN_ID_AVALANCHE]: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+  [CHAIN_ID_AVALANCHE]: "0x6BE2e8C41E899c51e899B962e2C8dcED2125B48e" as `0x${string}`,
 };
 
 /** Получить адрес контракта для chainId */
@@ -32,4 +32,16 @@ export function getTournamentRegistryAddress(chainId: number): `0x${string}` | u
 
 export function isChainSupported(chainId: number): chainId is SupportedChainId {
   return chainId in TOURNAMENT_REGISTRY_ADDRESSES;
+}
+
+export type PreferredNetwork = "abstract" | "avalanche";
+
+const PREFERRED_NETWORK_TO_CHAIN_ID: Record<PreferredNetwork, SupportedChainId> = {
+  avalanche: CHAIN_ID_AVALANCHE,
+  abstract: CHAIN_ID_ABSTRACT,
+};
+
+/** Получить chainId по preferred_network */
+export function getChainIdFromPreferredNetwork(network: PreferredNetwork): SupportedChainId {
+  return PREFERRED_NETWORK_TO_CHAIN_ID[network];
 }

@@ -8,7 +8,7 @@ import Image from "next/image";
 import type { OpenPackResponse } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
 import { OpenedPackModal } from "./components/OpenedPackModal";
-import { PackOpenedToast } from "@/components/PackOpenedToast";
+import { Toast } from "@/components/Toast";
 import { Onboarding } from "@/components/OnboardingLazy";
 import { usePageOnboarding } from "@/lib/useOnboarding";
 import { PACKS_ONBOARDING } from "@/lib/onboarding-config";
@@ -166,7 +166,7 @@ export default function PacksPage() {
         />
     )}
 
-      <PackOpenedToast
+      <Toast
         visible={showPackOpenedToast}
         onDismiss={() => setShowPackOpenedToast(false)}
       />

@@ -335,8 +335,8 @@ export interface DeckValidateResponse {
   weight_limit: number;
   cards: CardInDeckResponse[];
   message: string;
-  /** Цепочка, на которой у пользователя достаточно средств для транзакции. Бэкенд выбирает по балансу. */
-  recommended_chain_id?: number;
+  /** Рекомендуемая сеть для регистрации (бэкенд выбирает по балансу газа) */
+  preferred_network?: "abstract" | "avalanche";
   /** Информация о балансе по блокчейнам (если бэкенд её возвращает) */
   chain_balances?: ChainBalanceInfo[];
 }
