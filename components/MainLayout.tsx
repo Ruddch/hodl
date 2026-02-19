@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useAccount } from "wagmi";
 import { Sidebar } from "./Sidebar";
 import { PageHeader } from "./PageHeader";
 import { ThemeToggle } from "./ThemeToggle";
@@ -15,6 +16,7 @@ interface MainLayoutProps {
 function MainLayoutInner({ children, title }: MainLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { showWelcome, closeWelcome } = useWelcomeModal();
+  const { isConnected } = useAccount();
   const [welcomeJustClosed, setWelcomeJustClosed] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -97,8 +99,8 @@ function MainLayoutInner({ children, title }: MainLayoutProps) {
         <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain bg-[var(--background)] pt-18 py-5 px-4 md:py-6 md:px-6">{children}</main>
       </div>
 
-      {/* Приветственная модалка для новых пользователей */}
-      {showWelcome && <WelcomeModal onClose={handleWelcomeClose} />}
+      {/* Приветственная модалка — только для пользователей без подключённого кошелька */}
+      {showWelcome && isConnected === false && <WelcomeModal onClose={handleWelcomeClose} />}
     </div>
     </WelcomeClosedContext.Provider>
   );

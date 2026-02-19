@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { WELCOME_SCREEN_ENABLED } from "@/lib/feature-flags";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
@@ -16,6 +16,12 @@ type ConnectionText = {
 
 type StepConfig = {
   image: string | null;
+  /** Соотношение сторон изображения, например "276/201" или "16/9" */
+  imageAspectRatio?: string;
+  /** Ширина изображения в px (для Next Image) */
+  imageWidth?: number;
+  /** Высота изображения в px (для Next Image) */
+  imageHeight?: number;
   title: ConnectionText;
   description: ConnectionText;
   buttonText: ConnectionText;
@@ -33,47 +39,59 @@ function getText(text: ConnectionText, isConnected: boolean): string {
 
 const STEPS: StepConfig[] = [
   {
-    image: "/modal_img.png",
+    image: "/modal_img_1.png",
+    imageAspectRatio: "276/201",
+    imageWidth: 309,
+    imageHeight: 225,
     title: {
       withoutConnection: "Welcome to Hodleague",
       withConnection: "Welcome back!",
     },
     description: {
-      withoutConnection: "In beta you will get 5 new packs to bet every week some AI text maybe",
-      withConnection: "You're already connected. Ready to play!",
+      withoutConnection:
+        "A fantasy league where you collect token cards, build decks, and compete in weekly tournaments for rewards. Analyze the market, choose your lineup, and prove your crypto knowledge against other players.",
+      withConnection:
+        "A fantasy league where you collect token cards, build decks, and compete in weekly tournaments for rewards. Analyze the market, choose your lineup, and prove your crypto knowledge against other players.",
     },
     buttonText: {
-      withoutConnection: "Continue",
-      withConnection: "Continue",
+      withoutConnection: "Next step →",
+      withConnection: "Next step →",
     },
     isLast: false,
     withWallet: false,
   },
   {
-    image: "/modal_img.png",
-    title: { withoutConnection: "How it works" },
+    image: "/modal_img_2.png",
+    imageAspectRatio: "309/450",
+    imageWidth: 309,
+    imageHeight: 450,
+    title: { withoutConnection: "Your Weekly Cycle" },
     description: {
       withoutConnection:
-        "Collect cards, build deck, and compete in tournaments to climb the leaderboard and earn rewards.",
+        "Every week you receive 5 new card packs. Open them to collect tokens for the upcoming tournament. Build your deck, register for the tournament, and watch your cards compete based on real market performance from Monday to Friday. The best performing decks climb the leaderboard and earn rewards.",
     },
-    buttonText: { withoutConnection: "Continue" },
+    buttonText: { withoutConnection: "Next step →" },
     isLast: false,
     withWallet: false,
   },
   {
-    image: "/modal_img.png",
+    image: "/modal_img_3.png",
+    imageAspectRatio: "309/225",
+    imageWidth: 309,
+    imageHeight: 225,
     title: {
-      withoutConnection: "Connect your wallet",
-      withConnection: "You're all set",
+      withoutConnection: "Build Smart, Not Random",
+      withConnection: "Build Smart, Not Random",
     },
     description: {
       withoutConnection:
-        "Link your wallet to start playing. You'll need it to open packs and participate in tournaments.",
-      withConnection: "Your wallet is connected. Let's go!",
+        "Each card has a weight value, and your deck has a total weight limit. Your job is to select tokens that will perform best during the tournament week while staying within the limit. It's not just picking winners — it's about balancing your lineup, analyzing trends, and making strategic trade-offs. The strongest combination wins.",
+      withConnection:
+        "Each card has a weight value, and your deck has a total weight limit. Your job is to select tokens that will perform best during the tournament week while staying within the limit. It's not just picking winners — it's about balancing your lineup, analyzing trends, and making strategic trade-offs. The strongest combination wins.",
     },
     buttonText: {
       withoutConnection: "Connect Wallet",
-      withConnection: "Finish",
+      withConnection: "Explore First",
     },
     isLast: true,
     withWallet: true,
@@ -95,6 +113,12 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
     }
     onClose();
   }, [onClose]);
+
+  useEffect(() => {
+    if (isConnected) {
+      handleClose();
+    }
+  }, [isConnected, handleClose]);
 
   const handleNext = () => {
     if (currentStep.isLast) {
@@ -126,6 +150,17 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
           minHeight: "520px",
         }}
       >
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          className="absolute top-2 right-2 md:top-4 md:right-4 z-10 p-2 rounded-full hover:bg-white/10 transition-colors"
+          aria-label="Close"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeOpacity="0.5" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
         <div className="relative">
           {/* Слайды — горизонтальный карусель с анимацией */}
           <div className="overflow-hidden">
@@ -136,73 +171,85 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
               {STEPS.map((s, idx) => (
                 <div
                   key={idx}
-                  className="w-full flex-shrink-0 flex flex-col min-h-[420px] px-10 py-8 md:px-16 md:py-12"
+                  className="w-full flex-shrink-0 flex flex-col min-h-[420px] px-4 py-7 md:px-8 md:py-10"
                 >
-                  {/* Контент — растягивается */}
-                  <div className="flex-1 flex flex-col items-center text-center">
-                    <div className="w-full max-w-[380px] mx-auto mb-6 aspect-[276/201] min-h-[140px] flex items-center justify-center">
+                  {/* Контент — выравнивание по левому краю */}
+                  <div className="flex-1 flex flex-col items-start text-left">
+                    <div
+                      className="w-full px-4 md:px-10 h-[240px] md:h-[380px] mx-auto flex items-center justify-center overflow-hidden"
+                      style={{ aspectRatio: s.imageAspectRatio ?? "276/201" }}
+                    >
                       {s.image ? (
                         <Image
                           src={s.image}
                           alt=""
-                          width={276}
-                          height={201}
-                          className="w-full h-auto object-contain"
-                          sizes="380px"
+                          width={s.imageWidth ?? 276}
+                          height={s.imageHeight ?? 201}
+                          className="w-full h-full object-contain"
+                          // sizes="(max-width: 768px) calc(100vw - 2rem), 380px"
+                          priority={idx === 0}
                         />
                       ) : null}
                     </div>
 
-                    <h2 className="mb-3 text-center font-medium text-[22px] leading-[28px] md:text-[36px] md:leading-[44px] tracking-[0] text-[#FBFBFF] min-h-[28px] md:min-h-[44px]">
+                    <h2
+                      className="mt-4 md:mt-6 mb-3 text-left font-medium text-[1.375rem] leading-[1.75rem] md:text-[2.25rem] md:leading-[2.75rem] tracking-[0] text-[#FBFBFF] min-h-[1.75rem] md:min-h-[2.75rem]"
+                      style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
+                    >
                       {getText(s.title, isConnected)}
                     </h2>
 
-                    <p className="mb-4 text-center font-normal text-[16px] leading-[24px] md:text-[20px] md:leading-[32px] tracking-[0] text-white min-h-[72px] md:min-h-[96px]">
+                    <p
+                      className="mb-4 text-left font-normal text-[0.875rem] leading-[1.375rem] md:text-[1.25rem] md:leading-[2rem] tracking-[0] text-[#FFFFFF] min-h-[4.5rem] md:min-h-[6rem]"
+                      style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
+                    >
                       {getText(s.description, isConnected)}
                     </p>
                   </div>
 
-                  {/* Точки и кнопки — прибиты к низу. min-h резервирует место под 2 кнопки — избегаем layout shift при переключении isConnected */}
-                  <div className="mt-auto flex flex-col items-center">
-                    <div className="w-full flex flex-col items-center min-h-[48px]">
-                    {/* Action button — withWallet && !connected: Connect Wallet + Maybe Later; иначе обычная кнопка */}
-                    {s.withWallet && !isConnected ? (
-                      <div className="w-full max-w-[320px] flex flex-col sm:flex-row gap-3">
-                        <ConnectKitButton.Custom>
-                          {({ show }) => (
-                            <button
-                              onClick={show}
-                              className="flex-1 cursor-pointer py-4 px-4 text-center text-[16px] font-medium leading-[1] tracking-[0] bg-[#2200EF] text-white rounded-[15px] hover:opacity-90 transition-opacity"
-                            >
-                              Connect Wallet
-                            </button>
-                          )}
-                        </ConnectKitButton.Custom>
+                  {/* Индикатор шага слева, кнопка(и) справа */}
+                  <div className="mt-1 md:mt-6 flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 min-h-[48px]">
+                    <span
+                      className="text-[1rem] font-medium leading-[1] tracking-[0] text-[#FFFFFF] shrink-0"
+                      style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
+                    >
+                      {idx + 1} of {STEPS.length} steps
+                    </span>
+                    <div
+                      className={`flex flex-col sm:flex-row gap-3 w-full sm:w-auto ${!(s.withWallet && !isConnected) ? "sm:flex-1 sm:justify-end sm:min-w-0" : "shrink-0"}`}
+                    >
+                      {s.withWallet && !isConnected ? (
+                        <>
+                          <ConnectKitButton.Custom>
+                            {({ show }) => (
+                              <button
+                                onClick={show}
+                                className="cursor-pointer py-4 px-6 text-center text-[1rem] font-medium leading-[1] tracking-[0] bg-[#2200EF] text-white rounded-[15px] hover:opacity-90 transition-opacity"
+                                style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
+                              >
+                                Connect Wallet
+                              </button>
+                            )}
+                          </ConnectKitButton.Custom>
+                          <button
+                            onClick={handleClose}
+                            className="cursor-pointer py-4 px-6 text-center text-[1rem] font-medium leading-[1] tracking-[0] bg-white text-[#2200EF] rounded-[15px] hover:opacity-90 transition-colors"
+                            style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
+                          >
+                            Explore First
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={handleClose}
-                          className="flex-1 cursor-pointer py-4 px-4 text-center text-[16px] font-medium leading-[1] tracking-[0] bg-white text-[#2200EF] rounded-[15px] hover:opacity-90 transition-colors"
+                          onClick={s.isLast ? handleClose : handleNext}
+                          className="cursor-pointer py-4 px-6 w-full sm:w-[50%] min-w-0 sm:min-w-[8rem] text-center text-[1rem] font-medium leading-[1] tracking-[0] bg-white text-[#2200EF] rounded-[15px] hover:opacity-90 transition-opacity"
+                          style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
                         >
-                          Maybe Later
+                          {s.isLast
+                            ? getText(s.buttonText, isConnected)
+                            : `${getText(s.buttonText, isConnected)}`}
                         </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={s.isLast ? handleClose : handleNext}
-                        className="w-full max-w-[320px] cursor-pointer py-4 px-4 text-center text-[16px] font-medium leading-[1] tracking-[0] bg-white text-[#2200EF] rounded-[15px] hover:opacity-90 transition-opacity"
-                      >
-                        {getText(s.buttonText, isConnected)}
-                      </button>
-                    )}
-                    </div>
-                    <div className="flex gap-2 mt-6">
-                      {STEPS.map((_, i) => (
-                        <div
-                          key={i}
-                          className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                            i === step ? "bg-white" : "bg-white/40"
-                          }`}
-                        />
-                      ))}
+                      )}
                     </div>
                   </div>
                 </div>
@@ -218,14 +265,19 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
 const STORAGE_KEY = WELCOME_SEEN_KEY;
 
 export function useWelcomeModal() {
-  const [showWelcome, setShowWelcome] = useState(() => {
-    if (!WELCOME_SCREEN_ENABLED) return false;
-    if (typeof window === "undefined") return false;
-    const seen = localStorage.getItem(STORAGE_KEY);
-    if (!seen) {
-      return true;
-    }
-  });
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    if (!WELCOME_SCREEN_ENABLED) return;
+    const timer = requestAnimationFrame(() => {
+      if (typeof window === "undefined") return;
+      const seen = localStorage.getItem(STORAGE_KEY);
+      if (!seen) {
+        setShowWelcome(true);
+      }
+    });
+    return () => cancelAnimationFrame(timer);
+  }, []);
 
   const closeWelcome = useCallback(() => {
     if (typeof window !== "undefined") {
