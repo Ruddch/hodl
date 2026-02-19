@@ -48,7 +48,7 @@ export default function PacksPage() {
   const { run, steps, close, complete } = usePageOnboarding(
     "packs",
     PACKS_ONBOARDING,
-    !isLoading
+    isAuthenticated && !isLoading
   );
 
   const handleOpenPack = async () => {

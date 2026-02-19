@@ -71,7 +71,7 @@ function TournamentPageContent() {
   const { run, steps, close, complete } = usePageOnboarding(
     "tournament",
     TOURNAMENT_ONBOARDING,
-    !isLoading && !!tournamentDisplay
+    isAuthenticated && !isLoading && !!tournamentDisplay
   );
 
   const canRegister =

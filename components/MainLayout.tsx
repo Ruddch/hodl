@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { Sidebar } from "./Sidebar";
 import { PageHeader } from "./PageHeader";
@@ -26,6 +26,16 @@ function MainLayoutInner({ children, title }: MainLayoutProps) {
     closeWelcome();
     setWelcomeJustClosed(true);
   }, [closeWelcome, setWelcomeJustClosed]);
+
+  /** Когда пользователь подключил кошелёк из Welcome модала — модал сразу размонтируется
+   * (из-за условия isConnected === false). handleWelcomeClose не успевает вызваться.
+   * Обрабатываем это здесь — чтобы онбординг запустился.
+   */
+  useEffect(() => {
+    if (isConnected && showWelcome) {
+      queueMicrotask(() => handleWelcomeClose());
+    }
+  }, [isConnected, showWelcome, handleWelcomeClose]);
 
   const welcomeClosedValue = {
     welcomeJustClosed,
