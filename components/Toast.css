@@ -20,10 +20,10 @@
   }
 }
 
-.pack-opened-toast-enter {
+.toast-enter {
   animation: toastSlideInFromRight 0.4s ease-out both;
 }
 
-.pack-opened-toast-exit {
+.toast-exit {
   animation: toastSlideOutToRight 0.4s ease-in forwards;
 }

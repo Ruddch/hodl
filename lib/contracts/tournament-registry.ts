@@ -1,8 +1,9 @@
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { abstract } from "wagmi/chains";
-
-// Contract address on Abstract Mainnet
-export const TOURNAMENT_REGISTRY_ADDRESS = "0x507Db3dfd3695270D7F2b08a25906e171C07B4C4" as const;
+import {
+  getTournamentRegistryAddress,
+  CHAIN_ID_ABSTRACT,
+  isChainSupported,
+} from "@/lib/blockchain";
 
 // Contract ABI (only the functions we need)
 export const TOURNAMENT_REGISTRY_ABI = [
@@ -43,13 +44,22 @@ export function useRegisterDeckOnChain() {
     hash,
   });
 
-  const registerDeck = async (tournamentId: number, deckHash: `0x${string}`) => {
+  const registerDeck = async (
+    tournamentId: number,
+    deckHash: `0x${string}`,
+    chainId: number = CHAIN_ID_ABSTRACT
+  ) => {
+    const address = getTournamentRegistryAddress(chainId);
+    if (!address || !isChainSupported(chainId)) {
+      throw new Error(`Chain ${chainId} is not supported or contract address not set`);
+    }
+
     const txHash = await writeContractAsync({
-      address: TOURNAMENT_REGISTRY_ADDRESS,
+      address,
       abi: TOURNAMENT_REGISTRY_ABI,
       functionName: "registerDeck",
       args: [BigInt(tournamentId), deckHash],
-      chainId: abstract.id,
+      chainId,
     });
 
     return txHash;
@@ -73,13 +83,21 @@ export function useUnregisterDeckOnChain() {
     hash,
   });
 
-  const unregisterDeck = async (tournamentId: number) => {
+  const unregisterDeck = async (
+    tournamentId: number,
+    chainId: number = CHAIN_ID_ABSTRACT
+  ) => {
+    const address = getTournamentRegistryAddress(chainId);
+    if (!address || !isChainSupported(chainId)) {
+      throw new Error(`Chain ${chainId} is not supported or contract address not set`);
+    }
+
     const txHash = await writeContractAsync({
-      address: TOURNAMENT_REGISTRY_ADDRESS,
+      address,
       abi: TOURNAMENT_REGISTRY_ABI,
       functionName: "unregisterDeck",
       args: [BigInt(tournamentId)],
-      chainId: abstract.id,
+      chainId,
     });
 
     return txHash;

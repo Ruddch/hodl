@@ -22,10 +22,10 @@ const glowMap = {
   'common': 'silver',
 };
 
-const PACK_MAX_WIDTH = 473;
+const PACK_MAX_WIDTH = 400;
 const ANGLE_AT_MAX = 36; // ширина уголка/ленточки при макс. размере пака
 
-/** Вычисляемая ширина пака — синхронно с CSS (min(473px, 100vw - 4rem)) */
+/** Вычисляемая ширина пака — синхронно с CSS */
 const getPackWidth = () => Math.min(PACK_MAX_WIDTH, Math.max(150, window.innerWidth - 64));
 
 /** Размер уголка пропорционально ширине пака */
@@ -49,6 +49,9 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   const [containerScale, setContainerScale] = useState(1);
   const [packWidth, setPackWidth] = useState(() => 
     typeof window !== 'undefined' ? getPackWidth() : PACK_MAX_WIDTH
+  );
+  const [isDesktop, setIsDesktop] = useState(() => 
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : true
   );
 
   const angleSize = getAngleSize(packWidth);
@@ -321,35 +324,30 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   
   // Расчет scale для адаптации под размер экрана
   const calculateScale = useCallback(() => {
-    // Максимальная ширина, которую занимают карты
-    // Карта имеет max-width 320px, крайние карты смещены на 260% от ширины карты
-    // При ширине карты 320px: смещение = 320 * 2.6 = 832px в каждую сторону
-    // Общая ширина от левого края левой карты до правого края правой карты ≈ 2000px
     const maxCardsWidth = 2000;
-    
-    // Учитываем padding контейнера .app (2rem = 32px с каждой стороны)
     const padding = 64;
     const availableWidth = window.innerWidth - padding;
-    
-    // Вычисляем scale, чтобы все карты поместились
     const scale = Math.min(1, availableWidth / maxCardsWidth);
-    
-    // Минимальный scale для очень маленьких экранов
     const minScale = 0.6;
-    
     return Math.max(minScale, scale);
   }, []);
 
-  // Обновление scale и packWidth при изменении размера окна
+  // Обновление scale, packWidth и isDesktop при изменении размера окна
   useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
     const update = () => {
       setContainerScale(calculateScale());
       setPackWidth(getPackWidth());
+      setIsDesktop(mediaQuery.matches);
     };
 
     update();
+    mediaQuery.addEventListener('change', update);
     window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    return () => {
+      mediaQuery.removeEventListener('change', update);
+      window.removeEventListener('resize', update);
+    };
   }, [calculateScale]);
 
   // Сброс progress/distance при ресайзе, если пак закрыт
@@ -537,21 +535,29 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
 
        
       </div>
-       {/* Кнопка Open — скрывается в начале анимации при нажатии */}
        {!packOpened && !dragginStarted && (
-          <button
-            type="button"
-            onClick={triggerOpenPack}
-            className="pack-open-btn-pulse block absolute bottom-[5%] left-1/2 -translate-x-1/2 w-fit mx-auto mt-12 px-6 py-3 text-lg font-medium text-white hover:opacity-90 rounded-[15px] transition-opacity active:scale-[0.98] cursor-pointer z-10"
-            style={{
-              backgroundColor: "rgb(213, 141, 69)",
-              WebkitTapHighlightColor: "transparent",
-              touchAction: "manipulation",
-            }}
-            aria-label="Open pack"
-          >
-            Open pack
-          </button>
+          isDesktop ? (
+            <div
+              className="absolute bottom-[5%] left-1/2 -translate-x-1/2 w-fit mx-auto mt-12 px-4 py-2 text-sm font-medium text-white/80 rounded-[12px] border border-white/20 z-10"
+              style={{ backgroundColor: "rgba(213, 141, 69, 0.3)" }}
+            >
+              Press <kbd className="px-1.5 py-0.5 rounded bg-white/20 font-mono text-xs">Space</kbd> to open pack
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={triggerOpenPack}
+              className="pack-open-btn-pulse block absolute bottom-[5%] left-1/2 -translate-x-1/2 w-fit mx-auto mt-12 px-6 py-3 text-lg font-medium text-white hover:opacity-90 rounded-[15px] transition-opacity active:scale-[0.98] cursor-pointer z-10"
+              style={{
+                backgroundColor: "rgb(213, 141, 69)",
+                WebkitTapHighlightColor: "transparent",
+                touchAction: "manipulation",
+              }}
+              aria-label="Open pack"
+            >
+              Open pack
+            </button>
+          )
         )}
     </div>
   );

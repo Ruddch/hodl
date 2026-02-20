@@ -30,7 +30,6 @@ export const Card: React.FC<CardProps> = ({
 
   const handleCardMouseEnter = () => {
     if (!cardRef.current) return;
-    cardRef.current.style.transition = 'transform 0.15s ease-out';
   };
 
   const handleCardMouseMove = (e: React.MouseEvent) => {
@@ -52,7 +51,6 @@ export const Card: React.FC<CardProps> = ({
     const rotateX = -((y - midY) / midY) * 10 * tiltIntensity;
 
     card.style.transform = `
-      ${transform ?? ""}
       rotateX(${rotateX}deg)
       rotateY(${rotateY}deg)
     `;
@@ -67,8 +65,7 @@ export const Card: React.FC<CardProps> = ({
     if (!cardRef.current) return;
 
     const card = cardRef.current;
-    card.style.transition = 'transform 0.5s ease-out';
-    card.style.transform = transform ?? "";
+    card.style.transform = '';
   };
 
   return (
@@ -84,7 +81,7 @@ export const Card: React.FC<CardProps> = ({
         transformStyle: 'preserve-3d',
       }}
     >
-      <div ref={cardRef}>
+      <div ref={cardRef} className="card-container">
         <div className="card-shadow">
           <div 
             className={`card-wrapper ${isFlipped ? 'rotated' : ''}`}

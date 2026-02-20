@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect, useId } from "react";
 import { useVirtualizer, measureElement } from "@tanstack/react-virtual";
 import { useMyProfile } from "@/lib/api";
 import type { UserCard, Tournament } from "@/lib/types";
@@ -15,6 +15,10 @@ interface DeckSelectionModalProps {
 
 const DECK_SIZE = 5;
 const ROW_HEIGHT_ESTIMATE = 300; // грубая оценка, measureElement скорректирует
+
+function getCardIdentityKey(card: UserCard) {
+  return `${card.token_symbol}|${card.token_name}|${card.token_weight}|${card.rarity_name}|${card.design_type} ?? ""}`;
+}
 
 // Хук для определения количества колонок по ширине экрана
 function useCardsPerRow() {
@@ -50,11 +54,12 @@ export function DeckSelectionModal({
 }: DeckSelectionModalProps) {
   const { data: profile, isLoading } = useMyProfile(true);
   const [selectedCards, setSelectedCards] = useState<UserCard[]>([]);
+  const resetIconClipId = useId();
   const [searchQuery, setSearchQuery] = useState("");
   const cardsPerRow = useCardsPerRow();
   const parentRef = useRef<HTMLDivElement>(null);
 
-  // Фильтруем карты по поиску
+  // Фильтруем карты по поиску, показываем только уникальные по параметрам
   const filteredCards = useMemo(() => {
     if (!profile?.cards) return [];
 
@@ -69,8 +74,16 @@ export function DeckSelectionModal({
       );
     }
 
-    // Сортируем по token_weight (по убыванию - сначала более тяжелые карты)
-    return cards.sort((a, b) => b.token_weight - a.token_weight);
+    cards = cards.sort((a, b) => b.token_weight - a.token_weight);
+
+    // Уникальность по identity (token, rarity, design и т.д.) — оставляем первый из группы
+    const seen = new Set<string>();
+    return cards.filter((card) => {
+      const key = getCardIdentityKey(card);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [profile?.cards, searchQuery]);
 
   // Текущий вес выбранных карт
@@ -134,6 +147,11 @@ export function DeckSelectionModal({
   // Удаление карты из выбранных
   const removeCard = useCallback((userCardId: number) => {
     setSelectedCards((prev) => prev.filter((c) => c.user_card_id !== userCardId));
+  }, []);
+
+  // Сброс всех выбранных карт
+  const resetSelection = useCallback(() => {
+    setSelectedCards([]);
   }, []);
 
   // Название турнира
@@ -263,7 +281,7 @@ export function DeckSelectionModal({
                           key={card.user_card_id}
                           onClick={() => canSelect && toggleCard(card)}
                           disabled={!canSelect && !isSelected}
-                          className={`relative rounded-[10px] sm:rounded-[14px] overflow-visible transition-all ${
+                          className={`relative cursor-pointer rounded-[10px] sm:rounded-[14px] overflow-visible transition-all ${
                             isSelected
                               ? "ring-2 sm:ring-3 ring-[var(--primary)] ring-offset-2 sm:ring-offset-6"
                               : canSelect
@@ -315,7 +333,7 @@ export function DeckSelectionModal({
               return (
                 <div
                   key={index}
-                  className="relative w-[calc(20%-4px)] md:w-[120px] flex-shrink-0 rounded-lg sm:rounded-xl transition-all"
+                  className="relative w-[calc(18%-4px)] md:w-[120px] flex-shrink-0 rounded-lg sm:rounded-xl transition-all"
                   style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
                 >
                   {card ? (
@@ -368,6 +386,24 @@ export function DeckSelectionModal({
                 </div>
               );
             })}
+            {/* Кнопка сброса всех выбранных карт */}
+            <button
+              onClick={resetSelection}
+              disabled={selectedCards.length === 0}
+              className="self-start -ml-0 md:-ml-2 w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0 rounded-lg border flex items-center justify-center transition-colors disabled:cursor-not-allowed text-[var(--primary)] [background-color:var(--icon-button-bg)] [border-color:var(--icon-button-border)] [border-width:1px] hover:[background-color:var(--icon-button-hover)] disabled:hover:[background-color:var(--icon-button-bg)]"
+              aria-label="Reset all selected cards"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g clipPath={`url(#${resetIconClipId})`}>
+                  <path d="M9.15355 10.6182H12.815M12.815 10.6182V6.95676M12.815 10.6182L8.97047 6.77369C8.43639 6.2396 7.71201 5.93955 6.95669 5.93955C6.20138 5.93955 5.477 6.2396 4.94291 6.77369C4.67846 7.03814 4.46869 7.35209 4.32556 7.69762C4.18244 8.04314 4.10878 8.41347 4.10878 8.78747C4.10878 9.54278 4.40883 10.2672 4.94291 10.8012L6.22441 12.0827" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                </g>
+                <defs>
+                  <clipPath id={resetIconClipId}>
+                    <rect width="12.4273" height="12.4273" fill="white" transform="translate(8.7874) rotate(45)"/>
+                  </clipPath>
+                </defs>
+              </svg>
+            </button>
           </div>
 
           {/* Footer content */}

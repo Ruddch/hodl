@@ -1,15 +1,18 @@
 import { createConfig, http } from "wagmi";
-import { abstractTestnet, abstract } from "wagmi/chains";
+import { abstract, avalanche } from "wagmi/chains";
+import { injected } from "wagmi/connectors";
 import { createClient } from "viem";
 import { eip712WalletActions } from "viem/zksync";
 import { abstractWalletConnector } from "@abstract-foundation/agw-react/connectors";
 
-// Используем testnet по умолчанию, можно переключить на abstract для mainnet
-const chains = [abstract] as const;
+const chains = [abstract, avalanche] as const;
 
 export const wagmiConfig = createConfig({
   chains,
-  connectors: [abstractWalletConnector()],
+  connectors: [
+    abstractWalletConnector(),
+    injected(), // MetaMask и др. для Avalanche
+  ],
   client({ chain }) {
     return createClient({
       chain,

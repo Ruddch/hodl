@@ -66,7 +66,7 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
     if (!run || !currentStep) return;
     const el = document.querySelector(currentStep.target);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.scrollIntoView({ behavior: "auto", block: currentStep.placement === "top" ? "end" : "center" });
     }
   }, [run, stepIndex, currentStep]);
 
@@ -83,6 +83,11 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
     setStepIndex((i) => Math.max(0, i - 1));
   }, []);
 
+  const handleClose = useCallback(() => {
+    onComplete?.();
+    onClose();
+  }, [onComplete, onClose]);
+
   if (!run || !currentStep || steps.length === 0) return null;
 
   const rect = targetRect;
@@ -94,7 +99,7 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
       {/* Кликабельный слой — тень box-shadow не ловит события, нужен отдельный слой */}
       <div
         className="absolute inset-0 cursor-pointer pointer-events-auto"
-        onClick={onClose}
+        onClick={handleClose}
         aria-hidden
       />
       {/* Blur — 4 панели (прямоугольная дырка, без скругления) */}
@@ -174,7 +179,7 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
           {/* Кнопка закрытия */}
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             aria-label="Close"
           >

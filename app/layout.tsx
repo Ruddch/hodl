@@ -19,9 +19,20 @@ const leagueGothic = League_Gothic({
 });
 
 
+const basePath = (process.env.NEXT_PUBLIC_BASE_PATH || "").replace(/\/$/, "") || "";
+const iconPath = basePath ? `/${basePath}/logo-3.png` : "/logo-3.png";
+
 export const metadata: Metadata = {
   title: "Hodleague",
   description: "Crypto fantasy on Abstract chain",
+  icons: {
+    icon: iconPath,
+    apple: iconPath,
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Hodleague",
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +43,12 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
+        {/* Иконка для Add to Home Screen (iOS, Android) */}
+        <link rel="apple-touch-icon" href={iconPath} />
+        <link rel="icon" href={iconPath} />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="Hodleague" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         {/* Ранний редирект / → /tournament/ с сохранением ?ref (до загрузки React) */}
         <script
           dangerouslySetInnerHTML={{
