@@ -114,11 +114,20 @@ export interface Tournament {
   my_deck_id?: number | null;
 }
 
+/** Сеть, в которой пользователь зарегистрировал колоду (приходит в include_deck=true) */
+export interface MyRegistrationNetwork {
+  network: "abstract" | "avalanche";
+  chain_id: number;
+  contract_address: string;
+}
+
 export interface TournamentDetail extends Tournament {
   description?: string | null;
   rules?: string | null;
   my_deck?: CardInDeckInfo[] | null;
   prizes?: PrizeConfig[];
+  /** Сеть для анрегистрации колоды (когда include_deck=true и пользователь зарегистрирован) */
+  my_registration_network?: MyRegistrationNetwork | null;
 }
 
 export interface PaginatedTournamentsResponse {

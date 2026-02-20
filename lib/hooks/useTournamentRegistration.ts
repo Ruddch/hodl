@@ -10,7 +10,7 @@ import {
   getChainIdFromPreferredNetwork,
   getNetworkFromChainId,
 } from "@/lib/blockchain";
-import type { Tournament } from "@/lib/types";
+import type { Tournament, TournamentDetail } from "@/lib/types";
 
 export type RegistrationErrorContext = "register" | "unregister";
 
@@ -119,7 +119,7 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
   };
 
   // Отмена регистрации на турнир
-  const unregister = async (tournament: Tournament) => {
+  const unregister = async (tournament: Tournament | TournamentDetail) => {
     if (!validateWallet()) {
       options?.onError?.(new Error(WALLET_MISMATCH_MESSAGE), "unregister");
       return;
@@ -127,11 +127,20 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
 
     setIsUnregistering(true);
     try {
-      // 1. Используем текущую сеть (пользователь регистрировался на ней)
-      const chainIdForUnregister =
-        currentChainId && isChainSupported(currentChainId) ? currentChainId : CHAIN_ID_ABSTRACT;
+      // 1. Используем my_registration_network с бэкенда или текущую сеть как fallback
+      const regNetwork = (tournament as TournamentDetail).my_registration_network;
+      const chainIdForUnregister = regNetwork?.chain_id
+        ? regNetwork.chain_id
+        : currentChainId && isChainSupported(currentChainId)
+          ? currentChainId
+          : CHAIN_ID_ABSTRACT;
 
-      // 2. Отменяем регистрацию в смарт-контракте
+      // 2. Переключаем цепочку, если нужна другая сеть
+      if (currentChainId !== chainIdForUnregister && switchChain.mutateAsync) {
+        await switchChain.mutateAsync({ chainId: chainIdForUnregister });
+      }
+
+      // 3. Отменяем регистрацию в смарт-контракте
       console.log("Unregistering deck on blockchain...", {
         tournamentId: tournament.id,
         chainId: chainIdForUnregister,
@@ -152,8 +161,9 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
         status: receipt.status,
       });
 
-      // 2. Отправляем tx_hash на бэкенд для подтверждения отмены регистрации
-      const networkName = getNetworkFromChainId(chainIdForUnregister);
+      // 4. Отправляем tx_hash на бэкенд для подтверждения отмены регистрации
+      const networkName =
+        regNetwork?.network ?? getNetworkFromChainId(chainIdForUnregister);
       await unregisterMutation.mutateAsync({
         tournamentId: tournament.id,
         data: {
