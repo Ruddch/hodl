@@ -51,10 +51,10 @@ export function useTournamentSelector(
   const defaultTournament = useMemo(() => {
     if (!tournamentsData?.items.length) return null;
     if (defaultStrategy === "finished") {
-      const finished = tournamentsData.items
-        .filter((t) => t.status === "finished")
+      const finishedOrOngoing = tournamentsData.items
+        .filter((t) => t.status === "finished" || t.status === "ongoing")
         .sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime())[0];
-      return finished || tournamentsData.items[0];
+      return finishedOrOngoing || tournamentsData.items[0];
     }
     return null;
   }, [tournamentsData, defaultStrategy]);
@@ -116,8 +116,10 @@ export function useTournamentSelector(
     } else {
       for (const epochKey of epochKeys) {
         const tournamentsInEpoch = epochs[epochKey] || [];
-        const hasFinished = tournamentsInEpoch.some((t) => t.status === "finished");
-        if (hasFinished) return epochKey;
+        const hasFinishedOrOngoing = tournamentsInEpoch.some(
+          (t) => t.status === "finished" || t.status === "ongoing"
+        );
+        if (hasFinishedOrOngoing) return epochKey;
       }
     }
     return epochKeys[0];
@@ -130,10 +132,10 @@ export function useTournamentSelector(
   const defaultTournamentInEpoch = useMemo(() => {
     if (!tournamentsInEpoch.length) return null;
     if (defaultStrategy === "finished") {
-      const finished = tournamentsInEpoch
-        .filter((t) => t.status === "finished")
+      const finishedOrOngoing = tournamentsInEpoch
+        .filter((t) => t.status === "finished" || t.status === "ongoing")
         .sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime())[0];
-      return finished || tournamentsInEpoch[tournamentsInEpoch.length - 1];
+      return finishedOrOngoing || tournamentsInEpoch[tournamentsInEpoch.length - 1];
     }
     const active = tournamentsInEpoch.find((t) => t.status === "registration" || t.status === "ongoing");
     return active || tournamentsInEpoch[0];
