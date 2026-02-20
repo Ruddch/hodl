@@ -5,6 +5,7 @@ import { useVirtualizer, measureElement } from "@tanstack/react-virtual";
 import { useMyProfile } from "@/lib/api";
 import type { UserCard, Tournament } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
+import { SearchInput } from "@/components/SearchInput";
 
 interface DeckSelectionModalProps {
   tournament: Tournament;
@@ -211,12 +212,13 @@ export function DeckSelectionModal({
 
           {/* Search */}
           <div className="mt-3 sm:mt-4">
-            <input
-              type="text"
-              placeholder="Search by card name"
+            <SearchInput
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:max-w-sm px-3 sm:px-4 py-2 sm:py-2.5 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-placeholder)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-opacity-50"
+              onChange={setSearchQuery}
+              placeholder="Search by card name"
+              variant="compact"
+              showIcon={false}
+              className="w-full sm:max-w-sm"
             />
           </div>
         </div>

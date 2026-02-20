@@ -6,6 +6,7 @@ import { useTokensLeaderboardInfinite } from "@/lib/api";
 import type { TokenWithRate } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
 import { DropdownSelect } from "@/components/DropdownSelect";
+import { SearchInput } from "@/components/SearchInput";
 
 function formatPrice(price: number): string {
   if (price >= 1) return price.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
@@ -214,28 +215,12 @@ export default function TokensPage() {
 
           <div className="flex flex-col md:flex-row gap-4 md:gap-9 md:items-center">
             {/* Search */}
-            <div className="relative flex-1 md:max-w-[320px]">
-              <svg
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-placeholder)]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search by symbol or name"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-11 md:h-12 pl-11 pr-4 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] text-base text-[var(--input-text)] placeholder:text-[var(--text-placeholder)] outline-none focus:outline-none"
-              />
-            </div>
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by symbol or name"
+              className="flex-1 md:max-w-[320px]"
+            />
 
             {/* Filters */}
             <div className="flex flex-wrap gap-3 md:gap-4">
