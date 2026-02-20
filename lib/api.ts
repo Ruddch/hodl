@@ -25,6 +25,7 @@ import type {
   CardCatalogResponse,
   CardDetailResponse,
   CardTournamentStatsResponse,
+  TokensLeaderboardResponse,
   AvailablePacksResponse,
   OpenPackRequest,
   OpenPackResponse,
@@ -137,6 +138,29 @@ export async function getSimulationTokens(): Promise<TokenListResponse> {
 
 export async function getTokensStats(): Promise<TokenStatsResponse> {
   return fetchApi("/api/tokens-stats");
+}
+
+export interface GetTokensLeaderboardParams {
+  limit?: number;
+  offset?: number;
+  is_active?: boolean | null;
+  sort_by?: "calculated_score" | "symbol";
+  sort_order?: "asc" | "desc";
+}
+
+export async function getTokensLeaderboard(
+  params: GetTokensLeaderboardParams = {}
+): Promise<TokensLeaderboardResponse> {
+  const { sort_by = "calculated_score", sort_order = "desc", ...rest } = params;
+  const searchParams = new URLSearchParams();
+  if (rest.limit != null) searchParams.set("limit", String(rest.limit));
+  if (rest.offset != null) searchParams.set("offset", String(rest.offset));
+  if (rest.is_active != null) searchParams.set("is_active", String(rest.is_active));
+  searchParams.set("sort_by", sort_by);
+  searchParams.set("sort_order", sort_order);
+
+  const query = searchParams.toString();
+  return fetchApi(`/api/tokens/${query ? `?${query}` : ""}`);
 }
 
 // ==================== Sessions API ====================
@@ -425,6 +449,35 @@ export function useTokensStats() {
   return useQuery({
     queryKey: ["tokensStats"],
     queryFn: getTokensStats,
+  });
+}
+
+export function useTokensLeaderboard(params: GetTokensLeaderboardParams = {}) {
+  return useQuery({
+    queryKey: ["tokensLeaderboard", params],
+    queryFn: () => getTokensLeaderboard(params),
+  });
+}
+
+const TOKENS_PAGE_SIZE = 50;
+
+export function useTokensLeaderboardInfinite(
+  params: Omit<GetTokensLeaderboardParams, "limit" | "offset"> = {}
+) {
+  return useInfiniteQuery({
+    queryKey: ["tokensLeaderboard", "infinite", params],
+    queryFn: ({ pageParam }) =>
+      getTokensLeaderboard({
+        ...params,
+        limit: TOKENS_PAGE_SIZE,
+        offset: pageParam,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { offset, limit, total } = lastPage.pagination;
+      const nextOffset = offset + limit;
+      return nextOffset < total ? nextOffset : undefined;
+    },
   });
 }
 
