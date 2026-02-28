@@ -26,6 +26,7 @@ export function AlphaTestAccessModal({ onClose }: AlphaTestAccessModalProps) {
             <button
               onClick={onClose}
               className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors"
+              data-ph-capture-attribute-button="alpha-test-modal-close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -49,6 +50,7 @@ export function AlphaTestAccessModal({ onClose }: AlphaTestAccessModalProps) {
           <button
             onClick={onClose}
             className="w-full px-4 py-2.5 bg-[#2200EF] text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
+            data-ph-capture-attribute-button="alpha-test-modal-got-it"
           >
             Got it
           </button>

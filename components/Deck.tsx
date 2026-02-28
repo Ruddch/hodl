@@ -62,6 +62,7 @@ function EmptyDeck({ onStartClick, canRegister, tournamentStatus }: EmptyDeckPro
           <button
             onClick={onStartClick}
             disabled={!canRegister}
+            data-ph-capture-attribute-button="deck-lets-start"
             className={`px-8 py-3 bg-[var(--surface)] rounded-full text-base font-medium flex items-center gap-2 shadow-md transition-colors ${
               canRegister 
                 ? "text-[var(--primary-muted)] hover:bg-[var(--surface-hover)] cursor-pointer" 
@@ -178,6 +179,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
             <button
               onClick={onUnregister}
               disabled={isUnregistering}
+              data-ph-capture-attribute-button="deck-unregister"
               className="cursor-pointer px-3 py-0 bg-[var(--primary)] hover:opacity-90 text-white text-sm font-medium rounded-[5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 boxShadow: "0px 4px 8px 0px rgba(74, 106, 255, 0.3), 0px 2px 4px 0px rgba(74, 106, 255, 0.2)"
@@ -221,6 +223,7 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
                     <div
                       role="button"
                       tabIndex={0}
+                      data-ph-capture-attribute-button="deck-card-view"
                       onClick={() => {
                         if (cardId != null) {
                           setSelectedCardId(cardId);

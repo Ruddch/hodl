@@ -135,6 +135,7 @@ export default function PacksPage() {
               <button
                 data-onboarding="open-packs-btn"
                 onClick={handleOpenPack}
+                data-ph-capture-attribute-button="open-packs"
                 disabled={!isAuthenticated || totalPacks === 0 || openPackMutation.isPending}
                 className={`my-7 flex flex-col items-center justify-center gap-2 w-[198px] h-12 pt-3 pb-3 rounded-[15px] text-base font-medium text-white leading-none tracking-normal text-center transition-colors ${
                   isAuthenticated && totalPacks > 0 && !openPackMutation.isPending

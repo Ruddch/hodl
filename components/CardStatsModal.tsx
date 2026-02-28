@@ -297,6 +297,7 @@ export function CardStatsModal({
               onClick={onClose}
               className="absolute top-4 right-4 z-20 shrink-0 p-2 cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-lg hover:bg-[var(--surface-hover)]"
               aria-label="Close"
+              data-ph-capture-attribute-button="card-stats-modal-close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -392,6 +393,7 @@ export function CardStatsModal({
                   <div className="flex gap-[1px] rounded-[10px] p-[2px] w-fit mb-4 flex-shrink-0 bg-[var(--input-bg)]">
                     <button
                       onClick={() => setChartMode("price")}
+                      data-ph-capture-attribute-button="card-stats-chart-price"
                       className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
                         chartMode === "price"
                           ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
@@ -412,6 +414,7 @@ export function CardStatsModal({
                     </button>
                     <button
                       onClick={() => setChartMode("weight")}
+                      data-ph-capture-attribute-button="card-stats-chart-weight"
                       className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
                         chartMode === "weight"
                           ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"

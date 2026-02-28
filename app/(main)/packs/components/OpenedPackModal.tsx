@@ -16,6 +16,7 @@ export function OpenedPackModal({ result, onClose }: OpenedPackModalProps) {
         onClick={onClose}
         className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center text-white hover:bg-white/10 rounded transition-colors z-10"
         aria-label="Close"
+        data-ph-capture-attribute-button="opened-pack-modal-close"
       >
         <svg
           className="w-6 h-6"

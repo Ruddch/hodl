@@ -203,6 +203,7 @@ export function DeckSelectionModal({
               onClick={onClose}
               className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0"
               aria-label="Close"
+              data-ph-capture-attribute-button="deck-selection-modal-close"
             >
               <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -282,6 +283,7 @@ export function DeckSelectionModal({
                         <button
                           key={card.user_card_id}
                           onClick={() => canSelect && toggleCard(card)}
+                          data-ph-capture-attribute-button="deck-selection-card"
                           disabled={!canSelect && !isSelected}
                           className={`relative cursor-pointer rounded-[10px] sm:rounded-[14px] overflow-visible transition-all ${
                             isSelected
@@ -355,6 +357,7 @@ export function DeckSelectionModal({
                       <button
                         onClick={() => removeCard(card.user_card_id)}
                         className="absolute cursor-pointer -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-7 h-7 sm:w-5 sm:h-5 bg-[var(--surface)] border border-[var(--border)] rounded-md sm:rounded-lg flex items-center justify-center hover:bg-[var(--surface-hover)] transition-colors backdrop-blur-[150px]"
+                        data-ph-capture-attribute-button="deck-selection-remove-card"
                         style={{
                           boxShadow: '0px 1px 3px 0px rgba(79, 79, 79, 0.1)'
                         }}
@@ -392,6 +395,7 @@ export function DeckSelectionModal({
             <button
               onClick={resetSelection}
               disabled={selectedCards.length === 0}
+              data-ph-capture-attribute-button="deck-selection-reset"
               className="self-start -ml-0 md:-ml-2 w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0 rounded-lg border flex items-center justify-center transition-colors disabled:cursor-not-allowed text-[var(--primary)] [background-color:var(--icon-button-bg)] [border-color:var(--icon-button-border)] [border-width:1px] hover:[background-color:var(--icon-button-hover)] disabled:hover:[background-color:var(--icon-button-bg)]"
               aria-label="Reset all selected cards"
             >
@@ -441,12 +445,14 @@ export function DeckSelectionModal({
                     onClick={onClose}
                     disabled={isRegistering}
                     className="flex-1 py-2.5 sm:py-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl sm:rounded-2xl text-sm sm:text-base font-medium text-[var(--primary)] leading-none tracking-normal text-center transition-colors disabled:opacity-50"
+                    data-ph-capture-attribute-button="deck-selection-cancel"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleRegister}
                     disabled={selectedCards.length !== DECK_SIZE || isRegistering}
+                    data-ph-capture-attribute-button="deck-selection-register"
                     className={`flex-1 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl border text-sm sm:text-base leading-none font-medium transition-colors hover:opacity-90 disabled:cursor-not-allowed ${
                       selectedCards.length === DECK_SIZE && !isRegistering
                         ? "border-[var(--primary)] bg-[var(--primary)] text-white"

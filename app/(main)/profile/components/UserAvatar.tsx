@@ -51,6 +51,7 @@ export function UserAvatar({ profile, showReferralLink = true }: UserAvatarProps
           <button
             type="button"
             onClick={handleCopyRefLink}
+            data-ph-capture-attribute-button="copy-referral-link"
             title="Copy ref link"
             className="flex cursor-pointer items-center gap-1 md:gap-2 px-0 py-0 md:px-2 md:py-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
           >

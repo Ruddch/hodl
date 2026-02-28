@@ -20,6 +20,7 @@ export function ProfileBanner({ onLogout }: ProfileBannerProps) {
           onClick={onLogout}
           className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[rgba(255,255,255,0.2)] transition-colors"
           aria-label="Logout"
+          data-ph-capture-attribute-button="profile-logout"
         >
           <svg
             width="16"

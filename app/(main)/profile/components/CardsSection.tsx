@@ -65,6 +65,7 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
           <div className="flex gap-[1px] rounded-[16px] p-2 w-fit bg-[var(--input-bg)]">
             <button
               onClick={() => onTabChange("cards")}
+              data-ph-capture-attribute-button="profile-tab-cards"
               className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
                 activeTab === "cards"
                   ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
@@ -76,6 +77,7 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
             {showTournamentStats && (
               <button
                 onClick={() => onTabChange("tournaments")}
+                data-ph-capture-attribute-button="profile-tab-tournaments"
                 className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors whitespace-nowrap ${
                   activeTab === "tournaments"
                     ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
@@ -113,6 +115,7 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
                     key={group.token_symbol}
                     role="button"
                     tabIndex={0}
+                    data-ph-capture-attribute-button="profile-card-view"
                     onClick={() => {
                       if (cardId != null) {
                         setSelectedCardId(cardId);

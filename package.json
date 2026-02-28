@@ -23,6 +23,7 @@
     "@tanstack/react-virtual": "^3.13.18",
     "connectkit": "^1.9.1",
     "next": "16.1.2",
+    "posthog-js": "^1.356.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-parallax-tilt": "^1.7.316",

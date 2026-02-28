@@ -68,6 +68,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           onClick={onClose}
           className="md:hidden p-2 hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
           aria-label="Close menu"
+          data-ph-capture-attribute-button="sidebar-close"
         >
           <svg
             className="w-6 h-6 text-[var(--text-primary)]"
@@ -95,6 +96,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <Link
               href="/tournament"
               onClick={onClose}
+              data-ph-capture-attribute-button="nav-tournament"
               className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
                 isTournamentActive
                   ? "bg-[var(--nav-item-active-bg)] text-[var(--nav-item-active-text)]"
@@ -122,6 +124,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <Link
               href="/leaderboard"
               onClick={onClose}
+              data-ph-capture-attribute-button="nav-leaderboard"
               className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
                 isLeaderboardActive
                   ? "bg-[var(--nav-item-active-bg)] text-[var(--nav-item-active-text)]"
@@ -144,6 +147,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <Link
               href="/tokens"
               onClick={onClose}
+              data-ph-capture-attribute-button="nav-tokens"
               className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
                 isTokensActive
                   ? "bg-[var(--nav-item-active-bg)] text-[var(--nav-item-active-text)]"
@@ -165,6 +169,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <Link
               href="/packs"
               onClick={onClose}
+              data-ph-capture-attribute-button="nav-packs"
               className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
                 isPacksActive
                   ? "bg-[var(--nav-item-active-bg)] text-[var(--nav-item-active-text)]"

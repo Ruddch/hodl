@@ -142,6 +142,7 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
                     <button
                       onClick={show}
                       className="cursor-pointer px-6 sm:px-17 py-2.5 sm:py-3 bg-[var(--primary)] hover:opacity-90 text-white text-sm sm:text-base font-medium rounded-[15px] transition-colors"
+                      data-ph-capture-attribute-button="tournament-connect-wallet"
                       style={{
                         boxShadow: "0px 4px 12px 0px rgba(99, 102, 241, 0.35), 0px 2px 4px 0px rgba(99, 102, 241, 0.2)"
                       }}
@@ -154,6 +155,7 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
                 <button
                   onClick={onRegisterClick}
                   className="cursor-pointer px-6 sm:px-17 py-2.5 sm:py-3 bg-[var(--primary)] hover:bg-[var(--primary)] text-white text-sm sm:text-base font-medium rounded-[15px] transition-colors"
+                  data-ph-capture-attribute-button="tournament-register"
                   style={{
                     boxShadow: "0px 4px 12px 0px rgba(99, 102, 241, 0.35), 0px 2px 4px 0px rgba(99, 102, 241, 0.2)"
                   }}
