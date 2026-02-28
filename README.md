@@ -57,12 +57,6 @@ Each card has a weight, and your deck has a total weight limit. Your job is to s
 
 <br />
 
-<p align="center">
-  <img src="public/deck.png" alt="Deck" width="400" />
-</p>
-
-<br />
-
 ## ✨ What Makes Hodleague Different
 
 - **Strategy over luck** — your choices shape the outcome
