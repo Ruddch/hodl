@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { CardInDeckInfo, DeckDetailResponse } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
 import { CardStatsModal } from "@/components/CardStatsModalLazy";
+import { ShareDeckModal } from "@/components/ShareDeckModal";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { useTournamentLeaderboard } from "@/lib/api";
 
@@ -101,6 +102,7 @@ function formatReward(prizes: DeckDetailResponse["prizes"] | undefined): string 
 function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, isUnregistering, deckDetail, deckLoading }: RegisteredDeckProps) {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [selectedCardInfo, setSelectedCardInfo] = useState<{ imageUrl?: string | null; name?: string; rarity?: string } | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const isViewMode = deckDetail !== undefined || deckLoading;
   const isOngoing = tournamentStatus === "ongoing" || tournamentStatus === "finished";
@@ -189,8 +191,20 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
             </button>
           )}
         </div>
+        {cards.length > 0 && (
+          <button
+            onClick={() => setShareOpen(true)}
+            data-ph-capture-attribute-button="deck-share"
+            className="cursor-pointer ml-auto px-3 h-6 sm:h-8 flex items-center gap-1.5 text-[10px] sm:text-[13px] font-semibold rounded text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)] hover:opacity-90 transition-opacity shrink-0"
+          >
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            SHARE
+          </button>
+        )}
         {!isOngoing && !isViewMode && (
-          <p className="text-[13px] font-medium text-[var(--text-primary)] ml-auto">
+          <p className={`text-[13px] font-medium text-[var(--text-primary)] ${cards.length > 0 ? "" : "ml-auto"}`}>
             Deck stats appears after the tournament&apos;s start
           </p>
         )}
@@ -318,6 +332,16 @@ function RegisteredDeck({ myDeck, tournamentStatus, tournamentId, onUnregister, 
           cardRarity={selectedCardInfo?.rarity}
         />
       )}
+
+      <ShareDeckModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        cards={cards.map((c) => ({
+          token_symbol: c.token_symbol ?? c.token_name,
+          token_name: c.token_name,
+          rendered_image_url: c.rendered_image_url ?? null,
+        }))}
+      />
     </>
   );
 }
