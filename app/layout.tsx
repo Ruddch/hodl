@@ -27,7 +27,7 @@ const ogImage = `${siteUrl}/logo-3.png`;
 
 export const metadata: Metadata = {
   title: "Hodleague",
-  description: "Crypto fantasy onchain",
+  description: "Build your crypto deck, compete in tournaments, and prove you're the real alpha. Fantasy league for crypto degens.",
   metadataBase: new URL(siteUrl),
   icons: {
     icon: iconPath,
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Hodleague",
-    description: "Crypto fantasy onchain",
+    description: "Build your crypto deck, compete in tournaments, and prove you're the real alpha. Fantasy league for crypto degens.",
     url: siteUrl,
     siteName: "Hodleague",
     images: [
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "Hodleague",
-    description: "Crypto fantasy onchain",
+    description: "Build your crypto deck, compete in tournaments, and prove you're the real alpha. Fantasy league for crypto degens.",
     images: [ogImage],
   },
 };
