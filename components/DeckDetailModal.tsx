@@ -91,6 +91,7 @@ export function DeckDetailModal({
               onClick={onClose}
               className="p-2 cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-lg hover:bg-[var(--surface-hover)] flex-shrink-0"
               aria-label="Close"
+              data-ph-capture-attribute-button="deck-detail-modal-close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

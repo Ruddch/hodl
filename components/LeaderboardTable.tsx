@@ -161,6 +161,7 @@ function LeaderboardRow({
           href={profileHref}
           onClick={(e) => e.stopPropagation()}
           className="flex items-center gap-2 md:gap-[18px] min-w-0 hover:opacity-80 transition-opacity group"
+          data-ph-capture-attribute-button="leaderboard-profile"
         >
           <PlayerAvatar
             walletAddress={entry.wallet_address}
@@ -226,6 +227,7 @@ function LeaderboardRow({
       role={canOpenDeck ? "button" : undefined}
       tabIndex={canOpenDeck ? 0 : undefined}
       onClick={canOpenDeck ? () => onDeckClick?.(entry) : undefined}
+      data-ph-capture-attribute-button={canOpenDeck ? "leaderboard-deck-view" : undefined}
       onKeyDown={
         canOpenDeck
           ? (e) => {

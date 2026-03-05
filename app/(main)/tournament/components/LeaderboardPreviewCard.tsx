@@ -78,6 +78,7 @@ function LeaderboardActive({ tournamentId, epoch }: { tournamentId: number; epoc
             : `/leaderboard?tournamentId=${tournamentId}`
         }
         className="absolute top-6 right-6 text-base font-medium text-[var(--primary-muted)] hover:text-[var(--primary-muted-hover)] transition-colors"
+        data-ph-capture-attribute-button="leaderboard-view-all"
       >
         View all &gt;
       </Link>

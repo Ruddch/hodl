@@ -55,6 +55,7 @@ function MainLayoutInner({ children, title }: MainLayoutProps) {
           onClick={toggleSidebar}
           className="relative p-2 -m-2 hover:bg-[var(--sidebar-hover)] rounded-lg transition-colors w-10 h-10 flex items-center justify-center"
           aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+          data-ph-capture-attribute-button="mobile-menu-toggle"
         >
           {/* Бургер — плавный переход в крестик */}
           <svg

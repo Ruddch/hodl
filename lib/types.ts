@@ -56,6 +56,38 @@ export interface TokenStatsResponse {
   avg_weight: number;
 }
 
+/** Токен из GET /api/tokens/ (leaderboard с ценой и score) */
+export interface TokenWithRate {
+  id: number;
+  name: string;
+  symbol: string;
+  weight: number;
+  image_url: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  current_price: {
+    price: number;
+    market_cap: number;
+    change_24h: number;
+    price_timestamp: string;
+  };
+  score: {
+    calculated_score: number;
+    tournament_change: number;
+  };
+}
+
+export interface TokensLeaderboardResponse {
+  success: boolean;
+  data: TokenWithRate[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+}
+
 // ==================== Sessions ====================
 export interface LockDeckRequest {
   wallet_address: string;

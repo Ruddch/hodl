@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useSignMessage, useDisconnect, useConnectionEffect, useConnections } from "wagmi";
+import posthog from "posthog-js";
 import { useQueryClient } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 import { 
@@ -104,8 +105,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.removeItem(SIGNED_WALLET_KEY);
     }
+
+    // 3. PostHog: сбрасываем distinct_id и user properties при logout
+    posthog?.reset?.();
     
-    // 3. Инвалидируем все запросы, которые зависят от пользователя
+    // 4. Инвалидируем все запросы, которые зависят от пользователя
     invalidateUserQueries(queryClient);
   }, [queryClient]);
 

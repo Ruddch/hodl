@@ -71,6 +71,7 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       onClick={() => onFlip(index)}
+      data-ph-capture-attribute-button="pack-card-flip"
       onMouseEnter={handleCardMouseEnter}
       onMouseMove={handleCardMouseMove}
       onMouseLeave={handleCardMouseLeave} 

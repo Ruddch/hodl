@@ -12,7 +12,7 @@ export function PageHeader({ title, isSidebarOpen, onClick }: PageHeaderProps) {
   const displayText = isSidebarOpen ? "Hodleague" : (title ?? "");
 
   return (
-    <div onClick={onClick ? () => onClick() : () => {} } className="flex items-center gap-2 min-w-0 flex-1">
+    <div onClick={onClick ? () => onClick() : () => {} } className="flex items-center gap-2 min-w-0 flex-1" data-ph-capture-attribute-button="page-header-menu">
       <Logo />
       <span className="text-xl font-medium text-[var(--text-primary)] truncate">
         {displayText}

@@ -149,6 +149,7 @@ function TournamentCards({ cards, onCardClick }: TournamentCardsProps) {
               onClick: () => onCardClick(card),
               className: "w-8 rounded-[7%] overflow-hidden bg-[var(--surface)] shrink-0 relative cursor-pointer hover:ring-2 hover:ring-[var(--primary-muted)]/50 hover:ring-offset-1 transition-shadow focus:outline-none focus:ring-2 focus:ring-[var(--primary-muted)]",
               type: "button" as const,
+              "data-ph-capture-attribute-button": "tournament-stats-card",
             }
           : {
               className: "w-8 rounded-[7%] overflow-hidden bg-[var(--surface)] shrink-0 relative",

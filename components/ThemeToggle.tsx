@@ -9,6 +9,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
+      data-ph-capture-attribute-button="theme-toggle"
       className="p-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-primary)]"
       aria-label={resolvedTheme === "dark" ? "Enable light theme" : "Enable dark theme"}
       title={resolvedTheme === "dark" ? "Light theme" : "Dark theme"}

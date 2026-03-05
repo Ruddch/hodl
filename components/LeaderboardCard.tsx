@@ -5,6 +5,7 @@ import type { LeaderboardEntry } from "@/lib/types";
 import { LeaderboardTable } from "./LeaderboardTable";
 import { BlurCard } from "./BlurCard";
 import { DeckDetailModal } from "./DeckDetailModal";
+import { SearchInput } from "./SearchInput";
 
 const TABLE_GRID =
   "grid grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4";
@@ -143,28 +144,12 @@ export function LeaderboardCard({
 
         {/* Search */}
         {showSearch && (
-          <div className="relative flex items-center w-full md:w-auto shrink-0">
-            <svg
-              className="absolute left-4 w-5 h-5 text-[var(--text-placeholder)]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search by username or wallet address"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-[396px] h-12 px-4 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] backdrop-blur-[150px] text-base font-normal leading-none tracking-normal text-[var(--input-text)] placeholder:text-[var(--input-text)] outline-none focus:outline-none"
-            />
-          </div>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search by username or wallet address"
+            className="flex items-center w-full md:w-[396px] shrink-0"
+          />
         )}
       </div>
 

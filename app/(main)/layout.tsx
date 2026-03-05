@@ -6,6 +6,7 @@ import { MainLayout } from "@/components/MainLayout";
 const PAGE_TITLES: Record<string, string> = {
   "/tournament": "Tournaments",
   "/leaderboard": "Leaderboard",
+  "/tokens": "Tokens",
   "/packs": "Packs",
   "/profile": "Profile",
 };

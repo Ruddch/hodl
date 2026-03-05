@@ -15,6 +15,7 @@ export function WeekSelector({ tournaments, selectedId, onSelect }: WeekSelector
           <button
             key={t.id}
             onClick={() => onSelect(t.id)}
+            data-ph-capture-attribute-button={`week-select-${t.id}`}
             className={`cursor-pointer text-base font-medium leading-none tracking-normal transition-colors ${
               isSelected
                 ? "text-[var(--text-primary)]"

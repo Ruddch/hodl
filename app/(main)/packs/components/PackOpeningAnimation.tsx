@@ -547,6 +547,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
             <button
               type="button"
               onClick={triggerOpenPack}
+              data-ph-capture-attribute-button="pack-open-animation"
               className="pack-open-btn-pulse block absolute bottom-[5%] left-1/2 -translate-x-1/2 w-fit mx-auto mt-12 px-6 py-3 text-lg font-medium text-white hover:opacity-90 rounded-[15px] transition-opacity active:scale-[0.98] cursor-pointer z-10"
               style={{
                 backgroundColor: "rgb(213, 141, 69)",
