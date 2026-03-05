@@ -22,9 +22,13 @@ const leagueGothic = League_Gothic({
 const basePath = (process.env.NEXT_PUBLIC_BASE_PATH || "").replace(/\/$/, "") || "";
 const iconPath = basePath ? `/${basePath}/logo-3.png` : "/logo-3.png";
 
+const siteUrl = "https://hodleague.com";
+const ogImage = `${siteUrl}/logo-3.png`;
+
 export const metadata: Metadata = {
   title: "Hodleague",
-  description: "Crypto fantasy on Abstract chain",
+  description: "Crypto fantasy onchain",
+  metadataBase: new URL(siteUrl),
   icons: {
     icon: iconPath,
     apple: iconPath,
@@ -32,6 +36,27 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Hodleague",
+  },
+  openGraph: {
+    title: "Hodleague",
+    description: "Crypto fantasy onchain",
+    url: siteUrl,
+    siteName: "Hodleague",
+    images: [
+      {
+        url: ogImage,
+        width: 512,
+        height: 512,
+        alt: "Hodleague",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Hodleague",
+    description: "Crypto fantasy onchain",
+    images: [ogImage],
   },
 };
 
