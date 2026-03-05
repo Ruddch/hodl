@@ -10,7 +10,7 @@ export const IS_AVAX = process.env.NEXT_PUBLIC_ENV === "avax";
 /** Базовый URL API */
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_ENV === "avax"
-    ? "https://avax.dev.hodleague.com"
+    ? "https://avax.back.hodleague.com"
     : process.env.NEXT_PUBLIC_ENV === "development"
       ? "https://uat.hodleague.com"
       : "https://back.hodleague.com";

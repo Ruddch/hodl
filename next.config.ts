@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "avax.dev.hodleague.com",
+        hostname: "avax.back.hodleague.com",
         pathname: "/**",
       },
     ],
