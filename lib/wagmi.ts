@@ -4,20 +4,22 @@ import { injected } from "wagmi/connectors";
 import { createClient } from "viem";
 import { eip712WalletActions } from "viem/zksync";
 import { abstractWalletConnector } from "@abstract-foundation/agw-react/connectors";
+import { IS_AVAX } from "./constants";
 
-const chains = [abstract, avalanche] as const;
+const chains = IS_AVAX
+  ? ([avalanche] as const)
+  : ([abstract, avalanche] as const);
+
+const connectors = IS_AVAX
+  ? [injected()]
+  : [abstractWalletConnector(), injected()];
 
 export const wagmiConfig = createConfig({
   chains,
-  connectors: [
-    abstractWalletConnector(),
-    injected(), // MetaMask и др. для Avalanche
-  ],
+  connectors,
   client({ chain }) {
-    return createClient({
-      chain,
-      transport: http(),
-    }).extend(eip712WalletActions());
+    const c = createClient({ chain, transport: http() });
+    return IS_AVAX ? c : c.extend(eip712WalletActions());
   },
   ssr: true,
 });

@@ -4,6 +4,9 @@
  */
 export const CARD_ASPECT_RATIO = 567 / 889;
 
+/** Режим Avax-only (без Abstract blockchain и AGW) */
+export const IS_AVAX = process.env.NEXT_PUBLIC_ENV === "avax";
+
 /** Базовый URL API */
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_ENV === "avax"

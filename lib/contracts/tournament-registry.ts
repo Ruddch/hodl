@@ -1,7 +1,7 @@
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import {
   getTournamentRegistryAddress,
-  CHAIN_ID_ABSTRACT,
+  DEFAULT_CHAIN_ID,
   isChainSupported,
 } from "@/lib/blockchain";
 
@@ -47,7 +47,7 @@ export function useRegisterDeckOnChain() {
   const registerDeck = async (
     tournamentId: number,
     deckHash: `0x${string}`,
-    chainId: number = CHAIN_ID_ABSTRACT
+    chainId: number = DEFAULT_CHAIN_ID
   ) => {
     const address = getTournamentRegistryAddress(chainId);
     if (!address || !isChainSupported(chainId)) {
@@ -85,7 +85,7 @@ export function useUnregisterDeckOnChain() {
 
   const unregisterDeck = async (
     tournamentId: number,
-    chainId: number = CHAIN_ID_ABSTRACT
+    chainId: number = DEFAULT_CHAIN_ID
   ) => {
     const address = getTournamentRegistryAddress(chainId);
     if (!address || !isChainSupported(chainId)) {
