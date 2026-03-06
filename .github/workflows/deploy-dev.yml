@@ -39,6 +39,7 @@ jobs:
         env:
           NODE_ENV: production
           NEXT_PUBLIC_ENV: production
+          NEXT_PUBLIC_POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
 
       - name: Check build output
         run: |

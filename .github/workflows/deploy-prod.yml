@@ -36,6 +36,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          NEXT_PUBLIC_POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
 
       - name: Create .nojekyll file
         run: touch out/.nojekyll
