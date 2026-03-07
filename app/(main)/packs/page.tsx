@@ -1,11 +1,11 @@
 "use client";
 
-import { useAvailablePacks, useOpenPack } from "@/lib/api";
+import { useAvailablePacks } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useUnviewedCards } from "@/lib/unviewed-cards-context";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import type { OpenPackResponse } from "@/lib/types";
+import type { ConfirmOpenPackResponse } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
 import { OpenedPackModal } from "./components/OpenedPackModal";
 import { Toast } from "@/components/Toast";
@@ -13,20 +13,43 @@ import { Onboarding } from "@/components/OnboardingLazy";
 import { usePageOnboarding } from "@/lib/useOnboarding";
 import { PACKS_ONBOARDING } from "@/lib/onboarding-config";
 import { BASE_PATH } from "@/lib/constants";
+import { usePackOpening, type PackOpeningStep } from "@/lib/hooks/usePackOpening";
+
+const STEP_LABELS: Record<PackOpeningStep, string> = {
+  idle: "Open packs",
+  preparing: "Preparing...",
+  signing: "Sign transaction...",
+  waiting_tx: "Waiting for confirmation...",
+  confirming: "Confirming...",
+  done: "Open packs",
+  error: "Open packs",
+};
 
 export default function PacksPage() {
   const base = BASE_PATH ? `${BASE_PATH}/` : "";
   const { isAuthenticated, login } = useAuth();
   const { data: packsData, refetch } = useAvailablePacks(isAuthenticated);
-  const openPackMutation = useOpenPack();
   const { setUnviewedCards } = useUnviewedCards();
-  const [openedPack, setOpenedPack] = useState<OpenPackResponse | null>(null);
-  const [showPackOpenedToast, setShowPackOpenedToast] = useState(false);
+  const [openedPack, setOpenedPack] = useState<ConfirmOpenPackResponse | null>(null);
+  const [toast, setToast] = useState<{ visible: boolean; variant: "success" | "error"; message?: string }>({
+    visible: false,
+    variant: "success",
+  });
+
+  const { openPack, step, isLoading: isOpening, reset } = usePackOpening({
+    onSuccess: (result) => {
+      setOpenedPack(result);
+      refetch();
+    },
+    onError: (error) => {
+      setToast({ visible: true, variant: "error", message: error.message });
+      refetch();
+    },
+  });
 
   const totalPacks = packsData?.available_packs || 0;
   const isLoading = !packsData;
 
-  // Предзагрузка изображений для анимации открытия пака
   useEffect(() => {
     const localPaths = [
       "packs.png",
@@ -51,30 +74,31 @@ export default function PacksPage() {
     isAuthenticated && !isLoading
   );
 
-  const handleOpenPack = async () => {
+  const handleOpenPack = useCallback(async () => {
     if (!isAuthenticated) {
       login();
       return;
     }
 
-    if (!packsData?.pack_types.length || totalPacks === 0) {
+    if (!packsData?.packs.length || totalPacks === 0) {
       return;
     }
 
-    try {
-      // Открываем первый доступный пак
-      const firstPack = packsData.pack_types.find((pack) => pack.count > 0);
-      if (!firstPack) return;
+    const firstPack = packsData.packs[0];
+    if (!firstPack) return;
 
-      const result = await openPackMutation.mutateAsync({
-        pack_type_id: firstPack.pack_type_id,
-      });
-      setOpenedPack(result);
-      refetch();
-    } catch (error) {
-      console.error("Failed to open pack:", error);
-    }
-  };
+    setToast((t) => ({ ...t, visible: false }));
+    reset();
+    await openPack(firstPack.user_pack_id);
+  }, [isAuthenticated, login, packsData, totalPacks, openPack, reset]);
+
+  const buttonLabel = !isAuthenticated
+    ? "Login to open packs"
+    : totalPacks === 0
+    ? "No packs available"
+    : STEP_LABELS[step];
+
+  const buttonDisabled = !isAuthenticated || totalPacks === 0 || isOpening;
 
   return (
     <>
@@ -105,7 +129,6 @@ export default function PacksPage() {
               In beta you will get 5 new packs to bet every week
             </p>
           
-                {/* Packs Image with Badge */}
             <div className="flex flex-col items-center">
               <div className="relative">
                 <Image
@@ -115,7 +138,6 @@ export default function PacksPage() {
                   height={370}
                   className="object-contain h-[370px]"
                 />
-                {/* Badge */}
                 {totalPacks > 0 && (
                   <div 
                     className="absolute w-12 h-12 flex items-center justify-center shadow-lg z-10"
@@ -131,26 +153,20 @@ export default function PacksPage() {
                 )}
               </div>
 
-              {/* Open Packs Button */}
               <button
                 data-onboarding="open-packs-btn"
                 onClick={handleOpenPack}
                 data-ph-capture-attribute-button="open-packs"
-                disabled={!isAuthenticated || totalPacks === 0 || openPackMutation.isPending}
+                disabled={buttonDisabled}
                 className={`my-7 flex flex-col items-center justify-center gap-2 w-[198px] h-12 pt-3 pb-3 rounded-[15px] text-base font-medium text-white leading-none tracking-normal text-center transition-colors ${
-                  isAuthenticated && totalPacks > 0 && !openPackMutation.isPending
+                  !buttonDisabled
                     ? "bg-[var(--primary)] hover:opacity-90 cursor-pointer"
                     : "bg-[var(--text-muted)] cursor-not-allowed"
                 }`}
               >
-                {openPackMutation.isPending
-                  ? "Opening..."
-                  : !isAuthenticated
-                  ? "Login to open packs"
-                  : totalPacks === 0
-                  ? "No packs available"
-                  : "Open packs"}
+                {buttonLabel}
               </button>
+
             </div>
           </div>
         </BlurCard>
@@ -162,14 +178,16 @@ export default function PacksPage() {
           onClose={() => {
             setOpenedPack(null);
             setUnviewedCards();
-            setShowPackOpenedToast(true);
+            setToast({ visible: true, variant: "success" });
           }}
         />
     )}
 
       <Toast
-        visible={showPackOpenedToast}
-        onDismiss={() => setShowPackOpenedToast(false)}
+        visible={toast.visible}
+        variant={toast.variant}
+        message={toast.message}
+        onDismiss={() => setToast((t) => ({ ...t, visible: false }))}
       />
     </>
   );

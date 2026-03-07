@@ -1,10 +1,10 @@
 "use client";
 
-import type { OpenPackResponse } from "@/lib/types";
+import type { ConfirmOpenPackResponse } from "@/lib/types";
 import { PackOpeningAnimation } from "./PackOpeningAnimation";
 
 interface OpenedPackModalProps {
-  result: OpenPackResponse;
+  result: ConfirmOpenPackResponse;
   onClose: () => void;
 }
 
