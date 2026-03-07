@@ -18,54 +18,71 @@
 
 <br />
 
-<p align="center">
-  <img src="public/modal_img_1.png" alt="Welcome to Hodleague" width="480" style="border-radius: 12px;" />
-</p>
+---
 
-<br />
+## How the project works
 
-## 📦 Your Weekly Cycle
+This repository is the **frontend** of Hodleague: a Next.js app that talks to a backend API and, for some actions, to blockchain contracts.
 
-Every week you receive **5 new card packs**. Open them to collect tokens for the upcoming tournament. Build your deck, register for the tournament, and from Monday to Friday your cards compete based on real market performance. The best performing decks rise on the leaderboard and earn rewards.
+### Tech stack
 
-<p align="center">
-  <img src="public/modal_img_2.png" alt="Weekly cycle" width="280" style="border-radius: 12px;" />
-</p>
+- **Next.js 16** (App Router) with static export (`output: "export"`) for deployment to static hosting
+- **React 19**, **TypeScript**
+- **wagmi** + **viem** — wallet connection and blockchain calls (Abstract, Avalanche Fuji)
+- **TanStack Query** — API data fetching and cache
+- **Tailwind CSS** — styling
 
-<br />
+### Repository structure
 
-## 🧠 Strategy, Not Luck
+| Path | Purpose |
+|------|--------|
+| `app/` | Next.js App Router pages and layouts (`(main)/` for main app routes) |
+| `components/` | Reusable UI (layout, modals, deck, cards, tournament, etc.) |
+| `lib/` | API client (`api.ts`), types, contracts config (`blockchain.ts`), hooks, auth, theme |
+| `public/` | Static assets (images, logo) |
 
-Each card has a weight, and your deck has a total weight limit. Your job is to select tokens that will perform best during the tournament week while staying within the limit. It's not just about picking winners — it's about balancing your lineup, analyzing trends, and making thoughtful trade-offs. The strongest combination wins.
+Backend API base URL is chosen via `NEXT_PUBLIC_ENV` (see below). Contract addresses (TournamentRegistry, pack opener) are in `lib/blockchain.ts` and depend on the chain (Abstract or Avalanche Fuji).
 
-<p align="center">
-  <img src="public/modal_img_3.png" alt="Build smart" width="480" style="border-radius: 12px;" />
-</p>
+### Running locally
 
-<br />
+```bash
+git clone <repo-url>
+cd hodl
+npm install
+npm run dev
+```
 
-## 🏆 How It Works
+Open [http://localhost:3000](http://localhost:3000). The app will use the **development** API (`uat.hodleague.com`) by default.
 
-| Step | Description |
-|------|-------------|
-| 📥 Get packs | 5 new card packs every week |
-| 🃏 Open & collect | Grow your token collection |
-| ⚖️ Build your deck | Pick your lineup within the weight limit |
-| 📝 Register | Join the weekly tournament |
-| 📈 Watch results | Cards compete on real market data |
-| 🎁 Earn rewards | Top decks on the leaderboard win prizes |
+To run against the **Avalanche** backend and Fuji testnet:
 
-<br />
+```bash
+npm run dev:avax
+```
 
-## ✨ What Makes Hodleague Different
+### Environment variables
 
-- **Strategy over luck** — your choices shape the outcome
-- **Real data** — results are based on live market dynamics
-- **Weekly rhythm** — fresh packs and tournaments every week
-- **Competitive** — compare yourself with other players on the leaderboard
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_ENV` | `development` (UAT API), `avax` (Avalanche backend + Fuji), or unset (production API) |
+| `NEXT_PUBLIC_BASE_PATH` | Optional base path for static export (e.g. GitHub Pages subpath) |
+| `NEXT_PUBLIC_POSTHOG_TOKEN` | Optional; enables PostHog analytics |
+| `NEXT_PUBLIC_POSTHOG_HOST` | Optional; PostHog host (default: `https://us.i.posthog.com`) |
+
+### Main flows
+
+1. **Auth** — User connects wallet; frontend requests nonce from API, user signs, frontend sends signature and gets JWT. Token is stored in `localStorage` and sent in `Authorization` header.
+2. **Packs** — User opens packs; backend prepares mint data, user signs; on Avalanche Fuji the app can call the pack-opener contract (`lib/contracts/pack-opener.ts`). Card catalog and pack history come from the API.
+3. **Deck** — User builds a deck (within weight limit). Frontend validates via API; user can register/unregister for a tournament. On supported chains, registration is written to **TournamentRegistry** (`lib/contracts/tournament-registry.ts`).
+4. **Tournaments & leaderboard** — Tournament list, details, and leaderboard are loaded from the API. Results are based on real market data computed on the backend.
+
+### Build and deploy
+
+```bash
+npm run build
+```
+
+This produces a static export in the `out/` directory, suitable for any static host. For GitHub Actions and custom domains (e.g. hodleague.com), see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ---
 
-<p align="center">
-  <strong>Analyze the market. Pick your lineup. Prove your intuition.</strong>
-</p>
