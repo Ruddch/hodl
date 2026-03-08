@@ -49,7 +49,7 @@ export function isChainSupported(chainId: number): boolean {
 
 /** Адреса контракта HodleagueCards (mintWithSignature) по цепочкам */
 const PACK_OPENER_ADDRESSES: Record<number, `0x${string}`> = {
-  [CHAIN_ID_AVALANCHE_FUJI]: "0xA8E0d17d72d97CB5C5Bf7f93eFaDc823BB2311eD",
+  [CHAIN_ID_AVALANCHE_FUJI]: "0xC6d712e7cd67E0e6aC2d4210A78B9B1e11639923",
 };
 
 export function getPackOpenerAddress(chainId: number): `0x${string}` | undefined {
