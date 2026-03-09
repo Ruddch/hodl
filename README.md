@@ -28,7 +28,7 @@ This repository is the **frontend** of Hodleague: a Next.js app that talks to a 
 
 - **Next.js 16** (App Router) with static export (`output: "export"`) for deployment to static hosting
 - **React 19**, **TypeScript**
-- **wagmi** + **viem** — wallet connection and blockchain calls (Abstract, Avalanche Fuji)
+- **wagmi** + **viem** — wallet connection and blockchain calls (Avalanche Fuji)
 - **TanStack Query** — API data fetching and cache
 - **Tailwind CSS** — styling
 
@@ -41,7 +41,7 @@ This repository is the **frontend** of Hodleague: a Next.js app that talks to a 
 | `lib/` | API client (`api.ts`), types, contracts config (`blockchain.ts`), hooks, auth, theme |
 | `public/` | Static assets (images, logo) |
 
-Backend API base URL is chosen via `NEXT_PUBLIC_ENV` (see below). Contract addresses (TournamentRegistry, pack opener) are in `lib/blockchain.ts` and depend on the chain (Abstract or Avalanche Fuji).
+Backend API base URL is chosen via `NEXT_PUBLIC_ENV` (see below). Contract addresses (TournamentRegistry, pack opener) are in `lib/blockchain.ts` and depend on the chain (Avalanche Fuji).
 
 ### Running locally
 
@@ -71,7 +71,7 @@ npm run dev:avax
 
 ### Main flows
 
-1. **Auth** — User connects wallet; frontend requests nonce from API, user signs, frontend sends signature and gets JWT. Token is stored in `localStorage` and sent in `Authorization` header.
+1. **Auth** — User connects wallet; frontend requests nonce from API, user signs, frontend sends signature and gets JWT. Token is set by the backend in an HTTP-only cookie, which the browser sends automatically with subsequent requests.
 2. **Packs** — User opens packs; backend prepares mint data, user signs; on Avalanche Fuji the app can call the pack-opener contract (`lib/contracts/pack-opener.ts`). Card catalog and pack history come from the API.
 3. **Deck** — User builds a deck (within weight limit). Frontend validates via API; user can register/unregister for a tournament. On supported chains, registration is written to **TournamentRegistry** (`lib/contracts/tournament-registry.ts`).
 4. **Tournaments & leaderboard** — Tournament list, details, and leaderboard are loaded from the API. Results are based on real market data computed on the backend.
