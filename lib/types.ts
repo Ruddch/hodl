@@ -550,6 +550,13 @@ export interface MyTournamentsResponse {
   best_score: number;
 }
 
+export interface ClaimTournamentRewardsResponse {
+  success: boolean;
+  claimed_count: number;
+  reward_ids: number[];
+  message: string;
+}
+
 export interface UserCard {
   user_card_id: number;
   card_id: number;

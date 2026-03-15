@@ -35,6 +35,7 @@ import type {
   ConfirmOpenPackResponse,
   PackHistoryResponse,
   AlphaTestCheckResponse,
+  ClaimTournamentRewardsResponse,
 } from "./types";
 import { API_BASE_URL } from "./constants";
 
@@ -289,6 +290,14 @@ export async function getUserProfile(
 
 export async function getMyTournaments(): Promise<MyTournamentsResponse> {
   return fetchApi("/api/users/me/tournaments");
+}
+
+export async function claimTournamentRewards(
+  tournamentId: number
+): Promise<ClaimTournamentRewardsResponse> {
+  return fetchApi(`/api/tournaments/${tournamentId}/claim-rewards`, {
+    method: "POST",
+  });
 }
 
 // ==================== Cards API ====================
@@ -582,6 +591,17 @@ export function useUnregisterFromTournament() {
     onSuccess: (_, { tournamentId }) => {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId] });
       queryClient.invalidateQueries({ queryKey: ["tournaments"] });
+    },
+  });
+}
+
+export function useClaimTournamentRewards() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (tournamentId: number) => claimTournamentRewards(tournamentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myTournaments"] });
     },
   });
 }
