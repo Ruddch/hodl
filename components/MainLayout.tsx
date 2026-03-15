@@ -7,6 +7,10 @@ import { PageHeader } from "./PageHeader";
 import { ThemeToggle } from "./ThemeToggle";
 import { WelcomeModal, useWelcomeModal } from "./WelcomeModal";
 import { WelcomeClosedContext } from "@/lib/welcome-closed-context";
+import {
+  TournamentResultModal,
+  useTournamentResultModal,
+} from "./TournamentResultModal";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -16,6 +20,7 @@ interface MainLayoutProps {
 function MainLayoutInner({ children, title }: MainLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { showWelcome, closeWelcome } = useWelcomeModal();
+  const { showModal: showTournamentResult, entry: tournamentResultEntry, close: closeTournamentResult } = useTournamentResultModal();
   const { isConnected } = useAccount();
   const [welcomeJustClosed, setWelcomeJustClosed] = useState(false);
 
@@ -112,6 +117,14 @@ function MainLayoutInner({ children, title }: MainLayoutProps) {
 
       {/* Приветственная модалка — только для пользователей без подключённого кошелька */}
       {showWelcome && isConnected === false && <WelcomeModal onClose={handleWelcomeClose} />}
+
+      {/* Модалка результатов последнего завершённого турнира */}
+      {showTournamentResult && tournamentResultEntry && (
+        <TournamentResultModal
+          entry={tournamentResultEntry}
+          onClose={closeTournamentResult}
+        />
+      )}
     </div>
     </WelcomeClosedContext.Provider>
   );
