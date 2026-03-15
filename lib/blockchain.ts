@@ -47,8 +47,13 @@ export function isChainSupported(chainId: number): boolean {
   return chainId in ALL_REGISTRY_ADDRESSES;
 }
 
-/** Адреса контракта HodleagueCards (mintWithSignature) по цепочкам */
+/** Адреса контракта HodleagueCards (mintWithSignature) по цепочкам.
+ *  Для Abstract сейчас используется заглушка — транзакции будут отправляться
+ *  на этот адрес, но контракт там может быть не развёрнут.
+ */
 const PACK_OPENER_ADDRESSES: Record<number, `0x${string}`> = {
+  [CHAIN_ID_ABSTRACT]: "0x0000000000000000000000000000000000000001",
+  [CHAIN_ID_AVALANCHE]: "0x5AC017344d9D2230d3EB847673BB34f12B6e1c8A",
   [CHAIN_ID_AVALANCHE_FUJI]: "0xC6d712e7cd67E0e6aC2d4210A78B9B1e11639923",
 };
 

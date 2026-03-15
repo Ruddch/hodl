@@ -446,6 +446,8 @@ export interface PrepareOpenPackRequest {
 export interface PrepareOpenPackResponse {
   pack_opening_id: number;
   user_pack_id: number;
+  /** chain_id, на которой нужно открывать пак (приходит с бэкенда) */
+  chain_id?: number;
   card_ids: number[];
   server_seed: string;
   server_seed_hash: string;

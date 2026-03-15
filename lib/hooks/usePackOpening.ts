@@ -4,7 +4,8 @@ import { waitForTransactionReceipt } from "wagmi/actions";
 import { useAuth } from "@/lib/auth-context";
 import { usePrepareOpenPack, useConfirmOpenPack } from "@/lib/api";
 import { useMintWithSignature } from "@/lib/contracts/pack-opener";
-import { CHAIN_ID_AVALANCHE_FUJI } from "@/lib/blockchain";
+// Для открытия паков целевая сеть определяется по текущей сети пользователя.
+// Адрес контракта берётся из getPackOpenerAddress; для Abstract сейчас используется заглушка.
 import type { ConfirmOpenPackResponse } from "@/lib/types";
 
 export type PackOpeningStep =
@@ -116,13 +117,28 @@ export function usePackOpening(options?: UsePackOpeningOptions) {
           client_seed: clientSeed,
         });
 
-        // 2. Switch to Fuji if needed
-        const targetChainId = CHAIN_ID_AVALANCHE_FUJI;
+        // 2. Определяем целевую сеть:
+        //    приоритетно используем chain_id, который вернул бэкенд в prepare-open;
+        //    если его нет — падаем обратно на текущий chainId кошелька.
+        const targetChainId = prepared.chain_id ?? currentChainId;
+        if (!targetChainId) {
+          const err = new Error(
+            "Unable to detect target network for pack opening. Please switch network in your wallet and try again."
+          );
+          setError(err);
+          updateStep("error");
+          options?.onError?.(err, "signing");
+          return;
+        }
+
+        // Если текущая сеть кошелька не совпадает с целевой сетью открытия,
+        // переключаем кошелёк перед отправкой транзакции.
         if (currentChainId !== targetChainId && switchChain.mutateAsync) {
           await switchChain.mutateAsync({ chainId: targetChainId });
         }
 
-        // 3. mintWithSignature on-chain
+        // 3. mintWithSignature on-chain (адрес контракта берётся из getPackOpenerAddress;
+        // для Abstract там сейчас заглушка).
         updateStep("signing");
         const txHash = await mintWithSignature({
           user: address,
