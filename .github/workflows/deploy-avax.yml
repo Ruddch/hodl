@@ -30,8 +30,8 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          NEXT_PUBLIC_ENV: development
           NEXT_PUBLIC_POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
+          NEXT_PUBLIC_ENV: avax
 
       - name: Create .nojekyll
         run: touch out/.nojekyll

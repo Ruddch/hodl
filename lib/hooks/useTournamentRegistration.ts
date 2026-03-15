@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useValidateDeck, useRegisterForTournament, useUnregisterFromTournament } from "@/lib/api";
 import { useRegisterDeckOnChain, useUnregisterDeckOnChain } from "@/lib/contracts/tournament-registry";
 import {
-  CHAIN_ID_ABSTRACT,
+  DEFAULT_CHAIN_ID,
   isChainSupported,
   getChainIdFromPreferredNetwork,
   getNetworkFromChainId,
@@ -67,7 +67,7 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
       // 2. Выбираем цепочку по preferred_network
       const targetChainId = validation.preferred_network
         ? getChainIdFromPreferredNetwork(validation.preferred_network)
-        : CHAIN_ID_ABSTRACT;
+        : DEFAULT_CHAIN_ID;
 
       // 2.1. Переключаем цепочку, если нужно
       if (currentChainId !== targetChainId && switchChain.mutateAsync) {
@@ -133,7 +133,7 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
         ? regNetwork.chain_id
         : currentChainId && isChainSupported(currentChainId)
           ? currentChainId
-          : CHAIN_ID_ABSTRACT;
+          : DEFAULT_CHAIN_ID;
 
       // 2. Переключаем цепочку, если нужна другая сеть
       if (currentChainId !== chainIdForUnregister && switchChain.mutateAsync) {

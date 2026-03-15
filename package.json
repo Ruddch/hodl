@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "dev": "NEXT_PUBLIC_ENV=development next dev",
+    "dev:avax": "NEXT_PUBLIC_ENV=avax next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

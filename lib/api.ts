@@ -29,6 +29,10 @@ import type {
   AvailablePacksResponse,
   OpenPackRequest,
   OpenPackResponse,
+  PrepareOpenPackRequest,
+  PrepareOpenPackResponse,
+  ConfirmOpenPackRequest,
+  ConfirmOpenPackResponse,
   PackHistoryResponse,
   AlphaTestCheckResponse,
 } from "./types";
@@ -333,6 +337,23 @@ export async function openPack(data: OpenPackRequest = {}): Promise<OpenPackResp
   });
 }
 
+export async function prepareOpenPack(data: PrepareOpenPackRequest): Promise<PrepareOpenPackResponse> {
+  return fetchApi("/api/packs/prepare-open", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function confirmOpenPack(
+  packOpeningId: number,
+  data: ConfirmOpenPackRequest
+): Promise<ConfirmOpenPackResponse> {
+  return fetchApi(`/api/packs/openings/${packOpeningId}/confirm`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function getPackOpening(packOpeningId: number): Promise<OpenPackResponse> {
   return fetchApi(`/api/packs/openings/${packOpeningId}`);
 }
@@ -628,9 +649,29 @@ export function useAvailablePacks(enabled: boolean = true) {
 
 export function useOpenPack() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: OpenPackRequest = {}) => openPack(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["availablePacks"] });
+      queryClient.invalidateQueries({ queryKey: ["packHistory"] });
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    },
+  });
+}
+
+export function usePrepareOpenPack() {
+  return useMutation({
+    mutationFn: (data: PrepareOpenPackRequest) => prepareOpenPack(data),
+  });
+}
+
+export function useConfirmOpenPack() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ packOpeningId, data }: { packOpeningId: number; data: ConfirmOpenPackRequest }) =>
+      confirmOpenPack(packOpeningId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["availablePacks"] });
       queryClient.invalidateQueries({ queryKey: ["packHistory"] });

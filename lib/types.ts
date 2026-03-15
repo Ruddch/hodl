@@ -413,9 +413,10 @@ export interface DeckUnregisterResponse {
 }
 
 // ==================== Packs ====================
-export interface PackTypeDetail {
+export interface AvailablePack {
+  user_pack_id: number;
   pack_type_id: number;
-  name: string;
+  pack_type_name: string;
   description: string;
   image_url: string;
   header_image_url: string;
@@ -426,16 +427,35 @@ export interface PackTypeDetail {
   available_from?: string | null;
   available_until?: string | null;
   is_active: boolean;
-  count: number;
 }
 
 export interface AvailablePacksResponse {
   available_packs: number;
-  pack_types: PackTypeDetail[];
+  packs: AvailablePack[];
 }
 
 export interface OpenPackRequest {
   pack_type_id?: number | null;
+}
+
+export interface PrepareOpenPackRequest {
+  user_pack_id: number;
+  client_seed: string;
+}
+
+export interface PrepareOpenPackResponse {
+  pack_opening_id: number;
+  user_pack_id: number;
+  card_ids: number[];
+  server_seed: string;
+  server_seed_hash: string;
+  client_seed: string;
+  combined_hash: string;
+  signature: string;
+}
+
+export interface ConfirmOpenPackRequest {
+  tx_hash: string;
 }
 
 export interface CardReceived {
@@ -448,6 +468,15 @@ export interface CardReceived {
   rarity_color: string;
   design_type: string;
   rendered_image_url: string;
+}
+
+export interface ConfirmOpenPackResponse {
+  status: string;
+  pack_opening_id: number;
+  pack_type_name: string;
+  opened_at: string;
+  cards_received: CardReceived[];
+  nft_token_ids: number[];
 }
 
 export interface OpenPackResponse {
