@@ -6,6 +6,9 @@ import type { UserProfileResponse } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { BlurCard } from "@/components/BlurCard";
 import { CardStatsModal } from "@/components/CardStatsModalLazy";
+import { ProfileHoloCard } from "@/components/ProfileHoloCard";
+import { CosmosHoloCard } from "@/components/CosmosHoloCard";
+import { HoloRareCard } from "@/components/HoloRareCard";
 import { TournamentStatisticsTable } from "./TournamentStatisticsTable";
 
 interface CardsSectionProps {
@@ -107,40 +110,42 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
               </div>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-                {groupedCards.map((group) => {
+                {groupedCards.map((group, index) => {
                   const firstCard = group.cards[0];
                   const cardId = firstCard?.card_id;
-                  return (
-                  <div
-                    key={group.token_symbol}
-                    role="button"
-                    tabIndex={0}
-                    data-ph-capture-attribute-button="profile-card-view"
-                    onClick={() => {
-                      if (cardId != null) {
-                        setSelectedCardId(cardId);
-                        setSelectedCardInfo({
-                          imageUrl: firstCard?.rendered_image_url,
-                          name: group.token_name,
-                        });
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (cardId != null && (e.key === "Enter" || e.key === " ")) {
-                        e.preventDefault();
-                        setSelectedCardId(cardId);
-                        setSelectedCardInfo({
-                          imageUrl: firstCard?.rendered_image_url,
-                          name: group.token_name,
-                        });
-                      }
-                    }}
-                    className="relative rounded-2xl overflow-hidden border border-[var(--border-subtle)] shadow-sm cursor-pointer hover:ring-2 hover:ring-[var(--primary-muted)]/50 hover:ring-offset-2 transition-shadow"
-                    style={{
-                      background: "var(--profile-card-bg)"
-                    }}
-                  >
-                    {/* Изображение карты */}
+
+                  const handleClick = () => {
+                    if (cardId != null) {
+                      setSelectedCardId(cardId);
+                      setSelectedCardInfo({
+                        imageUrl: firstCard?.rendered_image_url,
+                        name: group.token_name,
+                      });
+                    }
+                  };
+
+                  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+                    if (cardId != null && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      setSelectedCardId(cardId);
+                      setSelectedCardInfo({
+                        imageUrl: firstCard?.rendered_image_url,
+                        name: group.token_name,
+                      });
+                    }
+                  };
+
+                  const sharedProps = {
+                    role: "button" as const,
+                    tabIndex: 0,
+                    "data-ph-capture-attribute-button": "profile-card-view",
+                    onClick: handleClick,
+                    onKeyDown: handleKeyDown,
+                    className: "relative rounded-2xl overflow-hidden border border-[var(--border-subtle)] shadow-sm cursor-pointer",
+                    style: { background: "var(--profile-card-bg)" } as React.CSSProperties,
+                  };
+
+                  const cardImage = (
                     <div className="relative" style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}>
                       {group.cards[0]?.rendered_image_url ? (
                         <Image
@@ -169,8 +174,27 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
                         </div>
                       )}
                     </div>
-                  </div>
-                );
+                  );
+
+                  if (index === 0) {
+                    return (
+                      <CosmosHoloCard key={group.token_symbol} {...sharedProps}>
+                        {cardImage}
+                      </CosmosHoloCard>
+                    );
+                  }
+                  if (index === 1) {
+                    return (
+                      <HoloRareCard key={group.token_symbol} {...sharedProps}>
+                        {cardImage}
+                      </HoloRareCard>
+                    );
+                  }
+                  return (
+                    <ProfileHoloCard key={group.token_symbol} {...sharedProps}>
+                      {cardImage}
+                    </ProfileHoloCard>
+                  );
                 })}
               </div>
             )}
