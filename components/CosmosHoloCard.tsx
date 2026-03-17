@@ -285,11 +285,11 @@ export function CosmosHoloCard({
           />
         </div>
 
-        {/* Glare: cursor highlight, clipped to artwork area */}
+        {/* Glare: cursor highlight across the whole card */}
         <div
           ref={glare1Ref}
           aria-hidden="true"
-          style={{ ...abs, mixBlendMode: "overlay", opacity: 0, zIndex: 2, clipPath: ARTWORK_CLIP }}
+          style={{ ...abs, mixBlendMode: "overlay", opacity: 0, zIndex: 2 }}
         />
         <div ref={glare2Ref} style={{ display: "none" }} />
       </div>
