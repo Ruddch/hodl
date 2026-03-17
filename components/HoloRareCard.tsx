@@ -190,8 +190,18 @@ export function HoloRareCard({
   }, []);
 
   const abs: CSSProperties = { position: "absolute", inset: 0, borderRadius: "inherit", pointerEvents: "none" };
-  // Restrict holo layers to the artwork area only (top ~70%), exclude text/stats section
-  const ARTWORK_CLIP = "inset(4px 4px 28% round 8px)";
+  // Mask restricts the holo shine to the shape defined by holo-rare-mask.png:
+  // opaque (black) pixels = effect visible, transparent pixels = effect hidden
+  const ARTWORK_MASK: CSSProperties = {
+    WebkitMaskImage: "url('/holo-rare-mask.png')",
+    maskImage: "url('/holo-rare-mask.png')",
+    WebkitMaskSize: "cover",
+    maskSize: "cover",
+    WebkitMaskPosition: "center",
+    maskPosition: "center",
+    WebkitMaskRepeat: "no-repeat",
+    maskRepeat: "no-repeat",
+  };
 
   return (
     <div
@@ -227,7 +237,7 @@ export function HoloRareCard({
         <div
           ref={shineGroupRef}
           aria-hidden="true"
-          style={{ ...abs, mixBlendMode: "color-dodge", opacity: 0, zIndex: 1, clipPath: ARTWORK_CLIP }}
+          style={{ ...abs, mixBlendMode: "color-dodge", opacity: 0, zIndex: 1, ...ARTWORK_MASK }}
         >
           {/* Rainbow stripes + fine scanlines */}
           <div
