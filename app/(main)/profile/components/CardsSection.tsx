@@ -9,6 +9,7 @@ import { CardStatsModal } from "@/components/CardStatsModalLazy";
 import { ProfileHoloCard } from "@/components/ProfileHoloCard";
 import { CosmosHoloCard } from "@/components/CosmosHoloCard";
 import { HoloRareCard } from "@/components/HoloRareCard";
+import { ReverseHoloCard } from "@/components/ReverseHoloCard";
 import { TournamentStatisticsTable } from "./TournamentStatisticsTable";
 
 interface CardsSectionProps {
@@ -188,6 +189,13 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
                       <HoloRareCard key={group.token_symbol} {...sharedProps}>
                         {cardImage}
                       </HoloRareCard>
+                    );
+                  }
+                  if (index === 2) {
+                    return (
+                      <ReverseHoloCard key={group.token_symbol} {...sharedProps}>
+                        {cardImage}
+                      </ReverseHoloCard>
                     );
                   }
                   return (
