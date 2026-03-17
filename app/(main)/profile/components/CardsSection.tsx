@@ -32,30 +32,8 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [selectedCardInfo, setSelectedCardInfo] = useState<{ imageUrl?: string | null; name?: string } | null>(null);
 
-  // Группируем карты по токену для отображения количества
-  const cardsByToken = cards.reduce((acc, card) => {
-    const key = card.token_symbol;
-    if (!acc[key]) {
-      acc[key] = {
-        token_symbol: card.token_symbol,
-        token_name: card.token_name,
-        token_image_url: card.token_image_url,
-        count: 0,
-        cards: [],
-      };
-    }
-    acc[key].count++;
-    acc[key].cards.push(card);
-    return acc;
-  }, {} as Record<string, {
-    token_symbol: string;
-    token_name: string;
-    token_image_url: string;
-    count: number;
-    cards: typeof cards;
-  }>);
-
-  const groupedCards = Object.values(cardsByToken);
+  // Отображаем все карты поштучно, не скрывая дубликаты
+  const visibleCards = cards;
   const expiresAt = cards[0]?.expires_at;
   const expiresLabel = expiresAt
     ? new Date(expiresAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
@@ -105,22 +83,21 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
         {/* Контент в зависимости от активной вкладки */}
         {activeTab === "cards" && (
           <div>
-            {groupedCards.length === 0 ? (
+            {visibleCards.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-[var(--text-secondary)]">No cards yet</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-                {groupedCards.map((group, index) => {
-                  const firstCard = group.cards[0];
-                  const cardId = firstCard?.card_id;
+                {visibleCards.map((card, index) => {
+                  const cardId = card.card_id;
 
                   const handleClick = () => {
                     if (cardId != null) {
                       setSelectedCardId(cardId);
                       setSelectedCardInfo({
-                        imageUrl: firstCard?.rendered_image_url,
-                        name: group.token_name,
+                        imageUrl: card.rendered_image_url,
+                        name: card.token_name,
                       });
                     }
                   };
@@ -130,8 +107,8 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
                       e.preventDefault();
                       setSelectedCardId(cardId);
                       setSelectedCardInfo({
-                        imageUrl: firstCard?.rendered_image_url,
-                        name: group.token_name,
+                        imageUrl: card.rendered_image_url,
+                        name: card.token_name,
                       });
                     }
                   };
@@ -148,29 +125,29 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
 
                   const cardImage = (
                     <div className="relative" style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}>
-                      {group.cards[0]?.rendered_image_url ? (
+                      {card.rendered_image_url ? (
                         <Image
-                          src={group.cards[0].rendered_image_url}
-                          alt={group.token_name}
+                          src={card.rendered_image_url}
+                          alt={card.token_name}
                           fill
                           className="object-cover"
                         />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[var(--surface-elevated)] to-[var(--badge-purple-muted)] p-4">
-                          {group.token_image_url && (
+                          {card.token_image_url && (
                             <Image
-                              src={group.token_image_url}
-                              alt={group.token_symbol}
+                              src={card.token_image_url}
+                              alt={card.token_symbol}
                               width={48}
                               height={48}
                               className="mb-3"
                             />
                           )}
                           <p className="text-sm font-semibold text-[var(--text-primary)] uppercase text-center">
-                            {group.token_name}
+                            {card.token_name}
                           </p>
                           <p className="text-xs text-[var(--text-secondary)] mt-1 uppercase">
-                            {group.token_symbol}
+                            {card.token_symbol}
                           </p>
                         </div>
                       )}
@@ -179,27 +156,27 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
 
                   if (index === 0) {
                     return (
-                      <CosmosHoloCard key={group.token_symbol} {...sharedProps}>
+                      <CosmosHoloCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
                         {cardImage}
                       </CosmosHoloCard>
                     );
                   }
                   if (index === 1) {
                     return (
-                      <HoloRareCard key={group.token_symbol} {...sharedProps}>
+                      <HoloRareCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
                         {cardImage}
                       </HoloRareCard>
                     );
                   }
                   if (index === 2) {
                     return (
-                      <ReverseHoloCard key={group.token_symbol} {...sharedProps}>
+                      <ReverseHoloCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
                         {cardImage}
                       </ReverseHoloCard>
                     );
                   }
                   return (
-                    <ProfileHoloCard key={group.token_symbol} {...sharedProps}>
+                    <ProfileHoloCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
                       {cardImage}
                     </ProfileHoloCard>
                   );
