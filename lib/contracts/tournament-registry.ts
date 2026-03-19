@@ -18,7 +18,10 @@ export const TOURNAMENT_REGISTRY_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "uint256", name: "tournamentId", type: "uint256" }],
+    inputs: [
+      { internalType: "uint256", name: "tournamentId", type: "uint256" },
+      { internalType: "bytes32", name: "deckHash", type: "bytes32" },
+    ],
     name: "unregisterDeck",
     outputs: [],
     stateMutability: "nonpayable",
@@ -85,6 +88,7 @@ export function useUnregisterDeckOnChain() {
 
   const unregisterDeck = async (
     tournamentId: number,
+    deckHash: `0x${string}`,
     chainId: number = DEFAULT_CHAIN_ID
   ) => {
     const address = getTournamentRegistryAddress(chainId);
@@ -96,7 +100,7 @@ export function useUnregisterDeckOnChain() {
       address,
       abi: TOURNAMENT_REGISTRY_ABI,
       functionName: "unregisterDeck",
-      args: [BigInt(tournamentId)],
+      args: [BigInt(tournamentId), deckHash],
       chainId,
     });
 

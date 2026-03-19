@@ -144,6 +144,8 @@ export interface Tournament {
   estimated_final_prize_pools?: Record<string, PrizePoolInfo> | null;
   deck_size?: number;
   my_deck_id?: number | null;
+  /** Количество активно зарегистрированных колод пользователя в этом турнире */
+  my_registered_deck_count?: number | null;
 }
 
 /** Сеть, в которой пользователь зарегистрировал колоду (приходит в include_deck=true) */
@@ -153,12 +155,28 @@ export interface MyRegistrationNetwork {
   contract_address: string;
 }
 
+/** Одна зарегистрированная колода пользователя в турнире */
+export interface MyDeckEntry {
+  deck_id: number;
+  deck_hash: string;
+  total_weight: number;
+  submitted_at: string;
+  registration_network: MyRegistrationNetwork;
+  cards: number[] | CardInDeckInfo[];
+  position?: number | null;
+  final_score?: number | null;
+  prizes?: PrizeInfo[] | null;
+}
+
 export interface TournamentDetail extends Tournament {
   description?: string | null;
   rules?: string | null;
+  /** Список всех зарегистрированных колод пользователя в этом турнире */
+  my_decks?: MyDeckEntry[] | null;
+  /** Карты первой колоды (для совместимости) */
   my_deck?: CardInDeckInfo[] | null;
   prizes?: PrizeConfig[];
-  /** Сеть для анрегистрации колоды (когда include_deck=true и пользователь зарегистрирован) */
+  /** Сеть первой колоды (для совместимости) */
   my_registration_network?: MyRegistrationNetwork | null;
 }
 
@@ -400,6 +418,7 @@ export interface DeckRegisterResponse {
 }
 
 export interface DeckUnregisterRequest {
+  deck_id: number;
   tx_hash: string;
   /** Название сети, в которой происходила отмена регистрации */
   network?: "abstract" | "avalanche";

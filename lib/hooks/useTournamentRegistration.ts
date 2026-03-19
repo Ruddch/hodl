@@ -10,7 +10,7 @@ import {
   getChainIdFromPreferredNetwork,
   getNetworkFromChainId,
 } from "@/lib/blockchain";
-import type { Tournament, TournamentDetail } from "@/lib/types";
+import type { Tournament, TournamentDetail, MyDeckEntry } from "@/lib/types";
 
 export type RegistrationErrorContext = "register" | "unregister";
 
@@ -69,6 +69,8 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
         ? getChainIdFromPreferredNetwork(validation.preferred_network)
         : DEFAULT_CHAIN_ID;
 
+      console.log("Target chain id:", targetChainId);
+      
       // 2.1. Переключаем цепочку, если нужно
       if (currentChainId !== targetChainId && switchChain.mutateAsync) {
         await switchChain.mutateAsync({ chainId: targetChainId });
@@ -111,6 +113,7 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
 
       options?.onSuccess?.();
     } catch (error) {
+      console.error("[register] error:", error);
       const errorMessage = error instanceof Error ? error.message : "Registration failed";
       options?.onError?.(error instanceof Error ? error : new Error(errorMessage), "register");
     } finally {
@@ -118,8 +121,8 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
     }
   };
 
-  // Отмена регистрации на турнир
-  const unregister = async (tournament: Tournament | TournamentDetail) => {
+  // Отмена регистрации конкретной деки на турнир
+  const unregister = async (tournament: Tournament | TournamentDetail, deck: MyDeckEntry) => {
     if (!validateWallet()) {
       options?.onError?.(new Error(WALLET_MISMATCH_MESSAGE), "unregister");
       return;
@@ -127,9 +130,9 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
 
     setIsUnregistering(true);
     try {
-      // 1. Используем my_registration_network с бэкенда или текущую сеть как fallback
-      const regNetwork = (tournament as TournamentDetail).my_registration_network;
-      const chainIdForUnregister = regNetwork?.chain_id
+      // 1. Берём сеть из registration_network конкретной деки
+      const regNetwork = deck.registration_network;
+      const chainIdForUnregister = regNetwork?.chain_id && isChainSupported(regNetwork.chain_id)
         ? regNetwork.chain_id
         : currentChainId && isChainSupported(currentChainId)
           ? currentChainId
@@ -140,33 +143,37 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
         await switchChain.mutateAsync({ chainId: chainIdForUnregister });
       }
 
-      // 3. Отменяем регистрацию в смарт-контракте
+      // 3. Отменяем регистрацию в смарт-контракте (передаём deckHash)
+      const deckHash = deck.deck_hash as `0x${string}`;
+
       console.log("Unregistering deck on blockchain...", {
         tournamentId: tournament.id,
+        deckId: deck.deck_id,
+        deckHash,
         chainId: chainIdForUnregister,
       });
 
-      const txHash = await unregisterDeckOnChain(tournament.id, chainIdForUnregister);
-      
+      const txHash = await unregisterDeckOnChain(tournament.id, deckHash, chainIdForUnregister);
+
       console.log("Transaction submitted:", txHash);
 
-      // 1.1. Ждем подтверждения транзакции в блокчейне
+      // 3.1. Ждем подтверждения транзакции в блокчейне
       console.log("Waiting for transaction confirmation...");
       const receipt = await waitForTransactionReceipt(config, {
         hash: txHash,
       });
-      
+
       console.log("Transaction confirmed:", {
         blockNumber: receipt.blockNumber,
         status: receipt.status,
       });
 
-      // 4. Отправляем tx_hash на бэкенд для подтверждения отмены регистрации
-      const networkName =
-        regNetwork?.network ?? getNetworkFromChainId(chainIdForUnregister);
+      // 4. Отправляем deck_id и tx_hash на бэкенд для подтверждения отмены регистрации
+      const networkName = regNetwork?.network ?? getNetworkFromChainId(chainIdForUnregister);
       await unregisterMutation.mutateAsync({
         tournamentId: tournament.id,
         data: {
+          deck_id: deck.deck_id,
           tx_hash: txHash,
           ...(networkName && { network: networkName }),
         },

@@ -106,7 +106,9 @@ function TournamentPageContent() {
 
   const handleUnregister = async () => {
     if (!tournamentDisplay) return;
-    await unregister(tournamentDisplay);
+    const deck = tournamentDetails?.my_decks?.[0];
+    if (!deck) return;
+    await unregister(tournamentDisplay, deck);
   };
 
   return (
