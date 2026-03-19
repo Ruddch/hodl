@@ -168,6 +168,7 @@ export function DeckSelectionModal({
       if (slot.mode === "locked") return false;
       const card = slot.card;
       if (selectedCards.some((c) => c.user_card_id === card.user_card_id)) return true;
+      if (selectedCards.some((c) => c.card_id === card.card_id)) return false;
       if (selectedCards.length >= DECK_SIZE) return false;
       if (card.token_weight > remainingWeight) return false;
       return true;
@@ -183,6 +184,7 @@ export function DeckSelectionModal({
         const isSelected = prev.some((c) => c.user_card_id === card.user_card_id);
         if (isSelected) return prev.filter((c) => c.user_card_id !== card.user_card_id);
         if (prev.length >= DECK_SIZE) return prev;
+        if (prev.some((c) => c.card_id === card.card_id)) return prev;
         const rw = tournament.weight_limit - prev.reduce((s, c) => s + c.token_weight, 0);
         if (card.token_weight > rw) return prev;
         return [...prev, card];
@@ -324,6 +326,10 @@ export function DeckSelectionModal({
                       const isSelected = selectedCards.some((c) => c.user_card_id === card.user_card_id);
                       const lockedInOtherDeck = slot.mode === "locked";
                       const canInteract = canInteractWithSlot(slot);
+                      const duplicateCardType =
+                        !isSelected &&
+                        !lockedInOtherDeck &&
+                        selectedCards.some((c) => c.card_id === card.card_id);
 
                       return (
                         <button
@@ -333,7 +339,11 @@ export function DeckSelectionModal({
                           data-ph-capture-attribute-button="deck-selection-card"
                           disabled={!canInteract && !isSelected}
                           title={
-                            lockedInOtherDeck ? "Locked in another deck for this tournament" : undefined
+                            lockedInOtherDeck
+                              ? "Locked in another deck for this tournament"
+                              : duplicateCardType
+                                ? "This card is already in your pack"
+                                : undefined
                           }
                           className={`relative rounded-[10px] sm:rounded-[14px] overflow-visible transition-all ${
                             lockedInOtherDeck
