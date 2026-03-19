@@ -1,5 +1,5 @@
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { getPackOpenerAddress, CHAIN_ID_AVALANCHE_FUJI } from "@/lib/blockchain";
+import { getPackOpenerAddress, DEFAULT_CHAIN_ID } from "@/lib/blockchain";
 
 export const HODLEAGUE_CARDS_ABI = [
   {
@@ -42,8 +42,8 @@ export function useMintWithSignature() {
     signature: `0x${string}`;
     chainId?: number;
   }) => {
-    const chainId = params.chainId ?? CHAIN_ID_AVALANCHE_FUJI;
-    const address = getPackOpenerAddress(chainId);
+    const chainId = params.chainId;
+    const address = getPackOpenerAddress(chainId ?? DEFAULT_CHAIN_ID);
     if (!address) {
       throw new Error(`HodleagueCards contract not deployed on chain ${chainId}`);
     }
