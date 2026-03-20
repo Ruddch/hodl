@@ -67,14 +67,6 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
               </button>
             )}
           </div>
-
-          {activeTab === "cards" && (
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
-              {expiresLabel
-                ? `Cards will be available till ${expiresLabel}`
-                : "Cards will be available till next tournament"}
-            </p>
-          )}
         </div>
 
         {/* Контент в зависимости от активной вкладки */}
