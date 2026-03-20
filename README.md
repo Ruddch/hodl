@@ -41,7 +41,7 @@ This repository is the **frontend** of Hodleague: a Next.js app that talks to a 
 | `lib/` | API client (`api.ts`), types, contracts config (`blockchain.ts`), hooks, auth, theme |
 | `public/` | Static assets (images, logo) |
 
-Backend API base URL is chosen via `NEXT_PUBLIC_ENV` (see below). Contract addresses (TournamentRegistry, pack opener) are in `lib/blockchain.ts` and depend on the chain (Avalanche Fuji).
+Backend API base URL is chosen via `NEXT_PUBLIC_ENV` (see below). Contract addresses (TournamentRegistry, pack opener) are in `lib/blockchain.ts`: отдельные таблицы для production и для UAT (`NEXT_PUBLIC_ENV=development`), плюс опциональные `NEXT_PUBLIC_*_DEV` (см. таблицу env).
 
 ### Running locally
 
@@ -65,6 +65,10 @@ npm run dev:avax
 | Variable | Description |
 |----------|-------------|
 | `NEXT_PUBLIC_ENV` | `development` (UAT API), `avax` (Avalanche backend + Fuji), or unset (production API) |
+| `NEXT_PUBLIC_TOURNAMENT_REGISTRY_ABSTRACT_DEV` | Опционально при `development`: адрес TournamentRegistry в Abstract (иначе берётся `TOURNAMENT_REGISTRY_UAT` в `lib/blockchain.ts`) |
+| `NEXT_PUBLIC_TOURNAMENT_REGISTRY_AVALANCHE_DEV` | То же для Avalanche C-Chain |
+| `NEXT_PUBLIC_PACK_OPENER_ABSTRACT_DEV` | Опционально: HodleagueCards (mint) на Abstract |
+| `NEXT_PUBLIC_PACK_OPENER_AVALANCHE_DEV` | То же для Avalanche |
 | `NEXT_PUBLIC_BASE_PATH` | Optional base path for static export (e.g. GitHub Pages subpath) |
 | `NEXT_PUBLIC_POSTHOG_TOKEN` | Optional; enables PostHog analytics |
 | `NEXT_PUBLIC_POSTHOG_HOST` | Optional; PostHog host (default: `https://us.i.posthog.com`) |
