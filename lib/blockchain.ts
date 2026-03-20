@@ -41,7 +41,6 @@ const TOURNAMENT_REGISTRY_UAT: Record<number, `0x${string}`> = {
 
 /** Получить адрес контракта для chainId */
 export function getTournamentRegistryAddress(chainId: number): `0x${string}` | undefined {
-  if (IS_AVAX && chainId === CHAIN_ID_ABSTRACT) return undefined;
   return IS_DEVELOPMENT ? TOURNAMENT_REGISTRY_UAT[chainId] : TOURNAMENT_REGISTRY_PROD[chainId];
 }
 
