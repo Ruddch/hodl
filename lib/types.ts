@@ -7,7 +7,7 @@ export interface VerifyRequest {
   wallet_address: string;
   signature: string;
   referral_code?: string | null;
-  //message: string;
+  message: string;
 }
 
 export interface AuthResponse {
