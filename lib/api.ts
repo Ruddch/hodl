@@ -416,7 +416,7 @@ export function useLogin() {
       message: string;
     }) => {
       console.log("verifySignature", walletAddress, signature, message);
-      const response = await verifySignature({ wallet_address: walletAddress, signature });
+      const response = await verifySignature({ wallet_address: walletAddress, signature, message });
       // Токен теперь в куках, не нужно сохранять в localStorage
       return response;
     },
