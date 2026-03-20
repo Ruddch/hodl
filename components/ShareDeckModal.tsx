@@ -24,7 +24,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = reject;
-    img.src = src;
+    img.src = `${src}?t=${Date.now()}`;
   });
 }
 

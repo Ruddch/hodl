@@ -19,6 +19,7 @@ import { TournamentInfoCard } from "./components/TournamentInfoCard";
 import { Deck } from "@/components/Deck";
 import { LeaderboardPreviewCard } from "./components/LeaderboardPreviewCard";
 import { TournamentPageSkeleton } from "./components/TournamentPageSkeleton";
+import type { MyDeckEntry } from "@/lib/types";
 
 function getFriendlyErrorMessage(rawMessage: string, context: RegistrationErrorContext): string {
   const m = rawMessage.toLowerCase();
@@ -74,8 +75,7 @@ function TournamentPageContent() {
     isAuthenticated && !isLoading && !!tournamentDisplay
   );
 
-  const canRegister =
-    tournamentDisplay?.status === "registration" && !tournamentDisplay?.is_registered;
+  const canRegister = tournamentDisplay?.status === "registration";
 
   const { register, unregister, isRegistering, isUnregistering } = useTournamentRegistration({
     onSuccess: () => {
@@ -104,9 +104,9 @@ function TournamentPageContent() {
     await register(tournamentDisplay, selectedCardIds);
   };
 
-  const handleUnregister = async () => {
+  const handleUnregisterDeck = async (deck: MyDeckEntry) => {
     if (!tournamentDisplay) return;
-    await unregister(tournamentDisplay);
+    await unregister(tournamentDisplay, deck);
   };
 
   return (
@@ -135,10 +135,11 @@ function TournamentPageContent() {
               isRegistered={tournamentDisplay.is_registered || false}
               onStartClick={handleOpenDeckModal}
               canRegister={canRegister}
+              myDecks={tournamentDetails?.my_decks}
               myDeck={tournamentDetails?.my_deck}
               tournamentStatus={tournamentDisplay.status}
               tournamentId={tournamentDisplay.id}
-              onUnregister={handleUnregister}
+              onUnregisterDeck={handleUnregisterDeck}
               isUnregistering={isUnregistering}
             />
             <LeaderboardPreviewCard
@@ -159,6 +160,7 @@ function TournamentPageContent() {
       {showDeckModal && tournamentDisplay && (
         <DeckSelectionModal
           tournament={tournamentDisplay}
+          myDecks={tournamentDetails?.my_decks}
           onClose={handleCloseDeckModal}
           onRegister={handleRegister}
           isRegistering={isRegistering}

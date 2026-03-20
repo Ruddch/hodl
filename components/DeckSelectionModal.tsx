@@ -3,12 +3,14 @@
 import { useState, useMemo, useCallback, useRef, useEffect, useId } from "react";
 import { useVirtualizer, measureElement } from "@tanstack/react-virtual";
 import { useMyProfile } from "@/lib/api";
-import type { UserCard, Tournament } from "@/lib/types";
+import type { UserCard, Tournament, MyDeckEntry } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { SearchInput } from "@/components/SearchInput";
 
 interface DeckSelectionModalProps {
   tournament: Tournament;
+  /** Уже зарегистрированные колоды — карты из них внизу списка, бледные и недоступны */
+  myDecks?: MyDeckEntry[] | null;
   onClose: () => void;
   onRegister: (selectedCardIds: number[]) => void;
   isRegistering?: boolean;
@@ -17,9 +19,61 @@ interface DeckSelectionModalProps {
 const DECK_SIZE = 5;
 const ROW_HEIGHT_ESTIMATE = 300; // грубая оценка, measureElement скорректирует
 
-function getCardIdentityKey(card: UserCard) {
-  return `${card.token_symbol}|${card.token_name}|${card.token_weight}|${card.rarity_name}|${card.design_type} ?? ""}`;
+/** user_card_id из профиля vs card_id (число в API) */
+function collectCardsUsedInOtherDecks(
+  myDecks: MyDeckEntry[] | null | undefined,
+  profileCards: UserCard[] | undefined
+): { usedUserCardIds: Set<number>; usedCardIds: Set<number> } {
+  const knownUserIds = new Set(profileCards?.map((c) => c.user_card_id) ?? []);
+  const usedUserCardIds = new Set<number>();
+  const usedCardIds = new Set<number>();
+
+  for (const deck of myDecks ?? []) {
+    for (const c of deck.cards ?? []) {
+      if (typeof c === "number") {
+        if (knownUserIds.has(c)) usedUserCardIds.add(c);
+        else usedCardIds.add(c);
+      } else {
+        usedUserCardIds.add(c.user_card_id);
+      }
+    }
+  }
+  return { usedUserCardIds, usedCardIds };
 }
+
+function isCardLockedInOtherDeck(
+  card: UserCard,
+  usedUserCardIds: Set<number>,
+  usedCardIds: Set<number>
+): boolean {
+  return usedUserCardIds.has(card.user_card_id) || usedCardIds.has(card.card_id);
+}
+
+/** Одна ячейка сетки = один экземпляр карты (дубликаты визуально отдельно) */
+type DeckDisplaySlot = {
+  slotKey: string;
+  mode: "available" | "locked";
+  card: UserCard;
+};
+
+function buildDisplaySlots(cards: UserCard[], isLocked: (c: UserCard) => boolean): DeckDisplaySlot[] {
+  const available: DeckDisplaySlot[] = [];
+  const locked: DeckDisplaySlot[] = [];
+  for (const card of cards) {
+    const hereLocked = isLocked(card);
+    const slot: DeckDisplaySlot = {
+      slotKey: `${card.user_card_id}::${hereLocked ? "locked" : "avail"}`,
+      mode: hereLocked ? "locked" : "available",
+      card,
+    };
+    if (hereLocked) locked.push(slot);
+    else available.push(slot);
+  }
+  available.sort((a, b) => b.card.token_weight - a.card.token_weight);
+  locked.sort((a, b) => b.card.token_weight - a.card.token_weight);
+  return [...available, ...locked];
+}
+
 
 // Хук для определения количества колонок по ширине экрана
 function useCardsPerRow() {
@@ -49,6 +103,7 @@ function useCardsPerRow() {
 
 export function DeckSelectionModal({
   tournament,
+  myDecks,
   onClose,
   onRegister,
   isRegistering = false,
@@ -60,8 +115,13 @@ export function DeckSelectionModal({
   const cardsPerRow = useCardsPerRow();
   const parentRef = useRef<HTMLDivElement>(null);
 
-  // Фильтруем карты по поиску, показываем только уникальные по параметрам
-  const filteredCards = useMemo(() => {
+  const { usedUserCardIds, usedCardIds } = useMemo(
+    () => collectCardsUsedInOtherDecks(myDecks, profile?.cards),
+    [myDecks, profile?.cards]
+  );
+
+  // Фильтр + поиск → по одному слоту на каждую карту; сначала все доступные, потом залоченные в других колодах
+  const displaySlots = useMemo(() => {
     if (!profile?.cards) return [];
 
     let cards = profile.cards.filter((card) => !card.is_locked);
@@ -75,17 +135,8 @@ export function DeckSelectionModal({
       );
     }
 
-    cards = cards.sort((a, b) => b.token_weight - a.token_weight);
-
-    // Уникальность по identity (token, rarity, design и т.д.) — оставляем первый из группы
-    const seen = new Set<string>();
-    return cards.filter((card) => {
-      const key = getCardIdentityKey(card);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [profile?.cards, searchQuery]);
+    return buildDisplaySlots(cards, (c) => isCardLockedInOtherDeck(c, usedUserCardIds, usedCardIds));
+  }, [profile?.cards, searchQuery, usedUserCardIds, usedCardIds]);
 
   // Текущий вес выбранных карт
   const currentWeight = useMemo(() => {
@@ -95,14 +146,14 @@ export function DeckSelectionModal({
   // Оставшийся допустимый вес
   const remainingWeight = tournament.weight_limit - currentWeight;
 
-  // Группируем карты по рядам для виртуализации
+  // Группируем слоты по рядам для виртуализации
   const rows = useMemo(() => {
-    const result: UserCard[][] = [];
-    for (let i = 0; i < filteredCards.length; i += cardsPerRow) {
-      result.push(filteredCards.slice(i, i + cardsPerRow));
+    const result: DeckDisplaySlot[][] = [];
+    for (let i = 0; i < displaySlots.length; i += cardsPerRow) {
+      result.push(displaySlots.slice(i, i + cardsPerRow));
     }
     return result;
-  }, [filteredCards, cardsPerRow]);
+  }, [displaySlots, cardsPerRow]);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -112,37 +163,34 @@ export function DeckSelectionModal({
     overscan: 2,
   });
 
-  // Проверка доступности карты
-  const isCardSelectable = useCallback(
-    (card: UserCard) => {
-      if (selectedCards.some((c) => c.user_card_id === card.user_card_id)) {
-        return true;
-      }
-      if (selectedCards.length >= DECK_SIZE) {
-        return false;
-      }
-      if (card.token_weight > remainingWeight) {
-        return false;
-      }
+  const canInteractWithSlot = useCallback(
+    (slot: DeckDisplaySlot) => {
+      if (slot.mode === "locked") return false;
+      const card = slot.card;
+      if (selectedCards.some((c) => c.user_card_id === card.user_card_id)) return true;
+      if (selectedCards.some((c) => c.card_id === card.card_id)) return false;
+      if (selectedCards.length >= DECK_SIZE) return false;
+      if (card.token_weight > remainingWeight) return false;
       return true;
     },
     [selectedCards, remainingWeight]
   );
 
-  // Выбор/снятие выбора карты
-  const toggleCard = useCallback(
-    (card: UserCard) => {
+  const toggleSlot = useCallback(
+    (slot: DeckDisplaySlot) => {
+      if (slot.mode === "locked") return;
+      const card = slot.card;
       setSelectedCards((prev) => {
         const isSelected = prev.some((c) => c.user_card_id === card.user_card_id);
-        if (isSelected) {
-          return prev.filter((c) => c.user_card_id !== card.user_card_id);
-        }
+        if (isSelected) return prev.filter((c) => c.user_card_id !== card.user_card_id);
         if (prev.length >= DECK_SIZE) return prev;
-        if (card.token_weight > remainingWeight) return prev;
+        if (prev.some((c) => c.card_id === card.card_id)) return prev;
+        const rw = tournament.weight_limit - prev.reduce((s, c) => s + c.token_weight, 0);
+        if (card.token_weight > rw) return prev;
         return [...prev, card];
       });
     },
-    [remainingWeight]
+    [tournament.weight_limit]
   );
 
   // Удаление карты из выбранных
@@ -243,7 +291,7 @@ export function DeckSelectionModal({
                 />
               ))}
             </div>
-          ) : filteredCards.length === 0 ? (
+          ) : displaySlots.length === 0 ? (
             <div className="flex items-center justify-center h-48 text-[var(--text-muted)]">
               {searchQuery ? "No cards found" : "You don't have any cards yet"}
             </div>
@@ -273,31 +321,46 @@ export function DeckSelectionModal({
                     className="grid gap-2 sm:gap-4"
                     style={{ gridTemplateColumns: `repeat(${cardsPerRow}, 1fr)` }}
                   >
-                    {rows[virtualRow.index].map((card) => {
-                      const isSelected = selectedCards.some(
-                        (c) => c.user_card_id === card.user_card_id
-                      );
-                      const canSelect = isCardSelectable(card);
+                    {rows[virtualRow.index].map((slot) => {
+                      const card = slot.card;
+                      const isSelected = selectedCards.some((c) => c.user_card_id === card.user_card_id);
+                      const lockedInOtherDeck = slot.mode === "locked";
+                      const canInteract = canInteractWithSlot(slot);
+                      const duplicateCardType =
+                        !isSelected &&
+                        !lockedInOtherDeck &&
+                        selectedCards.some((c) => c.card_id === card.card_id);
 
                       return (
                         <button
-                          key={card.user_card_id}
-                          onClick={() => canSelect && toggleCard(card)}
+                          key={slot.slotKey}
+                          type="button"
+                          onClick={() => canInteract && toggleSlot(slot)}
                           data-ph-capture-attribute-button="deck-selection-card"
-                          disabled={!canSelect && !isSelected}
-                          className={`relative cursor-pointer rounded-[10px] sm:rounded-[14px] overflow-visible transition-all ${
-                            isSelected
-                              ? "ring-2 sm:ring-3 ring-[var(--primary)] ring-offset-2 sm:ring-offset-6"
-                              : canSelect
-                              ? ""
-                              : "opacity-40 cursor-not-allowed"
+                          disabled={!canInteract && !isSelected}
+                          title={
+                            lockedInOtherDeck
+                              ? "Locked in another deck for this tournament"
+                              : duplicateCardType
+                                ? "This card is already in your pack"
+                                : undefined
+                          }
+                          className={`relative rounded-[10px] sm:rounded-[14px] overflow-visible transition-all ${
+                            lockedInOtherDeck
+                              ? "opacity-[0.42] grayscale cursor-not-allowed"
+                              : isSelected
+                                ? "cursor-pointer ring-2 sm:ring-3 ring-[var(--primary)] ring-offset-2 sm:ring-offset-6"
+                                : canInteract
+                                  ? "cursor-pointer"
+                                  : "opacity-40 cursor-not-allowed"
                           }`}
                           style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
                         >
-                          {/* SELECTED label */}
                           {isSelected && (
                             <div className="absolute flex items-center justify-center top-0 -translate-y-[14px] sm:-translate-y-[20px] left-1/2 -translate-x-1/2 z-10 px-2 py-1 sm:px-3 sm:py-2 bg-[var(--primary)] rounded-[4px]">
-                              <span className="text-[8px] sm:text-[10px] leading-[8px] sm:leading-[10px] font-semibold text-white">SELECTED</span>
+                              <span className="text-[8px] sm:text-[10px] leading-[8px] sm:leading-[10px] font-semibold text-white">
+                                SELECTED
+                              </span>
                             </div>
                           )}
                           <div className="w-full h-full rounded-[10px] sm:rounded-[14px] overflow-hidden">

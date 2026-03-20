@@ -21,6 +21,7 @@ import type {
   VerifyRequest,
   AuthResponse,
   UserProfileResponse,
+  UpdateNicknameRequest,
   MyTournamentsResponse,
   CardCatalogResponse,
   CardDetailResponse,
@@ -29,8 +30,13 @@ import type {
   AvailablePacksResponse,
   OpenPackRequest,
   OpenPackResponse,
+  PrepareOpenPackRequest,
+  PrepareOpenPackResponse,
+  ConfirmOpenPackRequest,
+  ConfirmOpenPackResponse,
   PackHistoryResponse,
   AlphaTestCheckResponse,
+  ClaimTournamentRewardsResponse,
 } from "./types";
 import { API_BASE_URL } from "./constants";
 
@@ -287,6 +293,21 @@ export async function getMyTournaments(): Promise<MyTournamentsResponse> {
   return fetchApi("/api/users/me/tournaments");
 }
 
+export async function updateMyNickname(data: UpdateNicknameRequest): Promise<UserProfileResponse> {
+  return fetchApi("/api/users/me/nickname", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function claimTournamentRewards(
+  tournamentId: number
+): Promise<ClaimTournamentRewardsResponse> {
+  return fetchApi(`/api/tournaments/${tournamentId}/claim-rewards`, {
+    method: "POST",
+  });
+}
+
 // ==================== Cards API ====================
 export interface GetCardsParams {
   rarity?: string | null;
@@ -328,6 +349,23 @@ export async function getAvailablePacks(): Promise<AvailablePacksResponse> {
 
 export async function openPack(data: OpenPackRequest = {}): Promise<OpenPackResponse> {
   return fetchApi("/api/packs/open", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function prepareOpenPack(data: PrepareOpenPackRequest): Promise<PrepareOpenPackResponse> {
+  return fetchApi("/api/packs/prepare-open", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function confirmOpenPack(
+  packOpeningId: number,
+  data: ConfirmOpenPackRequest
+): Promise<ConfirmOpenPackResponse> {
+  return fetchApi(`/api/packs/openings/${packOpeningId}/confirm`, {
     method: "POST",
     body: JSON.stringify(data),
   });
@@ -378,7 +416,7 @@ export function useLogin() {
       message: string;
     }) => {
       console.log("verifySignature", walletAddress, signature, message);
-      const response = await verifySignature({ wallet_address: walletAddress, signature });
+      const response = await verifySignature({ wallet_address: walletAddress, signature, message });
       // Токен теперь в куках, не нужно сохранять в localStorage
       return response;
     },
@@ -565,6 +603,17 @@ export function useUnregisterFromTournament() {
   });
 }
 
+export function useClaimTournamentRewards() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (tournamentId: number) => claimTournamentRewards(tournamentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myTournaments"] });
+    },
+  });
+}
+
 // User Hooks
 export function useMyProfile(includeCards: boolean = false, enabled: boolean = true) {
   return useQuery({
@@ -587,6 +636,18 @@ export function useUserProfile(walletAddress: string | undefined, includeCards: 
     queryKey: ["userProfile", walletAddress, includeCards],
     queryFn: () => getUserProfile(walletAddress!, includeCards),
     enabled: !!walletAddress,
+  });
+}
+
+export function useUpdateMyNickname() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateNicknameRequest) => updateMyNickname(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    },
   });
 }
 
@@ -628,9 +689,29 @@ export function useAvailablePacks(enabled: boolean = true) {
 
 export function useOpenPack() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: OpenPackRequest = {}) => openPack(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["availablePacks"] });
+      queryClient.invalidateQueries({ queryKey: ["packHistory"] });
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    },
+  });
+}
+
+export function usePrepareOpenPack() {
+  return useMutation({
+    mutationFn: (data: PrepareOpenPackRequest) => prepareOpenPack(data),
+  });
+}
+
+export function useConfirmOpenPack() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ packOpeningId, data }: { packOpeningId: number; data: ConfirmOpenPackRequest }) =>
+      confirmOpenPack(packOpeningId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["availablePacks"] });
       queryClient.invalidateQueries({ queryKey: ["packHistory"] });

@@ -7,7 +7,7 @@ export interface VerifyRequest {
   wallet_address: string;
   signature: string;
   referral_code?: string | null;
-  //message: string;
+  message: string;
 }
 
 export interface AuthResponse {
@@ -71,11 +71,11 @@ export interface TokenWithRate {
     market_cap: number;
     change_24h: number;
     price_timestamp: string;
-  };
+  } | null;
   score: {
     calculated_score: number;
     tournament_change: number;
-  };
+  } | null;
 }
 
 export interface TokensLeaderboardResponse {
@@ -144,6 +144,8 @@ export interface Tournament {
   estimated_final_prize_pools?: Record<string, PrizePoolInfo> | null;
   deck_size?: number;
   my_deck_id?: number | null;
+  /** Количество активно зарегистрированных колод пользователя в этом турнире */
+  my_registered_deck_count?: number | null;
 }
 
 /** Сеть, в которой пользователь зарегистрировал колоду (приходит в include_deck=true) */
@@ -153,12 +155,28 @@ export interface MyRegistrationNetwork {
   contract_address: string;
 }
 
+/** Одна зарегистрированная колода пользователя в турнире */
+export interface MyDeckEntry {
+  deck_id: number;
+  deck_hash: string;
+  total_weight: number;
+  submitted_at: string;
+  registration_network: MyRegistrationNetwork;
+  cards: number[] | CardInDeckInfo[];
+  position?: number | null;
+  final_score?: number | null;
+  prizes?: PrizeInfo[] | null;
+}
+
 export interface TournamentDetail extends Tournament {
   description?: string | null;
   rules?: string | null;
+  /** Список всех зарегистрированных колод пользователя в этом турнире */
+  my_decks?: MyDeckEntry[] | null;
+  /** Карты первой колоды (для совместимости) */
   my_deck?: CardInDeckInfo[] | null;
   prizes?: PrizeConfig[];
-  /** Сеть для анрегистрации колоды (когда include_deck=true и пользователь зарегистрирован) */
+  /** Сеть первой колоды (для совместимости) */
   my_registration_network?: MyRegistrationNetwork | null;
 }
 
@@ -400,6 +418,7 @@ export interface DeckRegisterResponse {
 }
 
 export interface DeckUnregisterRequest {
+  deck_id: number;
   tx_hash: string;
   /** Название сети, в которой происходила отмена регистрации */
   network?: "abstract" | "avalanche";
@@ -413,9 +432,10 @@ export interface DeckUnregisterResponse {
 }
 
 // ==================== Packs ====================
-export interface PackTypeDetail {
+export interface AvailablePack {
+  user_pack_id: number;
   pack_type_id: number;
-  name: string;
+  pack_type_name: string;
   description: string;
   image_url: string;
   header_image_url: string;
@@ -426,16 +446,37 @@ export interface PackTypeDetail {
   available_from?: string | null;
   available_until?: string | null;
   is_active: boolean;
-  count: number;
 }
 
 export interface AvailablePacksResponse {
   available_packs: number;
-  pack_types: PackTypeDetail[];
+  packs: AvailablePack[];
 }
 
 export interface OpenPackRequest {
   pack_type_id?: number | null;
+}
+
+export interface PrepareOpenPackRequest {
+  user_pack_id: number;
+  client_seed: string;
+}
+
+export interface PrepareOpenPackResponse {
+  pack_opening_id: number;
+  user_pack_id: number;
+  /** chain_id, на которой нужно открывать пак (приходит с бэкенда) */
+  chain_id?: number;
+  card_ids: number[];
+  server_seed: string;
+  server_seed_hash: string;
+  client_seed: string;
+  combined_hash: string;
+  signature: string;
+}
+
+export interface ConfirmOpenPackRequest {
+  tx_hash: string;
 }
 
 export interface CardReceived {
@@ -448,6 +489,15 @@ export interface CardReceived {
   rarity_color: string;
   design_type: string;
   rendered_image_url: string;
+}
+
+export interface ConfirmOpenPackResponse {
+  status: string;
+  pack_opening_id: number;
+  pack_type_name: string;
+  opened_at: string;
+  cards_received: CardReceived[];
+  nft_token_ids: number[];
 }
 
 export interface OpenPackResponse {
@@ -519,6 +569,13 @@ export interface MyTournamentsResponse {
   best_score: number;
 }
 
+export interface ClaimTournamentRewardsResponse {
+  success: boolean;
+  claimed_count: number;
+  reward_ids: number[];
+  message: string;
+}
+
 export interface UserCard {
   user_card_id: number;
   card_id: number;
@@ -554,6 +611,10 @@ export interface UserStats {
   best_position: number;
   best_score: number;
   balances: UserBalanceItem[];
+}
+
+export interface UpdateNicknameRequest {
+  nickname: string;
 }
 
 export interface UserProfileResponse {

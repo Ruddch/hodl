@@ -165,6 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await verifySignature({
         wallet_address: address,
         signature,
+        message,
         ...(refCode && { referral_code: refCode }),
       });
       if (refCode && typeof window !== "undefined") {
