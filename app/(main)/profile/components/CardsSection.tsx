@@ -7,9 +7,6 @@ import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { BlurCard } from "@/components/BlurCard";
 import { CardStatsModal } from "@/components/CardStatsModalLazy";
 import { ProfileHoloCard } from "@/components/ProfileHoloCard";
-import { CosmosHoloCard } from "@/components/CosmosHoloCard";
-import { HoloRareCard } from "@/components/HoloRareCard";
-import { ReverseHoloCard } from "@/components/ReverseHoloCard";
 import { TournamentStatisticsTable } from "./TournamentStatisticsTable";
 
 interface CardsSectionProps {
@@ -154,29 +151,29 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
                     </div>
                   );
 
-                  if (index === 0) {
-                    return (
-                      <CosmosHoloCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
-                        {cardImage}
-                      </CosmosHoloCard>
-                    );
-                  }
-                  if (index === 1) {
-                    return (
-                      <HoloRareCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
-                        {cardImage}
-                      </HoloRareCard>
-                    );
-                  }
-                  if (index === 2) {
-                    return (
-                      <ReverseHoloCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
-                        {cardImage}
-                      </ReverseHoloCard>
-                    );
-                  }
+                  // if (index === 0) {
+                  //   return (
+                  //     <CosmosHoloCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
+                  //       {cardImage}
+                  //     </CosmosHoloCard>
+                  //   );
+                  // }
+                  // if (index === 1) {
+                  //   return (
+                  //     <HoloRareCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
+                  //       {cardImage}
+                  //     </HoloRareCard>
+                  //   );
+                  // }
+                  // if (index === 2) {
+                  //   return (
+                  //     <ReverseHoloCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
+                  //       {cardImage}
+                  //     </ReverseHoloCard>
+                  //   );
+                  // }
                   return (
-                    <ProfileHoloCard key={card.card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
+                    <ProfileHoloCard key={card.user_card_id ?? `${card.token_symbol}-${index}`} {...sharedProps}>
                       {cardImage}
                     </ProfileHoloCard>
                   );

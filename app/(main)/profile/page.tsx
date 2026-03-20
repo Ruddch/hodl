@@ -96,7 +96,7 @@ function ProfilePageContent() {
             />
 
             {/* Аватар и имя пользователя */}
-            <UserAvatar profile={profile} />
+            <UserAvatar profile={profile} showProfileMenu />
 
             {/* Карточки статистики */}
             <StatsCards profile={profile} />

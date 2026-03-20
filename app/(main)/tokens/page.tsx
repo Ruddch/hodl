@@ -28,9 +28,9 @@ function formatChange(value: number): string {
 }
 
 function TokenCard({ token, rank }: { token: TokenWithRate; rank: number }) {
-  const { price, market_cap, change_24h } = token.current_price;
-  const { calculated_score, tournament_change } = token.score;
-  const isPositive = change_24h >= 0;
+  const currentPrice = token.current_price;
+  const score = token.score;
+  const isPositive = currentPrice != null && currentPrice.change_24h >= 0;
 
   const borderStyle =
     rank === 1
@@ -81,38 +81,48 @@ function TokenCard({ token, rank }: { token: TokenWithRate; rank: number }) {
         <div>
           <span className="block text-xs text-[var(--text-muted)] mb-0.5">Score</span>
           <span className="text-sm md:text-base font-medium text-[var(--text-primary)]">
-            {calculated_score.toLocaleString("en-US", { maximumFractionDigits: 1 })}
-            {tournament_change !== 0 && (
-              <span
-                className={`ml-1 text-xs ${
-                  tournament_change >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                ({tournament_change >= 0 ? "+" : ""}{tournament_change.toFixed(1)})
-              </span>
+            {score ? (
+              <>
+                {score.calculated_score.toLocaleString("en-US", { maximumFractionDigits: 1 })}
+                {score.tournament_change !== 0 && (
+                  <span
+                    className={`ml-1 text-xs ${
+                      score.tournament_change >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    ({score.tournament_change >= 0 ? "+" : ""}{score.tournament_change.toFixed(1)})
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-[var(--text-muted)]">—</span>
             )}
           </span>
         </div>
         <div>
           <span className="block text-xs text-[var(--text-muted)] mb-0.5">24h</span>
-          <span
-            className={`text-sm md:text-base font-medium ${
-              isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-            }`}
-          >
-            {formatChange(change_24h)}
-          </span>
+          {currentPrice ? (
+            <span
+              className={`text-sm md:text-base font-medium ${
+                isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+              }`}
+            >
+              {formatChange(currentPrice.change_24h)}
+            </span>
+          ) : (
+            <span className="text-sm md:text-base text-[var(--text-muted)]">—</span>
+          )}
         </div>
         <div>
           <span className="block text-xs text-[var(--text-muted)] mb-0.5">Price</span>
           <span className="text-sm md:text-base font-medium text-[var(--text-primary)]">
-            ${formatPrice(price)}
+            {currentPrice ? `$${formatPrice(currentPrice.price)}` : "—"}
           </span>
         </div>
         <div>
           <span className="block text-xs text-[var(--text-muted)] mb-0.5">Market Cap</span>
           <span className="text-sm md:text-base text-[var(--text-secondary)]">
-            {formatMarketCap(market_cap)}
+            {currentPrice ? formatMarketCap(currentPrice.market_cap) : "—"}
           </span>
         </div>
       </div>

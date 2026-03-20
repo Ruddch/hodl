@@ -21,6 +21,7 @@ import type {
   VerifyRequest,
   AuthResponse,
   UserProfileResponse,
+  UpdateNicknameRequest,
   MyTournamentsResponse,
   CardCatalogResponse,
   CardDetailResponse,
@@ -290,6 +291,13 @@ export async function getUserProfile(
 
 export async function getMyTournaments(): Promise<MyTournamentsResponse> {
   return fetchApi("/api/users/me/tournaments");
+}
+
+export async function updateMyNickname(data: UpdateNicknameRequest): Promise<UserProfileResponse> {
+  return fetchApi("/api/users/me/nickname", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 }
 
 export async function claimTournamentRewards(
@@ -628,6 +636,18 @@ export function useUserProfile(walletAddress: string | undefined, includeCards: 
     queryKey: ["userProfile", walletAddress, includeCards],
     queryFn: () => getUserProfile(walletAddress!, includeCards),
     enabled: !!walletAddress,
+  });
+}
+
+export function useUpdateMyNickname() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateNicknameRequest) => updateMyNickname(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    },
   });
 }
 

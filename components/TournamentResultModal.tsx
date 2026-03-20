@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { useMyTournaments, useClaimTournamentRewards } from "@/lib/api";
@@ -8,6 +8,8 @@ import { BlurCard } from "@/components/BlurCard";
 import type { MyTournamentEntry } from "@/lib/types";
 
 const STORAGE_KEY_PREFIX = "hodleague_tournament_result_seen_";
+/** Пауза после успешного клейма, чтобы пользователь успел осознать успех */
+const CLAIM_SUCCESS_CLOSE_DELAY_MS = 900;
 
 function getSeenKey(walletAddress: string): string {
   return `${STORAGE_KEY_PREFIX}${walletAddress.toLowerCase()}`;
@@ -93,9 +95,21 @@ export function TournamentResultModal({
   onClose,
 }: TournamentResultModalProps) {
   const claimMutation = useClaimTournamentRewards();
-  const [claimed, setClaimed] = useState(false);
+  const closeAfterClaimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const [closingAfterSuccess, setClosingAfterSuccess] = useState(false);
 
-  const canClaim = hasUnclaimedRewards(entry) && !claimed;
+  useEffect(() => {
+    return () => {
+      if (closeAfterClaimTimerRef.current != null) {
+        clearTimeout(closeAfterClaimTimerRef.current);
+        closeAfterClaimTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  const canClaim = hasUnclaimedRewards(entry);
   const totalRewards = (entry.prizes ?? []).reduce(
     (sum, p) => sum + Number(p.amount),
     0
@@ -104,8 +118,16 @@ export function TournamentResultModal({
   const tournamentName = getTournamentName(entry);
 
   const handleClaim = async () => {
-    await claimMutation.mutateAsync(entry.tournament_id);
-    setClaimed(true);
+    try {
+      await claimMutation.mutateAsync(entry.tournament_id);
+      setClosingAfterSuccess(true);
+      closeAfterClaimTimerRef.current = setTimeout(() => {
+        closeAfterClaimTimerRef.current = null;
+        onClose();
+      }, CLAIM_SUCCESS_CLOSE_DELAY_MS);
+    } catch {
+      /* ошибка сети/API — модалку не закрываем */
+    }
   };
 
   return (
@@ -165,74 +187,67 @@ export function TournamentResultModal({
 
           {/* Button */}
           <div className="p-6 pt-0">
-            {claimed ? (
-              <div
-                className="w-full py-4 rounded-[15px] bg-black/5 text-[var(--text-secondary)] font-medium text-base text-center flex items-center justify-center gap-2"
-                style={{
-                  fontFamily: "var(--font-instrument-sans), sans-serif",
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  aria-hidden
-                >
-                  <path
-                    d="M3 8L6.5 11.5L13 5"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Rewards Claimed
-              </div>
-            ) : (
-              <button
-                onClick={canClaim ? handleClaim : onClose}
-                disabled={claimMutation.isPending}
-                className="w-full py-4 rounded-[15px] bg-[#2200EF] text-white font-semibold text-base hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  fontFamily: "var(--font-instrument-sans), sans-serif",
-                }}
-                data-ph-capture-attribute-button="tournament-result-modal-claim"
-              >
-                {claimMutation.isPending ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg
-                      className="animate-spin"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      aria-hidden
-                    >
-                      <circle
-                        cx="8"
-                        cy="8"
-                        r="6"
-                        stroke="currentColor"
-                        strokeOpacity="0.3"
-                        strokeWidth="2"
-                      />
-                      <path
-                        d="M8 2A6 6 0 0 1 14 8"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    Claiming...
-                  </span>
-                ) : canClaim ? (
-                  "Claim your prize"
-                ) : (
-                  "Close"
-                )}
-              </button>
-            )}
+            <button
+              onClick={canClaim && !closingAfterSuccess ? handleClaim : onClose}
+              disabled={claimMutation.isPending || closingAfterSuccess}
+              className="w-full py-4 rounded-[15px] bg-[#2200EF] text-white font-semibold text-base hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                fontFamily: "var(--font-instrument-sans), sans-serif",
+              }}
+              data-ph-capture-attribute-button="tournament-result-modal-claim"
+            >
+              {claimMutation.isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg
+                    className="animate-spin"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden
+                  >
+                    <circle
+                      cx="8"
+                      cy="8"
+                      r="6"
+                      stroke="currentColor"
+                      strokeOpacity="0.3"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M8 2A6 6 0 0 1 14 8"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  Claiming...
+                </span>
+              ) : closingAfterSuccess ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden
+                  >
+                    <path
+                      d="M3 8L6.5 11.5L13 5"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Rewards claimed
+                </span>
+              ) : canClaim ? (
+                "Claim your prize"
+              ) : (
+                "Close"
+              )}
+            </button>
           </div>
         </BlurCard>
       </div>

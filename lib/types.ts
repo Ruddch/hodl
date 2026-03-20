@@ -71,11 +71,11 @@ export interface TokenWithRate {
     market_cap: number;
     change_24h: number;
     price_timestamp: string;
-  };
+  } | null;
   score: {
     calculated_score: number;
     tournament_change: number;
-  };
+  } | null;
 }
 
 export interface TokensLeaderboardResponse {
@@ -611,6 +611,10 @@ export interface UserStats {
   best_position: number;
   best_score: number;
   balances: UserBalanceItem[];
+}
+
+export interface UpdateNicknameRequest {
+  nickname: string;
 }
 
 export interface UserProfileResponse {
