@@ -145,6 +145,7 @@ function ClaimButton({ tournamentId, onClaim, isPending, isSuccess }: ClaimButto
         className="inline-flex items-center justify-center gap-1.5 w-24 py-2 rounded-lg text-sm font-semibold
           bg-[var(--surface-hover)] text-[var(--text-secondary)]
           cursor-not-allowed opacity-70"
+        data-ph-capture-attribute-button="tournament-claimed"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
           <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

@@ -20,6 +20,7 @@ import {
 } from "@/lib/acquisition";
 import type { UserProfileResponse } from "./types";
 import { AlphaTestAccessModal } from "@/components/AlphaTestAccessModal";
+import { isPosthogEnabled } from "@/lib/posthog-enabled";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -42,7 +43,7 @@ function identifyPosthogUser(
   userId: number,
   acquisition: ReturnType<typeof getStoredAcquisitionPayload>
 ): void {
-  if (typeof window === "undefined" || !process.env.NEXT_PUBLIC_POSTHOG_TOKEN) return;
+  if (typeof window === "undefined" || !isPosthogEnabled()) return;
   const props = acquisitionPayloadToPosthogProperties(acquisition);
   posthog.identify(String(userId), props ?? {});
 }
@@ -121,7 +122,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 3. PostHog: сбрасываем distinct_id и user properties при logout
-    posthog?.reset?.();
+    if (typeof window !== "undefined" && isPosthogEnabled()) {
+      posthog.reset();
+    }
     
     // 4. Инвалидируем все запросы, которые зависят от пользователя
     invalidateUserQueries(queryClient);
@@ -204,6 +207,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(true);
 
       identifyPosthogUser(userData.id, acquisition);
+      if (typeof window !== "undefined" && isPosthogEnabled()) {
+        posthog.capture("user_logged_in", { login_method: "siwe" });
+      }
       
       // 7. Инвалидируем все запросы, которые зависят от пользователя
       // При обновлении пользователя произойдут перезапросы всех зависимых ручек

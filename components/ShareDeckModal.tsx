@@ -223,6 +223,7 @@ export function ShareDeckModal({ open, onClose, cards }: ShareDeckModalProps) {
             onClick={onClose}
             className="p-2 cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-lg hover:bg-[var(--surface-hover)]"
             aria-label="Close"
+            data-ph-capture-attribute-button="share-deck-modal-close"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -262,6 +263,7 @@ export function ShareDeckModal({ open, onClose, cards }: ShareDeckModalProps) {
             onClick={handleSave}
             disabled={!imageUrl}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)] text-[var(--text-primary)] text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border border-[var(--border-subtle)]"
+            data-ph-capture-attribute-button="share-deck-save-image"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -273,6 +275,7 @@ export function ShareDeckModal({ open, onClose, cards }: ShareDeckModalProps) {
             onClick={handleCopy}
             disabled={!imageUrl}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)] text-[var(--text-primary)] text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border border-[var(--border-subtle)]"
+            data-ph-capture-attribute-button="share-deck-copy-image"
           >
             {copySuccess ? (
               <>
@@ -296,6 +299,7 @@ export function ShareDeckModal({ open, onClose, cards }: ShareDeckModalProps) {
             disabled={!imageUrl}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             style={{ background: "#000" }}
+            data-ph-capture-attribute-button="share-deck-x"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />

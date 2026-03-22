@@ -7,6 +7,7 @@ import {
   CAMPAIGN_LANDING_SENT_KEY,
   getStoredAcquisitionPayload,
 } from "@/lib/acquisition";
+import { isPosthogEnabled } from "@/lib/posthog-enabled";
 
 /**
  * Маркетинговые ссылки ведут на полную загрузку страницы; query в sessionStorage уже кладёт inline-скрипт в layout.
@@ -14,7 +15,7 @@ import {
  */
 export function AcquisitionCapture() {
   useEffect(() => {
-    if (typeof window === "undefined" || !process.env.NEXT_PUBLIC_POSTHOG_TOKEN) return;
+    if (typeof window === "undefined" || !isPosthogEnabled()) return;
     if (sessionStorage.getItem(CAMPAIGN_LANDING_SENT_KEY)) return;
 
     const stored = getStoredAcquisitionPayload();

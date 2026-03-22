@@ -268,6 +268,7 @@ export function DeckSelectionModal({
               variant="compact"
               showIcon={false}
               className="w-full sm:max-w-sm"
+              dataPhCaptureAttributeButton="search-deck-selection"
             />
           </div>
         </div>

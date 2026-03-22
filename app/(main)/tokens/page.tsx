@@ -230,6 +230,7 @@ export default function TokensPage() {
               onChange={setSearchQuery}
               placeholder="Search by symbol or name"
               className="flex-1 md:max-w-[320px]"
+              dataPhCaptureAttributeButton="search-tokens"
             />
 
             {/* Filters */}

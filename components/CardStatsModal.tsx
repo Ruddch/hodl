@@ -404,6 +404,7 @@ export function CardStatsModal({
                     </button>
                     <button
                       onClick={() => setChartMode("score")}
+                      data-ph-capture-attribute-button="card-stats-chart-score"
                       className={`p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center transition-colors ${
                         chartMode === "score"
                           ? "bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
