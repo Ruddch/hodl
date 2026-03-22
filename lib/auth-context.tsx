@@ -13,6 +13,7 @@ import {
   checkAlphaTestAccess
 } from "./api";
 import { REF_CODE_KEY } from "@/components/RefCapture";
+import { clearStoredAcquisition, getStoredAcquisitionPayload } from "@/lib/acquisition";
 import type { UserProfileResponse } from "./types";
 import { AlphaTestAccessModal } from "@/components/AlphaTestAccessModal";
 
@@ -162,14 +163,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // 4. Верифицируем подпись (токен устанавливается в куки на бэкенде)
       const refCode = typeof window !== "undefined" ? localStorage.getItem(REF_CODE_KEY) : null;
+      const acquisition =
+        typeof window !== "undefined" ? getStoredAcquisitionPayload() : null;
       await verifySignature({
         wallet_address: address,
         signature,
         message,
         ...(refCode && { referral_code: refCode }),
+        ...(acquisition && { acquisition }),
       });
       if (refCode && typeof window !== "undefined") {
         localStorage.removeItem(REF_CODE_KEY);
+      }
+      if (acquisition && typeof window !== "undefined") {
+        clearStoredAcquisition();
       }
 
       // 5. Сохраняем адрес кошелька
