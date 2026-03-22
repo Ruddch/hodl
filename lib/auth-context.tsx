@@ -13,7 +13,11 @@ import {
   checkAlphaTestAccess
 } from "./api";
 import { REF_CODE_KEY } from "@/components/RefCapture";
-import { clearStoredAcquisition, getStoredAcquisitionPayload } from "@/lib/acquisition";
+import {
+  acquisitionPayloadToPosthogProperties,
+  clearStoredAcquisition,
+  getStoredAcquisitionPayload,
+} from "@/lib/acquisition";
 import type { UserProfileResponse } from "./types";
 import { AlphaTestAccessModal } from "@/components/AlphaTestAccessModal";
 
@@ -33,6 +37,15 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const SIGNED_WALLET_KEY = "hodleague_signed_wallet";
+
+function identifyPosthogUser(
+  userId: number,
+  acquisition: ReturnType<typeof getStoredAcquisitionPayload>
+): void {
+  if (typeof window === "undefined" || !process.env.NEXT_PUBLIC_POSTHOG_TOKEN) return;
+  const props = acquisitionPayloadToPosthogProperties(acquisition);
+  posthog.identify(String(userId), props ?? {});
+}
 
 // Функция для инвалидации всех запросов, которые зависят от пользователя
 function invalidateUserQueries(queryClient: QueryClient) {
@@ -189,6 +202,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = await getCurrentUser();
       setUser(userData);
       setIsAuthenticated(true);
+
+      identifyPosthogUser(userData.id, acquisition);
       
       // 7. Инвалидируем все запросы, которые зависят от пользователя
       // При обновлении пользователя произойдут перезапросы всех зависимых ручек
@@ -222,6 +237,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userData = await getCurrentUser();
         setUser(userData);
         setIsAuthenticated(true);
+
+        const acquisitionOnLoad =
+          typeof window !== "undefined" ? getStoredAcquisitionPayload() : null;
+        identifyPosthogUser(userData.id, acquisitionOnLoad);
         
         // Загружаем сохраненный адрес
         const savedAddress = typeof window !== "undefined" 

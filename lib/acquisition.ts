@@ -1,40 +1,14 @@
 /** Ключ sessionStorage; синхронизирован с ранним inline-скриптом в app/layout.tsx */
 export const ACQUISITION_SESSION_KEY = "hodleague_acquisition";
 
+/** Один раз за сессию: событие PostHog campaign_landing уже отправлено */
+export const CAMPAIGN_LANDING_SENT_KEY = "hodleague_campaign_landing_sent";
+
 export interface AcquisitionPayload {
   marketing_link_id?: string;
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
-}
-
-/**
- * Записывает в sessionStorage только поля из текущего query (utm_*, fc_ml_id → marketing_link_id).
- * Без мерджа: объект целиком из этого URL (только непустые поля).
- */
-export function setAcquisitionFromSearchString(search: string): void {
-  if (typeof window === "undefined") return;
-  const trimmed = search.startsWith("?") ? search.slice(1) : search;
-  if (!trimmed) return;
-
-  const params = new URLSearchParams(trimmed);
-  const payload: Partial<AcquisitionPayload> = {};
-
-  const us = params.get("utm_source");
-  if (us) payload.utm_source = us;
-
-  const um = params.get("utm_medium");
-  if (um) payload.utm_medium = um;
-
-  const uc = params.get("utm_campaign");
-  if (uc) payload.utm_campaign = uc;
-
-  const ml = params.get("fc_ml_id");
-  if (ml) payload.marketing_link_id = ml;
-
-  if (Object.keys(payload).length === 0) return;
-
-  sessionStorage.setItem(ACQUISITION_SESSION_KEY, JSON.stringify(payload));
 }
 
 export function getStoredAcquisitionPayload(): AcquisitionPayload | null {
@@ -60,4 +34,17 @@ export function getStoredAcquisitionPayload(): AcquisitionPayload | null {
 export function clearStoredAcquisition(): void {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem(ACQUISITION_SESSION_KEY);
+}
+
+/** PostHog identify: те же поля, что в API acquisition; fc_ml_id из marketing_link_id. */
+export function acquisitionPayloadToPosthogProperties(
+  payload: AcquisitionPayload | null | undefined
+): Record<string, string> | undefined {
+  if (!payload) return undefined;
+  const out: Record<string, string> = {};
+  if (payload.marketing_link_id) out.fc_ml_id = payload.marketing_link_id;
+  if (payload.utm_source) out.utm_source = payload.utm_source;
+  if (payload.utm_medium) out.utm_medium = payload.utm_medium;
+  if (payload.utm_campaign) out.utm_campaign = payload.utm_campaign;
+  return Object.keys(out).length > 0 ? out : undefined;
 }

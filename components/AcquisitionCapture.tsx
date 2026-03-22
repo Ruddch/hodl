@@ -1,24 +1,31 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { setAcquisitionFromSearchString } from "@/lib/acquisition";
+import { useEffect } from "react";
+import posthog from "posthog-js";
+import {
+  acquisitionPayloadToPosthogProperties,
+  CAMPAIGN_LANDING_SENT_KEY,
+  getStoredAcquisitionPayload,
+} from "@/lib/acquisition";
 
-function AcquisitionCaptureInner() {
-  const searchParams = useSearchParams();
-
+/**
+ * Маркетинговые ссылки ведут на полную загрузку страницы; query в sessionStorage уже кладёт inline-скрипт в layout.
+ * Здесь только один раз за сессию шлём campaign_landing в PostHog, если есть fc_ml_id.
+ */
+export function AcquisitionCapture() {
   useEffect(() => {
-    const q = searchParams.toString();
-    if (q) setAcquisitionFromSearchString(q);
-  }, [searchParams]);
+    if (typeof window === "undefined" || !process.env.NEXT_PUBLIC_POSTHOG_TOKEN) return;
+    if (sessionStorage.getItem(CAMPAIGN_LANDING_SENT_KEY)) return;
+
+    const stored = getStoredAcquisitionPayload();
+    if (!stored?.marketing_link_id) return;
+
+    const props = acquisitionPayloadToPosthogProperties(stored);
+    if (!props?.fc_ml_id) return;
+
+    sessionStorage.setItem(CAMPAIGN_LANDING_SENT_KEY, "1");
+    posthog.capture("campaign_landing", props);
+  }, []);
 
   return null;
-}
-
-export function AcquisitionCapture() {
-  return (
-    <Suspense fallback={null}>
-      <AcquisitionCaptureInner />
-    </Suspense>
-  );
 }
