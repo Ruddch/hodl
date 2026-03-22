@@ -101,7 +101,8 @@ function TournamentPageContent() {
 
   const handleRegister = async (selectedCardIds: number[]) => {
     if (!tournamentDisplay) return;
-    await register(tournamentDisplay, selectedCardIds);
+    const existing = tournamentDetails?.my_decks?.length ?? 0;
+    await register(tournamentDisplay, selectedCardIds, { deckOrdinal: existing + 1 });
   };
 
   const handleUnregisterDeck = async (deck: MyDeckEntry) => {

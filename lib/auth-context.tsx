@@ -13,8 +13,14 @@ import {
   checkAlphaTestAccess
 } from "./api";
 import { REF_CODE_KEY } from "@/components/RefCapture";
+import {
+  acquisitionPayloadToPosthogProperties,
+  clearStoredAcquisition,
+  getStoredAcquisitionPayload,
+} from "@/lib/acquisition";
 import type { UserProfileResponse } from "./types";
 import { AlphaTestAccessModal } from "@/components/AlphaTestAccessModal";
+import { isPosthogEnabled } from "@/lib/posthog-enabled";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -32,6 +38,15 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const SIGNED_WALLET_KEY = "hodleague_signed_wallet";
+
+function identifyPosthogUser(
+  userId: number,
+  acquisition: ReturnType<typeof getStoredAcquisitionPayload>
+): void {
+  if (typeof window === "undefined" || !isPosthogEnabled()) return;
+  const props = acquisitionPayloadToPosthogProperties(acquisition);
+  posthog.identify(String(userId), props ?? {});
+}
 
 // Функция для инвалидации всех запросов, которые зависят от пользователя
 function invalidateUserQueries(queryClient: QueryClient) {
@@ -107,7 +122,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 3. PostHog: сбрасываем distinct_id и user properties при logout
-    posthog?.reset?.();
+    if (typeof window !== "undefined" && isPosthogEnabled()) {
+      posthog.reset();
+    }
     
     // 4. Инвалидируем все запросы, которые зависят от пользователя
     invalidateUserQueries(queryClient);
@@ -162,14 +179,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // 4. Верифицируем подпись (токен устанавливается в куки на бэкенде)
       const refCode = typeof window !== "undefined" ? localStorage.getItem(REF_CODE_KEY) : null;
+      const acquisition =
+        typeof window !== "undefined" ? getStoredAcquisitionPayload() : null;
       await verifySignature({
         wallet_address: address,
         signature,
         message,
         ...(refCode && { referral_code: refCode }),
+        ...(acquisition && { acquisition }),
       });
       if (refCode && typeof window !== "undefined") {
         localStorage.removeItem(REF_CODE_KEY);
+      }
+      if (acquisition && typeof window !== "undefined") {
+        clearStoredAcquisition();
       }
 
       // 5. Сохраняем адрес кошелька
@@ -182,6 +205,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = await getCurrentUser();
       setUser(userData);
       setIsAuthenticated(true);
+
+      identifyPosthogUser(userData.id, acquisition);
+      if (typeof window !== "undefined" && isPosthogEnabled()) {
+        posthog.capture("user_logged_in", { login_method: "siwe" });
+      }
       
       // 7. Инвалидируем все запросы, которые зависят от пользователя
       // При обновлении пользователя произойдут перезапросы всех зависимых ручек
@@ -215,6 +243,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userData = await getCurrentUser();
         setUser(userData);
         setIsAuthenticated(true);
+
+        const acquisitionOnLoad =
+          typeof window !== "undefined" ? getStoredAcquisitionPayload() : null;
+        identifyPosthogUser(userData.id, acquisitionOnLoad);
         
         // Загружаем сохраненный адрес
         const savedAddress = typeof window !== "undefined" 

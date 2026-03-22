@@ -1,4 +1,5 @@
 import { useState } from "react";
+import posthog from "posthog-js";
 import { useAccount, useConfig, useSwitchChain } from "wagmi";
 import { waitForTransactionReceipt } from "wagmi/actions";
 import { useAuth } from "@/lib/auth-context";
@@ -11,8 +12,19 @@ import {
   getNetworkFromChainId,
 } from "@/lib/blockchain";
 import type { Tournament, TournamentDetail, MyDeckEntry } from "@/lib/types";
+import { isPosthogEnabled } from "@/lib/posthog-enabled";
 
 export type RegistrationErrorContext = "register" | "unregister";
+
+/** Аналитика: порядковый номер колоды у пользователя на этом турнире (1 — первая). */
+export type TournamentRegisterAnalytics = {
+  deckOrdinal: number;
+};
+
+export type TournamentUnregisterAnalytics = {
+  /** Номер колоды до удаления (позиция в списке my_decks). */
+  deckOrdinal?: number;
+};
 
 interface UseTournamentRegistrationOptions {
   onSuccess?: () => void;
@@ -44,7 +56,11 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
   };
 
   // Регистрация на турнир
-  const register = async (tournament: Tournament, selectedCardIds: number[]) => {
+  const register = async (
+    tournament: Tournament,
+    selectedCardIds: number[],
+    analytics: TournamentRegisterAnalytics
+  ) => {
     if (!validateWallet()) {
       options?.onError?.(new Error(WALLET_MISMATCH_MESSAGE), "register");
       return;
@@ -110,6 +126,13 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
           ...(networkName && { network: networkName }),
         },
       });
+
+      if (typeof window !== "undefined" && isPosthogEnabled()) {
+        posthog.capture("tournament_registered", {
+          tournament_id: tournament.id,
+          deck_ordinal: analytics.deckOrdinal,
+        });
+      }
 
       options?.onSuccess?.();
     } catch (error) {
@@ -178,6 +201,13 @@ export function useTournamentRegistration(options?: UseTournamentRegistrationOpt
           ...(networkName && { network: networkName }),
         },
       });
+
+      if (typeof window !== "undefined" && isPosthogEnabled()) {
+        posthog.capture("tournament_deck_unregistered", {
+          tournament_id: tournament.id,
+          deck_id: deck.deck_id,
+        });
+      }
 
       options?.onSuccess?.();
     } catch (error) {

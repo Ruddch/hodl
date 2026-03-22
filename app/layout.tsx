@@ -74,10 +74,16 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Hodleague" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        {/* Ранний редирект / → /tournament/ с сохранением ?ref (до загрузки React) */}
+        {/* UTM / fc_ml_id в sessionStorage до редиректа (ключ hodleague_acquisition = lib/acquisition.ts) */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var p=location.pathname.replace(/\\/$/,'')||'/';var b="${BASE_PATH}";var r=b?p===b||p===b+'/':p===''||p==='/';if(r){location.replace((b?b+'/':'/')+'tournament/'+(location.search||''));}})();`,
+            __html: `(function(){var q=location.search;if(!q||q.length<2)return;var params=new URLSearchParams(q.slice(1));var o={};var us=params.get('utm_source');if(us)o.utm_source=us;var um=params.get('utm_medium');if(um)o.utm_medium=um;var uc=params.get('utm_campaign');if(uc)o.utm_campaign=uc;var ml=params.get('fc_ml_id');if(ml)o.marketing_link_id=ml;if(!Object.keys(o).length)return;sessionStorage.setItem('hodleague_acquisition',JSON.stringify(o));})();`,
+          }}
+        />
+        {/* Ранний редирект / → /tournament/ с сохранением query/hash (ref для RefCapture, UTM уже в sessionStorage) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var p=location.pathname.replace(/\\/$/,'')||'/';var b="${BASE_PATH}";var r=b?p===b||p===b+'/':p===''||p==='/';if(r){var sq=location.search||'';var h=location.hash||'';location.replace((b?b+'/':'/')+'tournament/'+sq+h);}})();`,
           }}
         />
         <link rel="preconnect" href={API_BASE_URL} crossOrigin="anonymous" />

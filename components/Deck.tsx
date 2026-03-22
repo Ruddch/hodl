@@ -182,6 +182,7 @@ function RegisteredDeck({
 
   const placeLabel = isViewMode ? "PLACE" : "YOUR PLACE";
   const title = isViewMode ? "Deck" : "My deck";
+  const sharePhCapture = isViewMode ? "deck-share-deck-detail" : "deck-share-tournament";
 
   return (
     <>
@@ -232,7 +233,7 @@ function RegisteredDeck({
         {cards.length > 0 && (
           <button
             onClick={() => setShareOpen(true)}
-            data-ph-capture-attribute-button="deck-share"
+            data-ph-capture-attribute-button={sharePhCapture}
             className="cursor-pointer ml-auto px-3 h-6 sm:h-8 flex items-center gap-1.5 text-[10px] sm:text-[13px] font-semibold rounded text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)] hover:opacity-90 transition-opacity shrink-0"
           >
             <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -512,7 +513,7 @@ function DeckAccordionItem({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setShareOpen(true); }}
-            data-ph-capture-attribute-button="deck-share"
+            data-ph-capture-attribute-button="deck-share-tournament"
             className="cursor-pointer px-2 sm:px-3 h-6 sm:h-7 flex items-center gap-1 text-[10px] sm:text-[13px] font-semibold rounded text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)] hover:opacity-90 transition-opacity shrink-0"
           >
             <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

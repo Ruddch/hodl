@@ -182,7 +182,7 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
             onClick={handleClose}
             className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             aria-label="Close"
-            data-ph-capture-attribute-button="onboarding-close"
+            data-ph-capture-attribute-button={`onboarding-step-${stepIndex + 1}-close`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -201,7 +201,7 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
                 <button
                   type="button"
                   onClick={handleBack}
-                  data-ph-capture-attribute-button="onboarding-back"
+                  data-ph-capture-attribute-button={`onboarding-step-${stepIndex + 1}-back`}
                   className="px-4 py-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
                 >
                   Back
@@ -210,7 +210,9 @@ export function Onboarding({ steps, run, onClose, onComplete }: OnboardingProps)
               <button
                 type="button"
                 onClick={handleNext}
-                data-ph-capture-attribute-button="onboarding-next"
+                data-ph-capture-attribute-button={
+                  isLastStep ? "onboarding-finish" : `onboarding-step-${stepIndex + 1}-next`
+                }
                 className="px-5 py-2.5 text-sm font-medium text-white bg-[var(--primary)] hover:opacity-90 rounded-[15px] transition-opacity"
               >
                 {isLastStep ? "Finish" : "Next"}

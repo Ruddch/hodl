@@ -3,11 +3,19 @@ export interface NonceRequest {
   wallet_address: string;
 }
 
+export interface VerifyAcquisitionPayload {
+  marketing_link_id?: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+}
+
 export interface VerifyRequest {
   wallet_address: string;
   signature: string;
   referral_code?: string | null;
   message: string;
+  acquisition?: VerifyAcquisitionPayload;
 }
 
 export interface AuthResponse {

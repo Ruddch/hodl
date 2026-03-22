@@ -149,6 +149,7 @@ export function LeaderboardCard({
             onChange={setSearchQuery}
             placeholder="Search by username or wallet address"
             className="flex items-center w-full md:w-[396px] shrink-0"
+            dataPhCaptureAttributeButton="search-leaderboard"
           />
         )}
       </div>

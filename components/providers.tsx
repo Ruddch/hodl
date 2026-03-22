@@ -7,6 +7,7 @@ import { wagmiConfig } from "@/lib/wagmi";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
 import { RefCapture } from "@/components/RefCapture";
+import { AcquisitionCapture } from "@/components/AcquisitionCapture";
 import { UnviewedCardsProvider } from "@/lib/unviewed-cards-context";
 
 const queryClient = new QueryClient({
@@ -24,6 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider>
           <ThemeProvider>
+            <AcquisitionCapture />
             <RefCapture />
             <AuthProvider>
               <UnviewedCardsProvider>

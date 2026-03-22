@@ -155,7 +155,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
           onClick={handleClose}
           className="absolute top-2 right-2 md:top-4 md:right-4 z-10 p-2 rounded-full hover:bg-white/10 transition-colors"
           aria-label="Close"
-          data-ph-capture-attribute-button="welcome-modal-close"
+          data-ph-capture-attribute-button={`welcome-step-${step + 1}-modal-close`}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeOpacity="0.5" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
@@ -225,7 +225,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
                             {({ show }) => (
                               <button
                                 onClick={show}
-                                data-ph-capture-attribute-button="welcome-connect-wallet"
+                                data-ph-capture-attribute-button={`welcome-step-${idx + 1}-connect-wallet`}
                                 className="cursor-pointer py-4 px-6 text-center text-[1rem] font-medium leading-[1] tracking-[0] bg-[#2200EF] text-white rounded-[15px] hover:opacity-90 transition-opacity"
                                 style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
                               >
@@ -236,7 +236,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
                           <button
                             onClick={handleClose}
                             className="cursor-pointer py-4 px-6 text-center text-[1rem] font-medium leading-[1] tracking-[0] bg-white text-[#2200EF] rounded-[15px] hover:opacity-90 transition-colors"
-                            data-ph-capture-attribute-button="welcome-explore-first"
+                            data-ph-capture-attribute-button={`welcome-step-${idx + 1}-explore-first`}
                             style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
                           >
                             Explore First
@@ -245,7 +245,9 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
                       ) : (
                         <button
                           onClick={s.isLast ? handleClose : handleNext}
-                          data-ph-capture-attribute-button={s.isLast ? "welcome-finish" : "welcome-next"}
+                          data-ph-capture-attribute-button={
+                            s.isLast ? "welcome-finish" : `welcome-step-${idx + 1}-next`
+                          }
                           className="cursor-pointer py-4 px-6 w-full sm:w-[50%] min-w-0 sm:min-w-[8rem] text-center text-[1rem] font-medium leading-[1] tracking-[0] bg-white text-[#2200EF] rounded-[15px] hover:opacity-90 transition-opacity"
                           style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
                         >

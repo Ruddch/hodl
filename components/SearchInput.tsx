@@ -9,6 +9,8 @@ interface SearchInputProps {
   /** Показывать иконку лупы. Для compact по умолчанию false */
   showIcon?: boolean;
   className?: string;
+  /** Уникальный id для PostHog autocapture (клик/взаимодействие с полем) */
+  dataPhCaptureAttributeButton?: string;
 }
 
 const SearchIcon = () => (
@@ -34,6 +36,7 @@ export function SearchInput({
   variant = "default",
   showIcon = variant === "default",
   className,
+  dataPhCaptureAttributeButton,
 }: SearchInputProps) {
   const isCompact = variant === "compact";
 
@@ -46,6 +49,7 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={`w-full bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] placeholder:text-[var(--text-placeholder)] outline-none focus:outline-none ${showIcon ? "pl-11 pr-4" : "px-3 sm:px-4"} ${isCompact ? "py-2 sm:py-2.5 rounded-xl text-sm text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary)] focus:ring-opacity-50" : "h-11 md:h-12 rounded-2xl text-base"}`}
+        data-ph-capture-attribute-button={dataPhCaptureAttributeButton || undefined}
       />
     </div>
   );
