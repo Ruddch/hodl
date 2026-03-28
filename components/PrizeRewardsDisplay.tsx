@@ -36,8 +36,8 @@ function PrizeSegment({
   if (prizeKey === "pack") {
     return (
       <span className="inline-flex items-center gap-1">
-        <img src={PACK_IMG} alt="" width={36} height={36} className={imgClass} />
         <span>{amount}</span>
+        <img src={PACK_IMG} alt="" width={36} height={36} className={imgClass} />
       </span>
     );
   }
@@ -79,13 +79,12 @@ export function PrizeRewardsDisplay({
   }
 
   return (
-    <span className={`inline-flex flex-wrap items-center gap-x-1 gap-y-0.5 ${className}`.trim()}>
+    <span className={`inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 ${className}`.trim()}>
       {keys.map((key, i) => {
         const entry = map.get(key);
         if (!entry) return null;
         return (
           <Fragment key={key}>
-            {i > 0 && <span className="text-[var(--text-muted)] px-0.5" aria-hidden>+</span>}
             <PrizeSegment prizeKey={key} total={entry.total} displayName={entry.displayName} size={size} />
           </Fragment>
         );
