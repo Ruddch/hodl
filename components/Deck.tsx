@@ -39,7 +39,7 @@ interface EmptyDeckProps {
 }
 
 function EmptyDeck({ onStartClick, canRegister, tournamentStatus }: EmptyDeckProps) {
-  const isTournamentFinished = tournamentStatus === "finished";
+  const isTournamentRegisterAvailable = tournamentStatus === "registration";
   return (
     <>
       <div className="relative px-8 pt-8">
@@ -50,9 +50,9 @@ function EmptyDeck({ onStartClick, canRegister, tournamentStatus }: EmptyDeckPro
           <img src="/deck.png" alt="Deck cards" width={280} height={400} className="object-contain" />
         </div>
         <p className="text-normal md:text-xl font-semibold text-[var(--text-primary)] mb-6">
-          {isTournamentFinished ? "You haven't registered any deck" : "You haven't registered any deck yet"}
+          {!isTournamentRegisterAvailable ? "You haven't registered any deck" : "You haven't registered any deck yet"}
         </p>
-        {!isTournamentFinished && (
+        {isTournamentRegisterAvailable && (
           <button
             onClick={onStartClick}
             disabled={!canRegister}
