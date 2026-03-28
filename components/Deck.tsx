@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { CardInDeckInfo, DeckDetailResponse, MyDeckEntry, PrizeInfo } from "@/lib/types";
+import type { CardInDeckInfo, DeckDetailResponse, MyDeckEntry } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
+import { PrizeRewardsDisplay } from "@/components/PrizeRewardsDisplay";
+import { flattenDeckPrizes } from "@/lib/prize-rewards";
 import { CardStatsModal } from "@/components/CardStatsModalLazy";
 import { ShareDeckModal } from "@/components/ShareDeckModal";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
@@ -74,12 +76,6 @@ function EmptyDeck({ onStartClick, canRegister, tournamentStatus }: EmptyDeckPro
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatReward(prizes: DeckDetailResponse["prizes"] | undefined): string {
-  if (!prizes || prizes.length === 0) return "—";
-  const first = prizes[0];
-  return `${new Intl.NumberFormat("en-US").format(Number(first.amount))} ${first.reward_name}`;
-}
-
 function formatScore(score: number | undefined | null): string {
   if (score === undefined || score === null) return "—";
   return score.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -101,32 +97,6 @@ function TrashIcon({ className }: { className?: string }) {
       />
     </svg>
   );
-}
-
-/** Форматирует массив призов в строку. Суммирует по reward_name. */
-function formatPrizes(prizes: PrizeInfo[] | null | undefined): string {
-  if (!prizes || prizes.length === 0) return "";
-  const totals: Record<string, number> = {};
-  for (const p of prizes) {
-    totals[p.reward_name] = (totals[p.reward_name] ?? 0) + Number(p.amount);
-  }
-  return Object.entries(totals)
-    .map(([name, amount]) => `${new Intl.NumberFormat("en-US").format(amount)} ${name}`)
-    .join(" + ");
-}
-
-/** Суммирует призы по всем декам */
-function formatTotalPrizes(decks: MyDeckEntry[]): string {
-  const totals: Record<string, number> = {};
-  for (const deck of decks) {
-    for (const p of deck.prizes ?? []) {
-      totals[p.reward_name] = (totals[p.reward_name] ?? 0) + Number(p.amount);
-    }
-  }
-  if (Object.keys(totals).length === 0) return "";
-  return Object.entries(totals)
-    .map(([name, amount]) => `${new Intl.NumberFormat("en-US").format(amount)} ${name}`)
-    .join(" + ");
 }
 
 // ─── RegisteredDeck (карточная сетка) ─────────────────────────────────────────
@@ -210,8 +180,8 @@ function RegisteredDeck({
               DECK SCORE: {formatScore(finalScore)}
             </span>
             {prizes && prizes.length > 0 && (
-              <span className="px-1.5 sm:px-2.5 h-6 sm:h-8 flex items-center text-[10px] sm:text-[13px] font-semibold rounded text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)] whitespace-nowrap">
-                REWARD: {formatReward(prizes)}
+              <span className="px-1.5 sm:px-2.5 min-h-6 sm:min-h-8 py-0.5 flex flex-wrap items-center gap-1 text-[10px] sm:text-[13px] font-semibold rounded text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)] max-w-full">
+                REWARD: <PrizeRewardsDisplay prizes={prizes} size="sm" />
               </span>
             )}
             {!isViewMode && tournamentStatus === "registration" && onUnregister && (
@@ -502,8 +472,8 @@ function DeckAccordionItem({
         </span>
 
         {deck.prizes && deck.prizes.length > 0 && (
-          <span className="flex px-1.5 sm:px-2.5 h-6 sm:h-7 items-center text-[10px] sm:text-[13px] font-semibold rounded whitespace-nowrap text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)] shrink-0">
-            {formatPrizes(deck.prizes)}
+          <span className="flex flex-wrap px-1.5 sm:px-2.5 min-h-6 sm:min-h-7 py-0.5 items-center gap-1 text-[10px] sm:text-[13px] font-semibold rounded text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)] shrink-0 max-w-[min(100%,280px)]">
+            <PrizeRewardsDisplay prizes={deck.prizes} size="sm" />
           </span>
         )}
 
@@ -601,8 +571,11 @@ function MyDecksAccordion({
 }: MyDecksAccordionProps) {
   const canAdd = canRegister && tournamentStatus === "registration";
 
-  const totalRewardsLabel =
-    (tournamentStatus === "ongoing" || tournamentStatus === "finished") && formatTotalPrizes(myDecks);
+  const totalPrizesFlat =
+    tournamentStatus === "ongoing" || tournamentStatus === "finished"
+      ? flattenDeckPrizes(myDecks)
+      : [];
+  const totalRewardsLabel = totalPrizesFlat.length > 0;
 
   return (
     <>
@@ -636,8 +609,8 @@ function MyDecksAccordion({
               </button>
             )}
             {totalRewardsLabel ? (
-              <span className="px-2 sm:px-2.5 h-6 sm:h-8 flex items-center text-[11px] sm:text-[13px] font-semibold rounded whitespace-nowrap text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)]">
-                TOTAL REWARDS: {totalRewardsLabel}
+              <span className="px-2 sm:px-2.5 min-h-6 sm:min-h-8 py-0.5 flex flex-wrap items-center gap-1 text-[11px] sm:text-[13px] font-semibold rounded text-[var(--badge-purple-text)] bg-[var(--badge-purple-bg)] max-w-[min(100%,420px)]">
+                TOTAL REWARDS: <PrizeRewardsDisplay prizes={totalPrizesFlat} size="sm" />
               </span>
             ) : null}
           </div>

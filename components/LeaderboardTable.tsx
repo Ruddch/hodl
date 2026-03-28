@@ -8,6 +8,7 @@ import type { LeaderboardEntry } from "@/lib/types";
 import type { ReactNode } from "react";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { Avatar } from "./Avatar";
+import { PrizeRewardsDisplay } from "./PrizeRewardsDisplay";
 
 // Функции форматирования
 export function truncateAddress(address: string) {
@@ -20,17 +21,6 @@ export function formatScore(score: number) {
     minimumFractionDigits: 0,
   });
   return formatted;
-}
-
-// Форматирование награды 
-function formatReward(prizes: LeaderboardEntry["prizes"]): string {
-  if (!prizes || prizes.length === 0) return "—";
-  
-  const firstPrize = prizes[0];
-  const amount = Number(firstPrize.amount);
-  const formattedAmount = new Intl.NumberFormat("en-US").format(amount);
-  
-  return `${formattedAmount} ${firstPrize.reward_name}`;
 }
 
 // Компонент ранга: мобилка — просто число, десктоп — бейдж в рамке
@@ -143,7 +133,6 @@ function LeaderboardRow({
       ? truncateAddress(entry.wallet_address)
       : `User #${entry.user_id}`;
 
-  const reward = formatReward(entry.prizes);
   const canOpenDeck = onDeckClick && entry.deck_id != null;
 
   const profileHref =
@@ -208,7 +197,9 @@ function LeaderboardRow({
 
       {/* Rewards */}
       <div className="min-w-0 shrink-0">
-        <span className="text-base font-medium text-[var(--text-primary)]">{reward}</span>
+        <span className="text-base font-medium text-[var(--text-primary)]">
+          <PrizeRewardsDisplay prizes={entry.prizes} size="md" />
+        </span>
       </div>
     </>
   );
