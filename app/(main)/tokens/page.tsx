@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useId } from "react";
 import Image from "next/image";
 import { useTokensLeaderboardInfinite } from "@/lib/api";
 import type { TokenWithRate } from "@/lib/types";
@@ -27,10 +27,69 @@ function formatChange(value: number): string {
   return `${sign}${value.toFixed(2)}%`;
 }
 
+/** Leaderboard place by score (1 = highest), independent of list sort order. */
+function compareTokensByScoreDesc(a: TokenWithRate, b: TokenWithRate): number {
+  const sa = a.score?.calculated_score;
+  const sb = b.score?.calculated_score;
+  const hasA = sa != null;
+  const hasB = sb != null;
+  if (hasA && hasB && sa !== sb) return sb - sa;
+  if (hasA && !hasB) return -1;
+  if (!hasA && hasB) return 1;
+  return a.id - b.id;
+}
+
+function buildScoreRankMap(tokens: TokenWithRate[]): Map<number, number> {
+  const sorted = [...tokens].sort(compareTokensByScoreDesc);
+  const map = new Map<number, number>();
+  sorted.forEach((t, i) => map.set(t.id, i + 1));
+  return map;
+}
+
+const PRICE_CHANGE_TOOLTIP =
+  "Price change since the start of the tournament";
+
+function InfoTooltipIcon({ id }: { id: string }) {
+  return (
+    <span className="group/tooltip relative inline-flex shrink-0">
+      <button
+        type="button"
+        tabIndex={0}
+        aria-describedby={id}
+        className="rounded p-0.5 text-[var(--icon-color)] hover:text-[var(--text-secondary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-muted)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--surface-elevated)]"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4" />
+          <path d="M12 8h.01" />
+        </svg>
+      </button>
+      <span
+        role="tooltip"
+        id={id}
+        className="pointer-events-none absolute right-0 bottom-full z-20 mb-1 w-max max-w-[min(240px,calc(100vw-2rem))] whitespace-normal rounded-lg px-2.5 py-1.5 text-left text-[11px] leading-snug shadow-[var(--modal-shadow)] opacity-0 transition-opacity duration-150 group-hover/tooltip:opacity-100 group-focus-within/tooltip:opacity-100 bg-[var(--text-primary)] text-[var(--surface)]"
+      >
+        {PRICE_CHANGE_TOOLTIP}
+      </span>
+    </span>
+  );
+}
+
 function TokenCard({ token, rank }: { token: TokenWithRate; rank: number }) {
+  const priceChangeTooltipId = useId();
   const currentPrice = token.current_price;
   const score = token.score;
-  const isPositive = currentPrice != null && currentPrice.change_24h >= 0;
 
   const borderStyle =
     rank === 1
@@ -76,39 +135,35 @@ function TokenCard({ token, rank }: { token: TokenWithRate; rank: number }) {
         </div>
       </div>
 
-      {/* Stats grid: Score | 24h, Price | Market Cap */}
+      {/* Stats grid: Score | Price change, Price | Market Cap */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
         <div>
           <span className="block text-xs text-[var(--text-muted)] mb-0.5">Score</span>
           <span className="text-sm md:text-base font-medium text-[var(--text-primary)]">
             {score ? (
-              <>
-                {score.calculated_score.toLocaleString("en-US", { maximumFractionDigits: 1 })}
-                {score.tournament_change !== 0 && (
-                  <span
-                    className={`ml-1 text-xs ${
-                      score.tournament_change >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-                    }`}
-                  >
-                    ({score.tournament_change >= 0 ? "+" : ""}{score.tournament_change.toFixed(1)})
-                  </span>
-                )}
-              </>
+              score.calculated_score.toLocaleString("en-US", { maximumFractionDigits: 1 })
             ) : (
               <span className="text-[var(--text-muted)]">—</span>
             )}
           </span>
         </div>
-        <div>
-          <span className="block text-xs text-[var(--text-muted)] mb-0.5">24h</span>
-          {currentPrice ? (
-            <span
-              className={`text-sm md:text-base font-medium ${
-                isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {formatChange(currentPrice.change_24h)}
-            </span>
+        <div className="min-w-0">
+          <div className="flex items-center gap-1 mb-0.5 min-w-0">
+            <span className="text-xs text-[var(--text-muted)] truncate">Price change</span>
+            <InfoTooltipIcon id={priceChangeTooltipId} />
+          </div>
+          {score ? (
+            score.tournament_change !== 0 ? (
+              <span
+                className={`text-sm md:text-base font-medium ${
+                  score.tournament_change >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                }`}
+              >
+                {formatChange(score.tournament_change)}
+              </span>
+            ) : (
+              <span className="text-sm md:text-base text-[var(--text-muted)]">{formatChange(0)}</span>
+            )
           ) : (
             <span className="text-sm md:text-base text-[var(--text-muted)]">—</span>
           )}
@@ -164,17 +219,19 @@ function TokensCardsSkeleton() {
 
 export default function TokensPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"calculated_score" | "symbol">("calculated_score");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const parentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const apiParams = useMemo(() => ({
-    is_active: true,
-    sort_by: sortBy,
-    sort_order: sortOrder,
-  }), [sortBy, sortOrder]);
+  const apiParams = useMemo(
+    () => ({
+      is_active: true,
+      sort_by: "calculated_score" as const,
+      sort_order: sortOrder,
+    }),
+    [sortOrder]
+  );
 
   const {
     data,
@@ -197,6 +254,11 @@ export default function TokensPage() {
         t.symbol.toLowerCase().includes(q) || t.name.toLowerCase().includes(q)
     );
   }, [allTokens, searchQuery]);
+
+  const scoreRankByTokenId = useMemo(
+    () => buildScoreRankMap(filteredTokens),
+    [filteredTokens]
+  );
 
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage) return;
@@ -233,17 +295,8 @@ export default function TokensPage() {
               dataPhCaptureAttributeButton="search-tokens"
             />
 
-            {/* Filters */}
+            {/* Sort by score */}
             <div className="flex flex-wrap gap-3 md:gap-4">
-              <DropdownSelect
-                options={[
-                  { value: "calculated_score", label: "By score" },
-                  { value: "symbol", label: "By symbol" },
-                ]}
-                value={sortBy}
-                onSelect={(v) => setSortBy(v as "calculated_score" | "symbol")}
-                minWidth="140px"
-              />
               <DropdownSelect
                 options={[
                   { value: "desc", label: "High → Low" },
@@ -272,8 +325,12 @@ export default function TokensPage() {
                 className="flex-1 pt-2 md:pt-4 min-h-0 overflow-y-auto overflow-x-hidden"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
-                  {filteredTokens.map((token, index) => (
-                    <TokenCard key={token.id} token={token} rank={index + 1} />
+                  {filteredTokens.map((token) => (
+                    <TokenCard
+                      key={token.id}
+                      token={token}
+                      rank={scoreRankByTokenId.get(token.id)!}
+                    />
                   ))}
                 </div>
                 {hasNextPage && (
