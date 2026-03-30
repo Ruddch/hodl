@@ -25,7 +25,7 @@ export interface AuthResponse {
 }
 
 export interface User {
-  id: number;
+  user_id: number;
   wallet_address: string;
   created_at: string;
   updated_at: string;
@@ -626,7 +626,7 @@ export interface UpdateNicknameRequest {
 }
 
 export interface UserProfileResponse {
-  id: number;
+  user_id: number;
   wallet_address: string;
   created_at: string;
   total_cards: number;

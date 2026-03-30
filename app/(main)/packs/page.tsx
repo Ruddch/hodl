@@ -15,6 +15,8 @@ import { usePageOnboarding } from "@/lib/useOnboarding";
 import { PACKS_ONBOARDING } from "@/lib/onboarding-config";
 import { BASE_PATH } from "@/lib/constants";
 import { usePackOpening, type PackOpeningStep } from "@/lib/hooks/usePackOpening";
+import { useAccount } from "wagmi";
+import { ConnectKitButton } from "connectkit";
 
 const STEP_LABELS: Record<PackOpeningStep, string> = {
   idle: "Open packs",
@@ -29,6 +31,7 @@ const STEP_LABELS: Record<PackOpeningStep, string> = {
 export default function PacksPage() {
   const base = BASE_PATH ? `${BASE_PATH}/` : "";
   const { isAuthenticated } = useAuth();
+  const { address, isConnected } = useAccount();
   const { data: packsData, refetch } = useAvailablePacks(isAuthenticated);
   const { setUnviewedCards } = useUnviewedCards();
   const [openedPack, setOpenedPack] = useState<ConfirmOpenPackResponse | null>(null);
@@ -88,7 +91,8 @@ export default function PacksPage() {
     await openPack(firstPack.user_pack_id);
   }, [packsData, totalPacks, openPack, reset]);
 
-  const needsSignIn = !isAuthenticated;
+  const needsConnectWallet = !(isConnected && address);
+  const needsSignIn = isConnected && address && !isAuthenticated;
 
   const openPackButtonLabel =
     totalPacks === 0 ? "No packs available" : STEP_LABELS[step];
@@ -152,7 +156,25 @@ export default function PacksPage() {
                 )}
               </div>
 
-              {needsSignIn ? (
+              {needsConnectWallet ? (
+                <ConnectKitButton.Custom>
+                  {({ show }) => (
+                    <button
+                      type="button"
+                      onClick={show}
+                      className="my-7 flex flex-col items-center justify-center gap-2 w-[198px] h-12 pt-3 pb-3 rounded-[15px] text-base font-medium text-white leading-none tracking-normal text-center transition-colors cursor-pointer bg-[var(--primary)] hover:opacity-90"
+                      data-onboarding="open-packs-btn"
+                      data-ph-capture-attribute-button="connect-wallet"
+                      style={{
+                        boxShadow:
+                          "0px 4px 12px 0px rgba(74, 106, 255, 0.3), 0px 2px 4px 0px rgba(74, 106, 255, 0.2)",
+                      }}
+                    >
+                      Connect Wallet
+                    </button>
+                  )}
+                </ConnectKitButton.Custom>
+              ) : needsSignIn ? (
                 <SignInButton
                   variant="packs"
                   data-onboarding="open-packs-btn"

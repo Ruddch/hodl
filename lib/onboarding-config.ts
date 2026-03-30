@@ -34,7 +34,7 @@ export const PACKS_ONBOARDING: OnboardingConfig = [
     target: "[data-onboarding='packs-section']",
     title: "Weekly Packs",
     content:
-      "You receive 5 new packs every week after the tournament ends during the beta. Cards inside are exclusive to the upcoming tournament—open them and start building your next deck.",
+      "Start with 3 free packs. Open them, build your deck, and register for your first tournament. Earn more packs by playing.",
     placement: "top",
     spotlightRadius: 30,
   },
