@@ -4,6 +4,8 @@ import { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
+import { useAuth } from "@/lib/auth-context";
+import { SignInButton } from "@/components/SignInButton";
 import type { Tournament } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
 
@@ -28,6 +30,7 @@ interface TournamentInfoCardProps {
 
 export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentInfoCardProps) {
   const { isConnected } = useAccount();
+  const { isAuthenticated } = useAuth();
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const canRegister = tournament.status === "registration" && !tournament.is_registered;
   
@@ -151,8 +154,11 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
                     </button>
                   )}
                 </ConnectKitButton.Custom>
+              ) : !isAuthenticated ? (
+                <SignInButton variant="tournament" data-ph-capture-attribute-button="tournament-sign-in" />
               ) : onRegisterClick ? (
                 <button
+                  type="button"
                   onClick={onRegisterClick}
                   className="cursor-pointer px-6 sm:px-17 py-2.5 sm:py-3 bg-[var(--primary)] hover:bg-[var(--primary)] text-white text-sm sm:text-base font-medium rounded-[15px] transition-colors"
                   data-ph-capture-attribute-button="tournament-register"

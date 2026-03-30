@@ -3,11 +3,12 @@
 import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useVirtualizer, measureElement } from "@tanstack/react-virtual";
 import type { LeaderboardEntry } from "@/lib/types";
-import type { ReactNode } from "react";
+import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { Avatar } from "./Avatar";
+import { PrizeRewardsDisplay } from "./PrizeRewardsDisplay";
 
 // Функции форматирования
 export function truncateAddress(address: string) {
@@ -22,22 +23,39 @@ export function formatScore(score: number) {
   return formatted;
 }
 
-// Форматирование награды 
-function formatReward(prizes: LeaderboardEntry["prizes"]): string {
-  if (!prizes || prizes.length === 0) return "—";
-  
-  const firstPrize = prizes[0];
-  const amount = Number(firstPrize.amount);
-  const formattedAmount = new Intl.NumberFormat("en-US").format(amount);
-  
-  return `${formattedAmount} ${firstPrize.reward_name}`;
-}
+const positionBadgeFramedStyle: CSSProperties = {
+  width: "32px",
+  minWidth: "32px",
+  height: "32px",
+  borderRadius: "8px",
+  border: "1px solid var(--leaderboard-position-border)",
+  fontFamily: "var(--font-league-gothic), sans-serif",
+  fontSize: "14px",
+  fontWeight: 400,
+  lineHeight: "32px",
+  color: "var(--leaderboard-position-color)",
+  textAlign: "center",
+};
 
-// Компонент ранга: мобилка — просто число, десктоп — бейдж в рамке
-function PositionBadge({ position }: { position: number; isCurrentUser: boolean }) {
+// Компонент ранга: мобилка в таблице — число; десктоп — бейдж. alwaysFramed — всегда бейдж как на десктопе (карточка лидерборда)
+function PositionBadge({
+  position,
+  alwaysFramed,
+}: {
+  position: number;
+  isCurrentUser: boolean;
+  /** Карточка на мобилке: тот же бейдж, что и в десктопной таблице */
+  alwaysFramed?: boolean;
+}) {
+  if (alwaysFramed) {
+    return (
+      <div className="flex items-center justify-center shrink-0" style={positionBadgeFramedStyle}>
+        {position}
+      </div>
+    );
+  }
   return (
     <>
-      {/* Мобилка: без рамки */}
       <span
         className="md:hidden shrink-0"
         style={{
@@ -50,23 +68,7 @@ function PositionBadge({ position }: { position: number; isCurrentUser: boolean 
       >
         {position}
       </span>
-      {/* Десктоп: бейдж с рамкой */}
-      <div
-        className="hidden md:flex items-center justify-center shrink-0"
-        style={{
-          width: "32px",
-          minWidth: "32px",
-          height: "32px",
-          borderRadius: "8px",
-          border: "1px solid var(--leaderboard-position-border)",
-          fontFamily: "var(--font-league-gothic), sans-serif",
-          fontSize: "14px",
-          fontWeight: 400,
-          lineHeight: "32px",
-          color: "var(--leaderboard-position-color)",
-          textAlign: "center",
-        }}
-      >
+      <div className="hidden md:flex items-center justify-center shrink-0" style={positionBadgeFramedStyle}>
         {position}
       </div>
     </>
@@ -86,14 +88,23 @@ function PlayerAvatar({
   return <Avatar walletAddress={walletAddress} fallbackSeed={userId} size={40} avatarUrl={avatarUrl} />;
 }
 
-// Компонент карт
-function PlayerCards({ cards }: { cards: LeaderboardEntry["cards"] }) {
+// Компонент карт — overlap в таблице; spread в моб. карточке (без наложения)
+function PlayerCards({
+  cards,
+  spread,
+}: {
+  cards: LeaderboardEntry["cards"];
+  spread?: boolean;
+}) {
   const cardStyle = { aspectRatio: `${CARD_ASPECT_RATIO}` };
   const emptyCards = [1, 2, 3, 4, 5];
+  const rowClass = spread
+    ? "flex flex-wrap gap-2"
+    : "flex md:gap-1.5 [&>*+*]:-ml-4 md:[&>*+*]:ml-0";
 
   if (!cards || cards.length === 0) {
     return (
-      <div className="flex md:gap-1.5 [&>*+*]:-ml-4 md:[&>*+*]:ml-0">
+      <div className={rowClass}>
         {emptyCards.map((i) => (
           <div
             key={i}
@@ -106,12 +117,12 @@ function PlayerCards({ cards }: { cards: LeaderboardEntry["cards"] }) {
   }
 
   return (
-    <div className="flex md:gap-1.5 [&>*+*]:-ml-4 md:[&>*+*]:ml-0">
+    <div className={rowClass}>
       {cards.slice(0, 5).map((card, index) => (
         <div
           key={card.card_id || index}
           className="w-8 md:w-8 rounded-[7%] overflow-hidden bg-[var(--surface)] shrink-0 relative"
-          style={{ ...cardStyle, zIndex: index }}
+          style={spread ? cardStyle : { ...cardStyle, zIndex: index }}
         >
           {card.rendered_image_url && (
             <img
@@ -127,7 +138,112 @@ function PlayerCards({ cards }: { cards: LeaderboardEntry["cards"] }) {
   );
 }
 
-// Строка таблицы (вся строка кликабельна для открытия модалки колоды)
+/** Мобилка: карточка в стиле Tournament statistics (профиль) */
+function LeaderboardMobileCard({
+  entry,
+  isCurrentUser,
+  playerName,
+  profileHref,
+  canOpenDeck,
+  onDeckClick,
+}: {
+  entry: LeaderboardEntry;
+  isCurrentUser: boolean;
+  playerName: string;
+  profileHref: string | null;
+  canOpenDeck: boolean;
+  onDeckClick: ((entry: LeaderboardEntry) => void) | undefined;
+}) {
+  const interactive = canOpenDeck
+    ? {
+        role: "button" as const,
+        tabIndex: 0 as const,
+        onClick: () => onDeckClick?.(entry),
+        onKeyDown: (e: KeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onDeckClick?.(entry);
+          }
+        },
+        "data-ph-capture-attribute-button": "leaderboard-deck-view" as const,
+      }
+    : {};
+
+  const nameInline = profileHref ? (
+    <Link
+      href={profileHref}
+      onClick={(e) => e.stopPropagation()}
+      className="min-w-0 flex-1 text-base font-semibold text-[var(--text-primary)] truncate hover:underline focus:underline focus:outline-none"
+      data-ph-capture-attribute-button="leaderboard-profile"
+    >
+      {playerName}
+      {isCurrentUser && <span className="text-[var(--primary-muted)] ml-1">(you)</span>}
+    </Link>
+  ) : (
+    <span className="min-w-0 flex-1 text-base font-semibold text-[var(--text-primary)] truncate">
+      {playerName}
+      {isCurrentUser && <span className="text-[var(--primary-muted)] ml-1">(you)</span>}
+    </span>
+  );
+
+  return (
+    <div
+      {...interactive}
+      className={`p-4 rounded-xl border border-[var(--leaderboard-row-border)] bg-[var(--surface)]/50 mb-3 md:hidden ${
+        canOpenDeck ? "cursor-pointer transition-colors leaderboard-row-hover" : ""
+      }`}
+    >
+      {/* Одна строка: бейдж как на десктопе | аватар + имя | Score: … */}
+      <div className="flex items-center gap-2 mb-3 min-w-0">
+        <PositionBadge position={entry.position} isCurrentUser={isCurrentUser} alwaysFramed />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {profileHref ? (
+            <Link
+              href={profileHref}
+              onClick={(e) => e.stopPropagation()}
+              className="shrink-0 hover:opacity-80 transition-opacity"
+              data-ph-capture-attribute-button="leaderboard-profile"
+            >
+              <PlayerAvatar
+                walletAddress={entry.wallet_address}
+                userId={entry.user_id}
+                avatarUrl={entry.avatar_url}
+              />
+            </Link>
+          ) : (
+            <div className="shrink-0">
+              <PlayerAvatar
+                walletAddress={entry.wallet_address}
+                userId={entry.user_id}
+                avatarUrl={entry.avatar_url}
+              />
+            </div>
+          )}
+          {nameInline}
+        </div>
+        <div className="shrink-0 pl-1 text-right leading-tight">
+          <span className="text-sm text-[var(--text-secondary)]">Score: </span>
+          <span className="text-sm font-medium tabular-nums text-[var(--text-primary)]">
+            {formatScore(entry.final_score)}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-sm text-[var(--text-secondary)] shrink-0 leading-none">Rewards:</span>
+        <span className="text-sm font-medium text-[var(--text-primary)] min-w-0 flex items-center">
+          <PrizeRewardsDisplay prizes={entry.prizes} size="sm" />
+        </span>
+      </div>
+
+      <div className="mt-3 pt-3 border-t border-[var(--leaderboard-row-border)]">
+        <PlayerCards cards={entry.cards} spread />
+      </div>
+    </div>
+  );
+}
+
+// Строка таблицы — десктоп: сетка; мобилка: карточка (см. LeaderboardMobileCard)
 function LeaderboardRow({
   entry,
   isCurrentUser,
@@ -143,8 +259,7 @@ function LeaderboardRow({
       ? truncateAddress(entry.wallet_address)
       : `User #${entry.user_id}`;
 
-  const reward = formatReward(entry.prizes);
-  const canOpenDeck = onDeckClick && entry.deck_id != null;
+  const canOpenDeck = Boolean(onDeckClick && entry.deck_id != null);
 
   const profileHref =
     entry.wallet_address
@@ -208,7 +323,9 @@ function LeaderboardRow({
 
       {/* Rewards */}
       <div className="min-w-0 shrink-0">
-        <span className="text-base font-medium text-[var(--text-primary)]">{reward}</span>
+        <span className="text-base font-medium text-[var(--text-primary)]">
+          <PrizeRewardsDisplay prizes={entry.prizes} size="md" />
+        </span>
       </div>
     </>
   );
@@ -222,29 +339,38 @@ function LeaderboardRow({
   const gridClasses =
     "grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4";
 
-  const rowElement = (
-    <div
-      role={canOpenDeck ? "button" : undefined}
-      tabIndex={canOpenDeck ? 0 : undefined}
-      onClick={canOpenDeck ? () => onDeckClick?.(entry) : undefined}
-      data-ph-capture-attribute-button={canOpenDeck ? "leaderboard-deck-view" : undefined}
-      onKeyDown={
-        canOpenDeck
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onDeckClick?.(entry);
-              }
-            }
-          : undefined
-      }
-      className={`w-full text-left grid ${gridClasses} ${rowClassName}`}
-    >
-      {rowContent}
-    </div>
-  );
+  return (
+    <>
+      <LeaderboardMobileCard
+        entry={entry}
+        isCurrentUser={isCurrentUser}
+        playerName={playerName}
+        profileHref={profileHref}
+        canOpenDeck={canOpenDeck}
+        onDeckClick={onDeckClick}
+      />
 
-  return rowElement;
+      <div
+        role={canOpenDeck ? "button" : undefined}
+        tabIndex={canOpenDeck ? 0 : undefined}
+        onClick={canOpenDeck ? () => onDeckClick?.(entry) : undefined}
+        data-ph-capture-attribute-button={canOpenDeck ? "leaderboard-deck-view" : undefined}
+        onKeyDown={
+          canOpenDeck
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onDeckClick?.(entry);
+                }
+              }
+            : undefined
+        }
+        className={`hidden md:grid w-full text-left ${gridClasses} ${rowClassName}`}
+      >
+        {rowContent}
+      </div>
+    </>
+  );
 }
 
 interface LeaderboardTableProps {
@@ -293,7 +419,8 @@ export function LeaderboardTable({ entries, height, className = "", onDeckClick,
   const virtualizer = useVirtualizer({
     count: entries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 75,
+    estimateSize: () => 200,
+    measureElement,
     overscan: 5,
   });
 
@@ -307,9 +434,9 @@ export function LeaderboardTable({ entries, height, className = "", onDeckClick,
 
   return (
     <div className={`min-w-0 overflow-hidden ${height === undefined ? `flex flex-col ${className}` : className || ""}`}>
-      {/* Table Header */}
+      {/* Table Header — только десктоп (на мобилке карточки без шапки таблицы, как в профиле) */}
       <div
-        className="grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4"
+        className="hidden md:grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4"
       >
         <div>
           <span className="text-sm font-medium text-[var(--text-muted)]">Player</span>
@@ -347,12 +474,13 @@ export function LeaderboardTable({ entries, height, className = "", onDeckClick,
             return (
               <div
                 key={virtualRow.key}
+                data-index={virtualRow.index}
+                ref={virtualizer.measureElement}
                 style={{
                   position: "absolute",
                   top: 0,
                   left: 0,
                   width: "100%",
-                  height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >

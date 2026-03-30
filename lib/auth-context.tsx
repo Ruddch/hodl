@@ -206,7 +206,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
       setIsAuthenticated(true);
 
-      identifyPosthogUser(userData.id, acquisition);
+      identifyPosthogUser(userData.user_id, acquisition);
       if (typeof window !== "undefined" && isPosthogEnabled()) {
         posthog.capture("user_logged_in", { login_method: "siwe" });
       }
@@ -246,7 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const acquisitionOnLoad =
           typeof window !== "undefined" ? getStoredAcquisitionPayload() : null;
-        identifyPosthogUser(userData.id, acquisitionOnLoad);
+        identifyPosthogUser(userData.user_id, acquisitionOnLoad);
         
         // Загружаем сохраненный адрес
         const savedAddress = typeof window !== "undefined" 

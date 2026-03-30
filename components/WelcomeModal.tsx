@@ -24,6 +24,8 @@ type StepConfig = {
   imageHeight?: number;
   title: ConnectionText;
   description: ConnectionText;
+  /** Короткие пункты вместо длинного абзаца (опционально) */
+  bullets?: string[];
   buttonText: ConnectionText;
   isLast: boolean;
   /** Если true — показываем Connect Wallet на этом шаге (когда кошелёк не подключён) */
@@ -48,11 +50,16 @@ const STEPS: StepConfig[] = [
       withConnection: "Welcome back!",
     },
     description: {
-      withoutConnection:
-        "A fantasy league where you collect token cards, build decks, and compete in weekly tournaments for rewards. Analyze the market, choose your lineup, and prove your crypto knowledge against other players.",
-      withConnection:
-        "A fantasy league where you collect token cards, build decks, and compete in weekly tournaments for rewards. Analyze the market, choose your lineup, and prove your crypto knowledge against other players.",
+      withoutConnection: "",
+      withConnection: "",
     },
+    bullets: [
+      "Collect token cards",
+      "Analyze the market",
+      "Build decks",
+      "Compete in tournaments",
+      "Earn rewards",
+    ],
     buttonText: {
       withoutConnection: "Next step →",
       withConnection: "Next step →",
@@ -66,10 +73,13 @@ const STEPS: StepConfig[] = [
     imageWidth: 309,
     imageHeight: 450,
     title: { withoutConnection: "Your Weekly Cycle" },
-    description: {
-      withoutConnection:
-        "Every week you receive 5 new card packs. Open them to collect tokens for the upcoming tournament. Build your deck, register for the tournament, and watch your cards compete based on real market performance from Monday to Friday. The best performing decks climb the leaderboard and earn rewards.",
-    },
+    description: { withoutConnection: "" },
+    bullets: [
+      "Get 3 packs for signing up",
+      "Open packs to get your cards",
+      "Register for the tournament",
+      "Watch your decks compete based on real market performance",
+    ],
     buttonText: { withoutConnection: "Next step →" },
     isLast: false,
     withWallet: false,
@@ -85,9 +95,9 @@ const STEPS: StepConfig[] = [
     },
     description: {
       withoutConnection:
-        "Each card has a weight value, and your deck has a total weight limit. Your job is to select tokens that will perform best during the tournament week while staying within the limit. It's not just picking winners — it's about balancing your lineup, analyzing trends, and making strategic trade-offs. The strongest combination wins.",
+        "Each card has a weight, and your deck has a limit. Pick tokens you believe in — but make them fit. Smart choices beat random ones.",
       withConnection:
-        "Each card has a weight value, and your deck has a total weight limit. Your job is to select tokens that will perform best during the tournament week while staying within the limit. It's not just picking winners — it's about balancing your lineup, analyzing trends, and making strategic trade-offs. The strongest combination wins.",
+        "Each card has a weight, and your deck has a limit. Pick tokens you believe in — but make them fit. Smart choices beat random ones.",
     },
     buttonText: {
       withoutConnection: "Connect Wallet",
@@ -200,12 +210,28 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
                       {getText(s.title, isConnected)}
                     </h2>
 
-                    <p
-                      className="mb-4 text-left font-normal text-[0.875rem] leading-[1.375rem] md:text-[1.25rem] md:leading-[2rem] tracking-[0] text-[#FFFFFF] min-h-[4.5rem] md:min-h-[6rem]"
-                      style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
-                    >
-                      {getText(s.description, isConnected)}
-                    </p>
+                    {s.bullets && s.bullets.length > 0 ? (
+                      <ul
+                        className="mb-4 text-left list-none space-y-2 md:space-y-2.5 font-normal text-[0.875rem] leading-[1.375rem] md:text-[1.125rem] md:leading-[1.625rem] tracking-[0] text-[#FFFFFF]"
+                        style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
+                      >
+                        {s.bullets.map((line, i) => (
+                          <li key={i} className="flex gap-2.5">
+                            <span className="shrink-0 text-[#FFFFFF]/55 select-none" aria-hidden>
+                              ·
+                            </span>
+                            <span>{line}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p
+                        className="mb-4 text-left font-normal text-[0.875rem] leading-[1.375rem] md:text-[1.25rem] md:leading-[2rem] tracking-[0] text-[#FFFFFF]"
+                        style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
+                      >
+                        {getText(s.description, isConnected)}
+                      </p>
+                    )}
                   </div>
 
                   {/* Индикатор шага слева, кнопка(и) справа */}

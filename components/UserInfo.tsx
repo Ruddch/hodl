@@ -8,6 +8,7 @@ import { useMyProfile } from "@/lib/api";
 import { useUnviewedCards } from "@/lib/unviewed-cards-context";
 import { formatBalance } from "@/lib/balance";
 import { Avatar } from "./Avatar";
+import { SignInButton } from "./SignInButton";
 
 interface UserInfoProps {
   onNavClick?: () => void;
@@ -15,7 +16,7 @@ interface UserInfoProps {
 
 export function UserInfo({ onNavClick }: UserInfoProps) {
   const { address, isConnected } = useAccount();
-  const { isAuthenticated, isLoading, login, disconnect } = useAuth();
+  const { isAuthenticated, disconnect } = useAuth();
   const { data: profile } = useMyProfile(true, isAuthenticated);
   const { hasUnviewedCards } = useUnviewedCards();
 
@@ -64,21 +65,8 @@ export function UserInfo({ onNavClick }: UserInfoProps) {
             )}
           </Link>
 
-          {/* Auth button if not authenticated */}
-          {!isAuthenticated && !isLoading && (
-            <button
-              onClick={() => login()}
-              className="w-full mt-3 py-2 px-4 text-sm rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-              data-ph-capture-attribute-button="sign-in"
-            >
-              Sign In
-            </button>
-          )}
-          
-          {isLoading && (
-            <div className="mt-3 text-center text-sm text-[var(--text-muted)]">
-              Signing in...
-            </div>
+          {!isAuthenticated && (
+            <SignInButton variant="sidebar" className="mt-3" data-ph-capture-attribute-button="sign-in" />
           )}
 
           {/* Disconnect button */}

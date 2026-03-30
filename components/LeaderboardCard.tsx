@@ -13,46 +13,82 @@ const TABLE_GRID =
 const ROW_HEIGHT = 75; // как virtualizer estimateSize в LeaderboardTable
 
 export function LeaderboardTableSkeleton({ fullHeight }: { fullHeight: boolean }) {
+  const cardSkeleton = (
+    <div className="p-4 rounded-xl border border-[var(--leaderboard-row-border)] bg-[var(--surface)]/50">
+      <div className="flex items-center gap-2 mb-3 min-w-0">
+        <div className="w-8 h-8 shrink-0 rounded-lg bg-[var(--surface-hover)] animate-pulse border border-[var(--leaderboard-row-border)]" />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="w-10 h-10 rounded-full bg-[var(--surface-hover)] animate-pulse shrink-0" />
+          <div className="h-4 flex-1 min-w-0 max-w-[140px] bg-[var(--surface-hover)] rounded animate-pulse" />
+        </div>
+        <div className="h-4 w-24 shrink-0 bg-[var(--surface-hover)] rounded animate-pulse" />
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="h-3 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+        <div className="h-4 flex-1 bg-[var(--surface-hover)] rounded animate-pulse" />
+      </div>
+      <div className="mt-3 pt-3 border-t border-[var(--leaderboard-row-border)]">
+        <div className="flex flex-wrap gap-2">
+          {[1, 2, 3, 4, 5].map((j) => (
+            <div
+              key={j}
+              className="w-8 rounded-[7%] bg-[var(--surface-hover)] animate-pulse shrink-0"
+              style={{ aspectRatio: "567/889" }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className={`flex flex-col min-w-0 ${fullHeight ? "flex-1 min-h-0 overflow-hidden" : ""}`}>
-      {/* Table Header — как в LeaderboardTable */}
-      <div
-        className={`grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 ${TABLE_GRID}`}
-      >
-        <div className="h-6 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
-        <div className="h-6 w-10 bg-[var(--surface-hover)] rounded animate-pulse" />
-        <div className="h-6 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
-        <div className="h-6 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+      {/* Десктоп — таблица */}
+      <div className={`hidden md:flex flex-col min-h-0 ${fullHeight ? "flex-1 overflow-hidden" : ""}`}>
+        <div
+          className={`grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 ${TABLE_GRID}`}
+        >
+          <div className="h-6 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-6 w-10 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-6 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
+          <div className="h-6 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+        </div>
+        <div className={`flex flex-col gap-0 ${fullHeight ? "flex-1 min-h-0 overflow-y-auto overflow-x-hidden" : ""}`}>
+          {Array.from(
+            { length: fullHeight ? 30 : 5 },
+            (_, i) => (
+              <div
+                key={i}
+                className={`grid items-center py-3 border-b border-[var(--leaderboard-row-border)] ${TABLE_GRID}`}
+                style={{ minHeight: ROW_HEIGHT }}
+              >
+                <div className="flex items-center gap-2 md:gap-[18px] min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-hover)] animate-pulse shrink-0" />
+                  <div className="w-10 h-10 rounded-full bg-[var(--surface-hover)] animate-pulse shrink-0" />
+                  <div className="h-4 flex-1 min-w-0 max-w-[120px] bg-[var(--surface-hover)] rounded animate-pulse" />
+                </div>
+                <div className="h-4 w-14 bg-[var(--surface-hover)] rounded animate-pulse shrink-0" />
+                <div className="flex gap-1.5 items-center [&>*+*]:-ml-4 md:[&>*+*]:ml-0">
+                  {[1, 2, 3, 4, 5].map((j) => (
+                    <div
+                      key={j}
+                      className="w-8 rounded-[7%] bg-[var(--surface-hover)] animate-pulse shrink-0"
+                      style={{ aspectRatio: "567/889" }}
+                    />
+                  ))}
+                </div>
+                <div className="h-4 w-16 bg-[var(--surface-hover)] rounded animate-pulse shrink-0" />
+              </div>
+            )
+          )}
+        </div>
       </div>
-      {/* Rows — высота 75px как в виртуализаторе */}
-      <div className={`flex flex-col gap-0 ${fullHeight ? "flex-1 min-h-0 overflow-y-auto overflow-x-hidden" : ""}`}>
-        {Array.from(
-          { length: fullHeight ? 30 : 5 },
-          (_, i) => (
-            <div
-              key={i}
-              className={`grid items-center py-3 border-b border-[var(--leaderboard-row-border)] ${TABLE_GRID}`}
-              style={{ minHeight: ROW_HEIGHT }}
-            >
-              <div className="flex items-center gap-2 md:gap-[18px] min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-[var(--surface-hover)] animate-pulse shrink-0" />
-                <div className="w-10 h-10 rounded-full bg-[var(--surface-hover)] animate-pulse shrink-0" />
-                <div className="h-4 flex-1 min-w-0 max-w-[120px] bg-[var(--surface-hover)] rounded animate-pulse" />
-              </div>
-              <div className="h-4 w-14 bg-[var(--surface-hover)] rounded animate-pulse shrink-0" />
-              <div className="flex gap-1.5 items-center [&>*+*]:-ml-4 md:[&>*+*]:ml-0">
-                {[1, 2, 3, 4, 5].map((j) => (
-                  <div
-                    key={j}
-                    className="w-8 rounded-[7%] bg-[var(--surface-hover)] animate-pulse shrink-0"
-                    style={{ aspectRatio: "567/889" }}
-                  />
-                ))}
-              </div>
-              <div className="h-4 w-16 bg-[var(--surface-hover)] rounded animate-pulse shrink-0" />
-            </div>
-          )
-        )}
+
+      {/* Мобилка — карточки как в профиле */}
+      <div className={`md:hidden space-y-3 ${fullHeight ? "flex-1 min-h-0 overflow-y-auto overflow-x-hidden" : ""}`}>
+        {Array.from({ length: fullHeight ? 8 : 3 }, (_, i) => (
+          <div key={i}>{cardSkeleton}</div>
+        ))}
       </div>
     </div>
   );

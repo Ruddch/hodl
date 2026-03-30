@@ -9,6 +9,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/tokens": "Tokens",
   "/packs": "Packs",
   "/profile": "Profile",
+  "/prize-preview": "Prize preview",
 };
 
 function getTitle(pathname: string | null): string {

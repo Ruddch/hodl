@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { useMyTournaments, useClaimTournamentRewards } from "@/lib/api";
 import { BlurCard } from "@/components/BlurCard";
+import { PrizeRewardsDisplay } from "@/components/PrizeRewardsDisplay";
 import type { MyTournamentEntry } from "@/lib/types";
 
 const STORAGE_KEY_PREFIX = "hodleague_tournament_result_seen_";
@@ -110,11 +111,6 @@ export function TournamentResultModal({
   }, []);
 
   const canClaim = hasUnclaimedRewards(entry);
-  const totalRewards = (entry.prizes ?? []).reduce(
-    (sum, p) => sum + Number(p.amount),
-    0
-  );
-  const primaryCurrency = entry.prizes[0]?.currency_type ?? "";
   const tournamentName = getTournamentName(entry);
 
   const handleClaim = async () => {
@@ -164,7 +160,7 @@ export function TournamentResultModal({
               style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
             >
               Congrats! Your prize{" "}
-              {totalRewards.toLocaleString("en-US")} {primaryCurrency}
+              <PrizeRewardsDisplay prizes={entry.prizes} size="md" className="align-middle" />
             </h2>
             <p
               className="text-sm md:text-base font-normal leading-6 md:leading-8 tracking-normal text-[var(--text-secondary)]"

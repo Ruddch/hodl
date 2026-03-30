@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { CardStatsModal } from "@/components/CardStatsModalLazy";
+import { PrizeRewardsDisplay } from "@/components/PrizeRewardsDisplay";
 import type { MyTournamentEntry, MyTournamentCard } from "@/lib/types";
 
 const gridClasses =
@@ -284,8 +285,6 @@ export function TournamentStatisticsTable() {
         score: t.final_score,
         cards: t.cards,
         date: t.end_date || t.start_date,
-        rewards:
-          t.prizes?.reduce((sum, p) => sum + Number(p.amount || 0), 0) ?? 0,
         canClaim: hasUnclaimedRewards(t),
         hasRewards: hasAnyRewards(t),
       }))
@@ -409,7 +408,7 @@ export function TournamentStatisticsTable() {
               </div>
               <div className="min-w-0 shrink-0">
                 <span className="text-base font-medium text-[var(--text-primary)]">
-                  {row.rewards.toLocaleString("en-US")}
+                  <PrizeRewardsDisplay prizes={row.entry.prizes} size="md" />
                 </span>
               </div>
               <div className="flex items-center justify-end">
@@ -488,10 +487,10 @@ export function TournamentStatisticsTable() {
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-[var(--text-secondary)]">Rewards:</span>
-                    <span className="text-sm font-medium text-[var(--text-primary)]">
-                      {row.rewards.toLocaleString("en-US")}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm text-[var(--text-secondary)] shrink-0">Rewards:</span>
+                    <span className="text-sm font-medium text-[var(--text-primary)] min-w-0">
+                      <PrizeRewardsDisplay prizes={row.entry.prizes} size="md" />
                     </span>
                   </div>
                   {row.hasRewards && (
