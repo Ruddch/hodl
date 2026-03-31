@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { loadImageForCanvas } from "@/lib/loadImageForCanvas";
 
 interface ShareCard {
   token_symbol: string;
@@ -17,16 +18,6 @@ interface ShareDeckModalProps {
 const CANVAS_W = 1200;
 const CANVAS_H = 675;
 const CARD_RATIO = 567 / 889;
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = `${src}?t=${Date.now()}`;
-  });
-}
 
 const FONT_NAME = "Instrument Sans";
 const FONT_URL =
@@ -52,7 +43,7 @@ async function generateShareImage(cards: ShareCard[]): Promise<HTMLCanvasElement
   canvas.height = CANVAS_H;
   const ctx = canvas.getContext("2d")!;
 
-  const bg = await loadImage("/share_bg.jpeg");
+  const bg = await loadImageForCanvas("/share_bg.jpeg");
   ctx.drawImage(bg, 0, 0, CANVAS_W, CANVAS_H);
 
   ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
@@ -60,7 +51,7 @@ async function generateShareImage(cards: ShareCard[]): Promise<HTMLCanvasElement
 
   const cardImages = await Promise.allSettled(
     cards.map((c) =>
-      c.rendered_image_url ? loadImage(c.rendered_image_url) : Promise.reject("no url"),
+      c.rendered_image_url ? loadImageForCanvas(c.rendered_image_url) : Promise.reject("no url"),
     ),
   );
 

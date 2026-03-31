@@ -19,7 +19,8 @@ void main() {
   float cx=cos(tx),sx=sin(tx);
   p = vec3(p.x, p.y*cx-p.z*sx, p.y*sx+p.z*cx);
   float dz = 1.0+p.z*0.28;
-  vec2 proj = p.xy/dz * 0.78;
+  /* 1.0 — квад заполняет весь canvas (0.78 оставлял «поля» меньше карты) */
+  vec2 proj = p.xy / dz;
   v_sc = proj;
   gl_Position = vec4(proj,0.0,1.0);
 }

@@ -2,17 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BURN_FRAGMENT_SHADER, BURN_VERTEX_SHADER } from "@/lib/forge/burnShaders";
-
-/** Same-origin и относительные пути — без crossOrigin, иначе WebGL часто получает «кремовый» 1×1 fallback вместо картинки */
-function isSameOriginImageUrl(url: string): boolean {
-  if (typeof window === "undefined") return false;
-  if (url.startsWith("/")) return true;
-  try {
-    return new URL(url).origin === window.location.origin;
-  } catch {
-    return false;
-  }
-}
+import { loadImageForCanvas } from "@/lib/loadImageForCanvas";
 
 type ParticleEmber = {
   x: number;
@@ -60,6 +50,13 @@ interface CardBurnAnimationProps {
    * без собственного aspect-ratio (размер задаёт родитель).
    */
   overlay?: boolean;
+  /**
+   * Вызывается в тот же кадр, когда текстура загружена и canvas готов к показу
+   * (перед opacity 100). Родитель может скрыть статичную карту без «дыры» до анимации.
+   */
+  onBurnVisualReady?: () => void;
+  /** Один bust с предзагрузкой на forge — тот же URL и кэш */
+  imageCacheBust?: string | number;
 }
 
 /**
@@ -72,6 +69,8 @@ export function CardBurnAnimation({
   onComplete,
   className = "",
   overlay = false,
+  onBurnVisualReady,
+  imageCacheBust,
 }: CardBurnAnimationProps) {
   const [canvasVisible, setCanvasVisible] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -101,6 +100,8 @@ export function CardBurnAnimation({
 
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
+  const onBurnVisualReadyRef = useRef(onBurnVisualReady);
+  onBurnVisualReadyRef.current = onBurnVisualReady;
 
   /** Инициализация WebGL один раз */
   useEffect(() => {
@@ -192,15 +193,6 @@ export function CardBurnAnimation({
       glWeb.texImage2D(glWeb.TEXTURE_2D, 0, glWeb.RGBA, 1, 1, 0, glWeb.RGBA, glWeb.UNSIGNED_BYTE, fb);
     };
 
-    const tryLoadImage = (src: string, crossOrigin: string | undefined): Promise<HTMLImageElement> =>
-      new Promise((resolve, reject) => {
-        const img = new Image();
-        if (crossOrigin) img.crossOrigin = crossOrigin;
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error("img load"));
-        img.src = src;
-      });
-
     let cancelled = false;
 
     const finishTextureReady = () => {
@@ -208,35 +200,16 @@ export function CardBurnAnimation({
       requestAnimationFrame(() => {
         if (cancelled) return;
         syncCanvasSizeToWrap();
-        requestAnimationFrame(() => {
-          if (cancelled) return;
-          syncCanvasSizeToWrap();
-          setCanvasVisible(true);
-        });
+        onBurnVisualReadyRef.current?.();
+        setCanvasVisible(true);
       });
     };
 
     (async () => {
       try {
-        const cross = isSameOriginImageUrl(imageUrl) ? undefined : "anonymous";
-        let img: HTMLImageElement;
-        try {
-          img = await tryLoadImage(imageUrl, cross);
-        } catch {
-          if (cross === "anonymous") {
-            const r = await fetch(imageUrl, { mode: "cors" });
-            if (!r.ok) throw new Error("fetch");
-            const blob = await r.blob();
-            const obj = URL.createObjectURL(blob);
-            try {
-              img = await tryLoadImage(obj, undefined);
-            } finally {
-              URL.revokeObjectURL(obj);
-            }
-          } else {
-            throw new Error("same-origin load failed");
-          }
-        }
+        const img = await loadImageForCanvas(imageUrl, {
+          bust: imageCacheBust ?? Date.now(),
+        });
         if (cancelled) return;
         uploadHtmlImage(img);
         finishTextureReady();
@@ -247,6 +220,7 @@ export function CardBurnAnimation({
         requestAnimationFrame(() => {
           if (cancelled) return;
           syncCanvasSizeToWrap();
+          onBurnVisualReadyRef.current?.();
           setCanvasVisible(true);
         });
       }
@@ -262,7 +236,7 @@ export function CardBurnAnimation({
       glWeb.deleteShader(fs);
       if (tex) glWeb.deleteTexture(tex);
     };
-  }, [imageUrl]);
+  }, [imageUrl, imageCacheBust]);
 
   const resizeCanvases = useCallback(() => {
     const wrap = wrapRef.current;
@@ -416,7 +390,6 @@ export function CardBurnAnimation({
     lastNowRef.current = performance.now();
     lastEmberRef.current = 0;
 
-    const gl = glRef.current;
     const glCanvas = glCanvasRef.current;
     if (glCanvas) {
       glCanvas.classList.add("is-burning");

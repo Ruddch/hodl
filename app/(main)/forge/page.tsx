@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { BlurCard } from "@/components/BlurCard";
@@ -15,6 +15,7 @@ import {
   FORGE_COMMON_BURN_DUST_REWARD,
   type ForgeSwapRecipe,
 } from "@/lib/forge";
+import { loadImageForCanvas } from "@/lib/loadImageForCanvas";
 
 const CardBurnAnimation = dynamic(
   () => import("@/components/forge/CardBurnAnimation").then((m) => m.CardBurnAnimation),
@@ -47,19 +48,26 @@ function ForgeSlotBox({
   onOpenPicker,
   onClear,
   clearLabel,
+  /**
+   * Карта выбрана, но показываем UI пустого слота (пунктир, без крестика) — например во время burn под WebGL.
+   */
+  visualEmpty = false,
 }: {
   filled: UserCard | null;
   emptyLabel: string;
   onOpenPicker: () => void;
   onClear: () => void;
   clearLabel: string;
+  visualEmpty?: boolean;
 }) {
+  const showFilledChrome = Boolean(filled) && !visualEmpty;
+
   return (
     <div
       className="relative w-[148px] sm:w-[168px] shrink-0"
       style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
     >
-      {filled ? (
+      {showFilledChrome ? (
         <>
           <button
             type="button"
@@ -69,10 +77,10 @@ function ForgeSlotBox({
             data-ph-capture-attribute-button="forge-change-card"
           >
             <div className="relative w-full h-full">
-              {filled.rendered_image_url ? (
+              {filled!.rendered_image_url ? (
                 <Image
-                  src={filled.rendered_image_url}
-                  alt={filled.token_name}
+                  src={filled!.rendered_image_url}
+                  alt={filled!.token_name}
                   fill
                   className="object-cover"
                   sizes="168px"
@@ -80,8 +88,8 @@ function ForgeSlotBox({
                 />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-gradient-to-br from-[var(--surface-elevated)] to-[var(--surface-hover)]">
-                  <span className="text-sm font-semibold text-[var(--text-primary)]">{filled.token_name}</span>
-                  <span className="text-xs text-[var(--text-muted)] mt-1">{filled.token_symbol}</span>
+                  <span className="text-sm font-semibold text-[var(--text-primary)]">{filled!.token_name}</span>
+                  <span className="text-xs text-[var(--text-muted)] mt-1">{filled!.token_symbol}</span>
                 </div>
               )}
             </div>
@@ -121,6 +129,8 @@ export default function ForgePage() {
   const [firstCard, setFirstCard] = useState<UserCard | null>(null);
   const [secondCard, setSecondCard] = useState<UserCard | null>(null);
   const [burnPlaying, setBurnPlaying] = useState(false);
+  /** Скрываем статичную карту только когда burn-canvas уже готов — без паузы «фиолетовый слот» */
+  const [burnOverlayReady, setBurnOverlayReady] = useState(false);
   const [toast, setToast] = useState<{ visible: boolean; message?: string }>({ visible: false });
 
   const recipe: ForgeSwapRecipe | null = useMemo(
@@ -164,12 +174,14 @@ export default function ForgePage() {
 
   const handleBurnAnimationComplete = useCallback(() => {
     setBurnPlaying(false);
+    setBurnOverlayReady(false);
     clearAll();
     setToast({ visible: true, message: "Placeholder action feedback." });
   }, [clearAll]);
 
   const handlePrimary = useCallback(() => {
     if (firstCard && recipe?.slots === 1 && isCommonRarity(firstCard)) {
+      setBurnOverlayReady(false);
       setBurnPlaying(true);
       return;
     }
@@ -196,6 +208,15 @@ export default function ForgePage() {
   /** Common + single slot: card left, copy right */
   const showCommonBurnAside =
     Boolean(firstCard && recipe?.slots === 1 && isCommonRarity(firstCard));
+
+  /** Один cache-bust на выбор карты: тот же `t`, что при burn WebGL → тот же URL → HTTP-кэш */
+  const forgeImageCacheBust = useMemo(() => Date.now(), [firstCard?.user_card_id]);
+
+  /** Предзагрузка той же строки URL, что и `loadImageForCanvas` в CardBurnAnimation */
+  useEffect(() => {
+    if (!firstCard) return;
+    loadImageForCanvas(cardTextureUrl(firstCard), { bust: forgeImageCacheBust }).catch(() => {});
+  }, [firstCard, forgeImageCacheBust]);
 
   return (
     <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0 h-full">
@@ -247,13 +268,16 @@ export default function ForgePage() {
                         onOpenPicker={() => openPicker("first")}
                         onClear={clearAll}
                         clearLabel="Clear forge"
+                        visualEmpty={burnPlaying && burnOverlayReady}
                       />
                       {burnPlaying && firstCard ? (
                         <CardBurnAnimation
                           key={firstCard.user_card_id}
                           imageUrl={cardTextureUrl(firstCard)}
+                          imageCacheBust={forgeImageCacheBust}
                           active={burnPlaying}
                           overlay
+                          onBurnVisualReady={() => setBurnOverlayReady(true)}
                           onComplete={handleBurnAnimationComplete}
                         />
                       ) : null}
