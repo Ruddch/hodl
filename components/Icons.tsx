@@ -182,6 +182,47 @@ export const PacksIcon: React.FC<{
   );
 };
 
+/** Молоток и наковальня — для раздела Forge / кузницы */
+export const ForgeIcon: React.FC<{
+  width?: number | string;
+  height?: number | string;
+  className?: string;
+  strokeColor?: string;
+  strokeOpacity?: number;
+}> = ({
+  width = 16,
+  height = 16,
+  className,
+  strokeColor = "var(--nav-item-inactive)",
+  strokeOpacity = 0.5,
+}) => (
+  <svg
+    width={width}
+    height={height}
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      d="M11.5 1.75L7.25 6M10.25 1h3v2.25h-2L10.25 1z"
+      stroke={strokeColor}
+      strokeOpacity={strokeOpacity}
+      strokeWidth="1.33"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M2 12.75h12M3.5 9.5h9l1.25 3.25H2.25l1.25-3.25z"
+      stroke={strokeColor}
+      strokeOpacity={strokeOpacity}
+      strokeWidth="1.33"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 export const CopyIcon: React.FC<{
   width?: number | string;
   height?: number | string;

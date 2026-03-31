@@ -8,7 +8,7 @@ import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { useTournaments, useAvailablePacks } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { TournamentIcon, LeaderboardIcon, PacksIcon, CoinIcon } from "./Icons";
+import { TournamentIcon, LeaderboardIcon, PacksIcon, CoinIcon, ForgeIcon } from "./Icons";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -32,12 +32,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const isLeaderboardActive = pathname === "/leaderboard" || pathname?.startsWith("/leaderboard");
   const isTokensActive = pathname === "/tokens" || pathname?.startsWith("/tokens");
   const isPacksActive = pathname === "/packs" || pathname?.startsWith("/packs");
+  const isForgeActive = pathname === "/forge" || pathname?.startsWith("/forge");
 
   // Цвета для иконок (используем CSS-переменные для поддержки тёмной темы)
   const tournamentIconColor = isTournamentActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
   const leaderboardIconColor = isLeaderboardActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
   const tokensIconColor = isTokensActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
   const packsIconColor = isPacksActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
+  const forgeIconColor = isForgeActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
 
   // Закрываем меню при переходе на другую страницу на мобильных
   useEffect(() => {
@@ -199,6 +201,28 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   {availablePacks}
                 </span>
               )}
+            </Link>
+          </li>
+
+          {/* Forge */}
+          <li>
+            <Link
+              href="/forge"
+              onClick={onClose}
+              data-ph-capture-attribute-button="nav-forge"
+              className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
+                isForgeActive
+                  ? "bg-[var(--nav-item-active-bg)] text-[var(--nav-item-active-text)]"
+                  : "text-[var(--nav-item-inactive)] hover:text-[var(--nav-item-inactive-hover)]"
+              }`}
+            >
+              <ForgeIcon
+                width={16}
+                height={16}
+                strokeColor={forgeIconColor}
+                strokeOpacity={isForgeActive ? 1 : 0.5}
+              />
+              <span className="text-[16px]">Forge</span>
             </Link>
           </li>
         </ul>
