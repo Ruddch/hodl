@@ -112,59 +112,59 @@ export function CardBurnAnimation({
     glRef.current = glWeb;
 
     const vs = mkShader(glWeb, BURN_VERTEX_SHADER, glWeb.VERTEX_SHADER);
-    const fs = mkShader(gl, BURN_FRAGMENT_SHADER, gl.FRAGMENT_SHADER);
+    const fs = mkShader(glWeb, BURN_FRAGMENT_SHADER, glWeb.FRAGMENT_SHADER);
     if (!vs || !fs) return;
 
-    const prog = gl.createProgram();
+    const prog = glWeb.createProgram();
     if (!prog) return;
-    gl.attachShader(prog, vs);
-    gl.attachShader(prog, fs);
-    gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      console.error(gl.getProgramInfoLog(prog));
+    glWeb.attachShader(prog, vs);
+    glWeb.attachShader(prog, fs);
+    glWeb.linkProgram(prog);
+    if (!glWeb.getProgramParameter(prog, glWeb.LINK_STATUS)) {
+      console.error(glWeb.getProgramInfoLog(prog));
       return;
     }
-    gl.useProgram(prog);
+    glWeb.useProgram(prog);
     progRef.current = prog;
 
     const QUAD_POS = new Float32Array([-1, -1, 1, -1, -1, 1, 1, -1, 1, 1, -1, 1]);
     const QUAD_UV = new Float32Array([0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1]);
 
     function bindBuf(data: Float32Array, attr: string) {
-      const buf = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-      const loc = gl.getAttribLocation(prog, attr);
-      gl.enableVertexAttribArray(loc);
-      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      const buf = glWeb.createBuffer();
+      glWeb.bindBuffer(glWeb.ARRAY_BUFFER, buf);
+      glWeb.bufferData(glWeb.ARRAY_BUFFER, data, glWeb.STATIC_DRAW);
+      const loc = glWeb.getAttribLocation(prog, attr);
+      glWeb.enableVertexAttribArray(loc);
+      glWeb.vertexAttribPointer(loc, 2, glWeb.FLOAT, false, 0, 0);
     }
     bindBuf(QUAD_POS, "a_pos");
     bindBuf(QUAD_UV, "a_uv");
 
     const U: Record<string, WebGLUniformLocation | null> = {};
     for (const n of ["u_time", "u_mouse", "u_tex", "u_dissolve", "u_shine"]) {
-      U[n] = gl.getUniformLocation(prog, n);
+      U[n] = glWeb.getUniformLocation(prog, n);
     }
     uRef.current = U;
-    gl.uniform1i(U.u_tex!, 0);
-    gl.uniform2f(U.u_mouse!, 0, 0);
-    gl.uniform1f(U.u_dissolve!, 0);
-    gl.uniform1f(U.u_shine!, 0);
+    glWeb.uniform1i(U.u_tex!, 0);
+    glWeb.uniform2f(U.u_mouse!, 0, 0);
+    glWeb.uniform1f(U.u_dissolve!, 0);
+    glWeb.uniform1f(U.u_shine!, 0);
 
-    const tex = gl.createTexture();
+    const tex = glWeb.createTexture();
     texRef.current = tex;
     textureReadyRef.current = false;
     setCanvasVisible(false);
 
     const uploadHtmlImage = (img: HTMLImageElement) => {
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      glWeb.activeTexture(glWeb.TEXTURE0);
+      glWeb.bindTexture(glWeb.TEXTURE_2D, tex);
+      glWeb.pixelStorei(glWeb.UNPACK_FLIP_Y_WEBGL, true);
+      glWeb.texImage2D(glWeb.TEXTURE_2D, 0, glWeb.RGBA, glWeb.RGBA, glWeb.UNSIGNED_BYTE, img);
+      glWeb.texParameteri(glWeb.TEXTURE_2D, glWeb.TEXTURE_WRAP_S, glWeb.CLAMP_TO_EDGE);
+      glWeb.texParameteri(glWeb.TEXTURE_2D, glWeb.TEXTURE_WRAP_T, glWeb.CLAMP_TO_EDGE);
+      glWeb.texParameteri(glWeb.TEXTURE_2D, glWeb.TEXTURE_MIN_FILTER, glWeb.LINEAR);
+      glWeb.texParameteri(glWeb.TEXTURE_2D, glWeb.TEXTURE_MAG_FILTER, glWeb.LINEAR);
     };
 
     const syncCanvasSizeToWrap = () => {
@@ -187,9 +187,9 @@ export function CardBurnAnimation({
 
     const applyFallbackTexture = () => {
       const fb = new Uint8Array([245, 238, 230, 255]);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, fb);
+      glWeb.activeTexture(glWeb.TEXTURE0);
+      glWeb.bindTexture(glWeb.TEXTURE_2D, tex);
+      glWeb.texImage2D(glWeb.TEXTURE_2D, 0, glWeb.RGBA, 1, 1, 0, glWeb.RGBA, glWeb.UNSIGNED_BYTE, fb);
     };
 
     const tryLoadImage = (src: string, crossOrigin: string | undefined): Promise<HTMLImageElement> =>
@@ -257,10 +257,10 @@ export function CardBurnAnimation({
     return () => {
       cancelled = true;
       cancelAnimationFrame(rafRef.current);
-      gl.deleteProgram(prog);
-      gl.deleteShader(vs);
-      gl.deleteShader(fs);
-      if (tex) gl.deleteTexture(tex);
+      glWeb.deleteProgram(prog);
+      glWeb.deleteShader(vs);
+      glWeb.deleteShader(fs);
+      if (tex) glWeb.deleteTexture(tex);
     };
   }, [imageUrl]);
 
