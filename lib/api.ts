@@ -37,6 +37,10 @@ import type {
   PackHistoryResponse,
   AlphaTestCheckResponse,
   ClaimTournamentRewardsResponse,
+  PrepareCardBurnRequest,
+  PrepareCardBurnResponse,
+  ConfirmCardBurnRequest,
+  ConfirmCardBurnResponse,
 } from "./types";
 import { API_BASE_URL } from "./constants";
 
@@ -389,6 +393,21 @@ export async function getPackHistory(params: GetPackHistoryParams = {}): Promise
   return fetchApi(`/api/packs/history${query ? `?${query}` : ""}`);
 }
 
+// ==================== Card burn API ====================
+export async function prepareCardBurn(data: PrepareCardBurnRequest): Promise<PrepareCardBurnResponse> {
+  return fetchApi("/api/cards/burn/prepare", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function confirmCardBurn(data: ConfirmCardBurnRequest): Promise<ConfirmCardBurnResponse> {
+  return fetchApi("/api/cards/burn/confirm", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 // ==================== Alpha Test API ====================
 export async function checkAlphaTestAccess(walletAddress: string): Promise<AlphaTestCheckResponse> {
   return fetchApi(`/api/alpha-test/check/${walletAddress}`);
@@ -716,6 +735,24 @@ export function useConfirmOpenPack() {
       queryClient.invalidateQueries({ queryKey: ["availablePacks"] });
       queryClient.invalidateQueries({ queryKey: ["packHistory"] });
       queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    },
+  });
+}
+
+export function usePrepareCardBurn() {
+  return useMutation({
+    mutationFn: (data: PrepareCardBurnRequest) => prepareCardBurn(data),
+  });
+}
+
+export function useConfirmCardBurn() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: ConfirmCardBurnRequest) => confirmCardBurn(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
   });
 }

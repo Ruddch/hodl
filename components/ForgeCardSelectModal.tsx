@@ -6,6 +6,7 @@ import { useMyProfile } from "@/lib/api";
 import type { UserCard } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { SearchInput } from "@/components/SearchInput";
+import { isCommonRarity } from "@/lib/forge";
 
 interface ForgeCardSelectModalProps {
   open: boolean;
@@ -15,6 +16,11 @@ interface ForgeCardSelectModalProps {
   sameCardIdAs?: number;
   /** Эти `user_card_id` нельзя выбрать (уже в слотах) */
   excludeUserCardIds?: number[];
+  /** Только common (доп. слоты burn) */
+  commonOnly?: boolean;
+  /** Оставить карты с той же эффективной сетью: `card.chain_id ?? walletChainId` */
+  matchChainId?: number;
+  walletChainId?: number;
   title?: string;
   subtitle?: string;
 }
@@ -25,6 +31,9 @@ export function ForgeCardSelectModal({
   onSelect,
   sameCardIdAs,
   excludeUserCardIds = [],
+  commonOnly = false,
+  matchChainId,
+  walletChainId,
   title = "Placeholder title",
   subtitle = "Placeholder subtitle.",
 }: ForgeCardSelectModalProps) {
@@ -38,13 +47,19 @@ export function ForgeCardSelectModal({
     if (sameCardIdAs != null) {
       list = list.filter((c) => c.card_id === sameCardIdAs);
     }
+    if (commonOnly) {
+      list = list.filter((c) => isCommonRarity(c));
+    }
+    if (matchChainId != null) {
+      list = list.filter((c) => (c.chain_id ?? walletChainId) === matchChainId);
+    }
     if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase().trim();
     return list.filter(
       (c) =>
         c.token_name.toLowerCase().includes(q) || c.token_symbol.toLowerCase().includes(q)
     );
-  }, [profile?.cards, searchQuery, sameCardIdAs, excludeSet]);
+  }, [profile?.cards, searchQuery, sameCardIdAs, excludeSet, commonOnly, matchChainId, walletChainId]);
 
   useEffect(() => {
     if (!open) setSearchQuery("");

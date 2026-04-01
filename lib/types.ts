@@ -528,6 +528,33 @@ export interface PackHistoryResponse {
   openings: PackHistoryItem[];
 }
 
+// ==================== Card burn (forge) ====================
+export interface PrepareCardBurnRequest {
+  user_card_ids: number[];
+  chain_id: number;
+}
+
+export interface PrepareCardBurnResponse {
+  token_ids: number[];
+  /** JSON может отдать строку или число для больших uint256 */
+  nonce: number;
+  deadline: number;
+  signature: string;
+  burner_contract: string;
+  chain_id: number;
+}
+
+export interface ConfirmCardBurnRequest {
+  tx_hash: string;
+  chain_id: number;
+}
+
+/** Ответ confirm — бэкенд может вернуть минимальное тело */
+export interface ConfirmCardBurnResponse {
+  success?: boolean;
+  message?: string;
+}
+
 // ==================== Users ====================
 export interface MyTournamentCard {
   user_card_id: number;
@@ -599,6 +626,8 @@ export interface UserCard {
   acquired_at: string;
   expires_at?: string | null;
   is_locked: boolean;
+  /** Сеть NFT-карты (для prepare burn и т.п.) */
+  chain_id?: number;
 }
 
 export interface UserBalanceItem {

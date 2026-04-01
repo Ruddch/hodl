@@ -1,0 +1,139 @@
+"use client";
+
+import { Fragment } from "react";
+import dynamic from "next/dynamic";
+import { ForgeSlotBox } from "@/components/forge/ForgeSlotBox";
+import { FORGE_COMMON_BURN_DUST_REWARD } from "@/lib/forge";
+import type { UserCard } from "@/lib/types";
+
+const CardBurnAnimation = dynamic(
+  () => import("@/components/forge/CardBurnAnimation").then((m) => m.CardBurnAnimation),
+  { ssr: false }
+);
+
+function cardTextureUrl(card: UserCard): string {
+  return card.rendered_image_url || card.token_image_url || "/packs.png";
+}
+
+interface ForgeInputsCommonBurnProps {
+  cards: UserCard[];
+  forgeImageCacheBust: number;
+  burnPlaying: boolean;
+  burnOverlayReady: boolean;
+  burnTxLoading: boolean;
+  canBurn: boolean;
+  onOpenSlot: (slotIndex: number) => void;
+  onClearSlot: (slotIndex: number) => void;
+  onResetAll: () => void;
+  onBurn: () => void;
+  onBurnVisualReady: () => void;
+  onBurnAnimationComplete: () => void;
+}
+
+/** Common: сетка слотов (auto-fill + перенос строк), Burn/Reset, текст под кнопками */
+export function ForgeInputsCommonBurn({
+  cards,
+  forgeImageCacheBust,
+  burnPlaying,
+  burnOverlayReady,
+  burnTxLoading,
+  canBurn,
+  onOpenSlot,
+  onClearSlot,
+  onResetAll,
+  onBurn,
+  onBurnVisualReady,
+  onBurnAnimationComplete,
+}: ForgeInputsCommonBurnProps) {
+  const firstCard = cards[0];
+  const totalDust = FORGE_COMMON_BURN_DUST_REWARD * cards.length;
+  const trailingEmptyIndex = cards.length;
+
+  return (
+    <>
+      <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-6 max-w-lg">
+        Placeholder hint text. Rules for common vs rare slots will be explained here.
+      </p>
+      <div className="border-t border-[var(--border-subtle)] pt-5">
+        <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--text-muted)] mb-4">Inputs</p>
+
+        {/* pt/px — запас под крестики слотов; сетка без лимита ширины, колонки по auto-fill */}
+        <div className="grid w-full [grid-template-columns:repeat(auto-fill,minmax(148px,max-content))] sm:[grid-template-columns:repeat(auto-fill,minmax(168px,max-content))] gap-x-3 gap-y-8 pt-3 pb-2 px-1">
+          {cards.map((card, index) => (
+            <Fragment key={card.user_card_id}>
+              <div className="relative w-[148px] sm:w-[168px]">
+                <ForgeSlotBox
+                  filled={card}
+                  emptyLabel={`Slot ${index + 1}`}
+                  onOpenPicker={() => onOpenSlot(index)}
+                  onClear={() => onClearSlot(index)}
+                  clearLabel={cards.length === 1 ? "Clear forge" : "Remove"}
+                  visualEmpty={index === 0 && burnPlaying && burnOverlayReady}
+                />
+                {index === 0 && burnPlaying && firstCard ? (
+                  <CardBurnAnimation
+                    key={firstCard.user_card_id}
+                    imageUrl={cardTextureUrl(firstCard)}
+                    imageCacheBust={forgeImageCacheBust}
+                    active={burnPlaying}
+                    overlay
+                    onBurnVisualReady={onBurnVisualReady}
+                    onComplete={onBurnAnimationComplete}
+                  />
+                ) : null}
+              </div>
+            </Fragment>
+          ))}
+
+          <div className="relative w-[148px] sm:w-[168px]">
+            <ForgeSlotBox
+              filled={null}
+              emptyLabel={`Slot ${trailingEmptyIndex + 1}`}
+              onOpenPicker={() => onOpenSlot(trailingEmptyIndex)}
+              clearLabel="Clear forge"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={onBurn}
+          disabled={burnPlaying || burnTxLoading || !canBurn}
+          className="py-2.5 px-8 rounded-[15px] text-sm font-medium text-white bg-[var(--primary)] hover:opacity-90 transition-opacity shadow-[0px_4px_12px_0px_rgba(74,106,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+          data-ph-capture-attribute-button="forge-burn"
+        >
+          {burnTxLoading ? "Working…" : "Burn"}
+        </button>
+        <button
+          type="button"
+          onClick={onResetAll}
+          disabled={burnPlaying || burnTxLoading}
+          className="py-2.5 px-6 rounded-[15px] text-sm font-medium border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          data-ph-capture-attribute-button="forge-reset"
+        >
+          Reset
+        </button>
+      </div>
+
+      <div className="mt-4 max-w-xl space-y-2 text-sm text-[var(--text-muted)] leading-relaxed">
+        <p>Add common cards here to burn them in the forge.</p>
+        <p>
+          For each common card you burn, you receive{" "}
+          <span className="font-semibold text-[var(--text-primary)] tabular-nums">{FORGE_COMMON_BURN_DUST_REWARD}</span>{" "}
+          dust
+          {cards.length > 1 ? (
+            <>
+              {" "}
+              (
+              <span className="font-semibold text-[var(--text-primary)] tabular-nums">{totalDust}</span> total for{" "}
+              {cards.length} cards)
+            </>
+          ) : null}
+          .
+        </p>
+      </div>
+    </>
+  );
+}
