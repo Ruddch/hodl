@@ -535,10 +535,11 @@ export interface PrepareCardBurnRequest {
 }
 
 export interface PrepareCardBurnResponse {
-  token_ids: number[];
-  /** JSON может отдать строку или число для больших uint256 */
-  nonce: number;
-  deadline: number;
+  /** uint256 token id — строки, чтобы не терять точность в JSON */
+  token_ids: string[];
+  /** Большие nonce/deadline — тоже лучше строками в ответе API */
+  nonce: string | number;
+  deadline: string | number;
   signature: string;
   burner_contract: string;
   chain_id: number;

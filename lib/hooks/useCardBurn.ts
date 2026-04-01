@@ -149,9 +149,9 @@ export function useCardBurn(options?: UseCardBurnOptions) {
         const txHash = await burnForDust({
           burnerContract: burnerContract as `0x${string}`,
           user: address,
-          tokenIds: tokenIds.map((id) => BigInt(id)),
-          nonce: BigInt(nonce),
-          deadline: BigInt(deadline),
+          tokenIds: tokenIds.map((id) => parseUint256(id)),
+          nonce: parseUint256(nonce),
+          deadline: parseUint256(deadline),
           signature: signature as `0x${string}`,
           chainId: targetChainId,
         });
