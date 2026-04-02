@@ -16,9 +16,9 @@ interface PackOpeningAnimationProps {
 }
 
 const glowMap = {
-  'gold': 'gold',
-  'purple': 'purple',
-  'blue': 'blue',
+  'legendary': 'gold',
+  'epic': 'purple',
+  'rare': 'blue',
   'common': 'silver',
 };
 

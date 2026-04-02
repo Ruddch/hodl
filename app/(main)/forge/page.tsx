@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { useAccount } from "wagmi";
 import { BlurCard } from "@/components/BlurCard";
 import { ForgeCardSelectModal } from "@/components/ForgeCardSelectModal";
@@ -15,6 +15,7 @@ import {
   isCommonRarity,
   FORGE_COMMON_BURN_DUST_REWARD,
 } from "@/lib/forge";
+import { DustIcon } from "@/components/Icons";
 import { loadImageForCanvas } from "@/lib/loadImageForCanvas";
 
 function cardTextureUrl(card: UserCard): string {
@@ -35,7 +36,7 @@ export default function ForgePage() {
   const [burnOverlayReady, setBurnOverlayReady] = useState(false);
   const [toast, setToast] = useState<{
     visible: boolean;
-    message?: string;
+    message?: ReactNode;
     variant?: "success" | "error";
   }>({ visible: false });
 
@@ -111,7 +112,13 @@ export default function ForgePage() {
     setToast({
       visible: true,
       variant: "success",
-      message: `You received ${FORGE_COMMON_BURN_DUST_REWARD * n} dust.`,
+      message: (
+        <span className="inline-flex items-center gap-1 flex-wrap">
+          <span>You received {FORGE_COMMON_BURN_DUST_REWARD * n}</span>
+          <DustIcon className="h-[1em] w-[1em] shrink-0" aria-hidden />
+          <span aria-hidden>.</span>
+        </span>
+      ),
     });
   }, [clearAll, resetBurn, forgeCards.length]);
 

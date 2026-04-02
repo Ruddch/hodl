@@ -472,15 +472,15 @@
 @keyframes smoothBlueGlow {
   0%, 100% {
     filter: 
-      drop-shadow(0 0 8px rgba(140, 190, 235, 0.8))
-      drop-shadow(0 0 10px rgba(130, 180, 225, 0.6))
+      drop-shadow(0 0 8px rgba(105, 176, 237, 0.8))
+      drop-shadow(0 0 10px rgba(97, 169, 233, 0.6))
       drop-shadow(0 0 16px rgba(120, 170, 215, 0.4))
       brightness(1.05);
   }
   50% {
     filter: 
-      drop-shadow(0 0 12px rgba(150, 200, 240, 1))
-      drop-shadow(0 0 25px rgba(140, 190, 230, 0.8))
+      drop-shadow(0 0 12px rgb(120, 188, 244))
+      drop-shadow(0 0 25px rgba(101, 171, 229, 0.8))
       drop-shadow(0 0 30px rgba(130, 180, 220, 0.6))
       brightness(1.12);
   }
@@ -614,7 +614,7 @@
 }
 
 .card.glow-blue:hover .card-wrapper img {
-  box-shadow: 0 0 20px rgba(173, 216, 230, 0.6), 0 0 30px rgba(173, 216, 230, 0.5), 0 0 40px rgba(173, 216, 230, 0.4);
+  box-shadow: 0 0 20px rgba(23, 184, 237, 0.6), 0 0 30px rgba(107, 206, 239, 0.5), 0 0 40px rgba(84, 193, 230, 0.4);
 }
 
 .bottom {

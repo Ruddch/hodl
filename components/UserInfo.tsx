@@ -6,7 +6,7 @@ import { ConnectKitButton } from "connectkit";
 import { useAuth } from "@/lib/auth-context";
 import { useMyProfile } from "@/lib/api";
 import { useUnviewedCards } from "@/lib/unviewed-cards-context";
-import { formatBalance } from "@/lib/balance";
+import { UserBalanceDisplay } from "@/components/UserBalanceDisplay";
 import { Avatar } from "./Avatar";
 import { SignInButton } from "./SignInButton";
 
@@ -45,7 +45,7 @@ export function UserInfo({ onNavClick }: UserInfoProps) {
           <div className="mb-3">
             <p className="text-sm text-[var(--text-muted)]">Balance</p>
             <p className="text-lg font-semibold text-[var(--text-primary)]">
-              {formatBalance(profile?.stats?.balances)}
+              <UserBalanceDisplay balances={profile?.stats?.balances} />
             </p>
           </div>
 

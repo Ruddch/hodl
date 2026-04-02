@@ -1,7 +1,7 @@
 "use client";
 
 import type { UserProfileResponse } from "@/lib/types";
-import { formatBalance } from "@/lib/balance";
+import { UserBalanceDisplay } from "@/components/UserBalanceDisplay";
 
 interface StatsCardsProps {
   profile: UserProfileResponse;
@@ -18,7 +18,6 @@ export function StatsCards({ profile, showReferrals = true }: StatsCardsProps) {
   };
 
   const stats = {
-    balance: formatBalance(statsData?.balances),
     bestScore: statsData?.best_score ? statsData.best_score.toLocaleString() : "0",
     cards: statsData?.total_cards ?? 0,
     bestResult: {
@@ -46,7 +45,9 @@ export function StatsCards({ profile, showReferrals = true }: StatsCardsProps) {
             </svg>
           </div>
         </div>
-        <p className="text-[16px] sm:text-[24px] font-semibold text-[var(--text-primary)]">{stats.balance}</p>
+        <p className="text-[16px] sm:text-[24px] font-semibold text-[var(--text-primary)]">
+          <UserBalanceDisplay balances={statsData?.balances} />
+        </p>
       </div>
 
       {/* Best score */}
