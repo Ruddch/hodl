@@ -1,6 +1,6 @@
 "use client";
 
-import { useAvailablePacks } from "@/lib/api";
+import { useAvailablePacks, usePacksStore, useBuyPack } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useUnviewedCards } from "@/lib/unviewed-cards-context";
 import { useState, useEffect, useCallback } from "react";
@@ -17,6 +17,7 @@ import { BASE_PATH } from "@/lib/constants";
 import { usePackOpening, type PackOpeningStep } from "@/lib/hooks/usePackOpening";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
+import { MarketplacePacks } from "./components/MarketplacePacks";
 
 const STEP_LABELS: Record<PackOpeningStep, string> = {
   idle: "Open packs",
@@ -33,6 +34,8 @@ export default function PacksPage() {
   const { isAuthenticated } = useAuth();
   const { address, isConnected } = useAccount();
   const { data: packsData, refetch } = useAvailablePacks(isAuthenticated);
+  const { data: storeData, isLoading: isStoreLoading } = usePacksStore(true);
+  const buyPackMutation = useBuyPack();
   const { setUnviewedCards } = useUnviewedCards();
   const [openedPack, setOpenedPack] = useState<ConfirmOpenPackResponse | null>(null);
   const [toast, setToast] = useState<{ visible: boolean; variant: "success" | "error"; message?: string }>({
@@ -53,6 +56,25 @@ export default function PacksPage() {
 
   const totalPacks = packsData?.available_packs || 0;
   const isLoading = !packsData;
+  const [buyingPackTypeId, setBuyingPackTypeId] = useState<number | null>(null);
+
+  const handleBuyPack = useCallback(
+    async (packTypeId: number) => {
+      setToast((t) => ({ ...t, visible: false }));
+      setBuyingPackTypeId(packTypeId);
+      try {
+        await buyPackMutation.mutateAsync({ pack_type_id: packTypeId });
+        setToast({ visible: true, variant: "success", message: "Pack purchased" });
+        await refetch();
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "Purchase failed";
+        setToast({ visible: true, variant: "error", message });
+      } finally {
+        setBuyingPackTypeId(null);
+      }
+    },
+    [buyPackMutation, refetch]
+  );
 
   useEffect(() => {
     const localPaths = [
@@ -92,7 +114,7 @@ export default function PacksPage() {
   }, [packsData, totalPacks, openPack, reset]);
 
   const needsConnectWallet = !(isConnected && address);
-  const needsSignIn = isConnected && address && !isAuthenticated;
+  const needsSignIn = Boolean(isConnected && address && !isAuthenticated);
 
   const openPackButtonLabel =
     totalPacks === 0 ? "No packs available" : STEP_LABELS[step];
@@ -107,30 +129,19 @@ export default function PacksPage() {
     <>
       <Onboarding steps={steps} run={run} onClose={close} onComplete={complete} />
       <div className="max-w-8xl mx-auto">
-        {/* Banner */}
-        <div
-          className="relative rounded-[16px] overflow-hidden"
-          style={{
-            backgroundImage: "url('https://back.hodleague.com/static/card_templates/packs_background_classic_common_20260120_215426.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <div className="px-4 py-6 md:px-8 md:py-12">
-            <h1 className="text-xl md:text-[36px] font-medium leading-8 md:leading-[44px] tracking-normal text-white">
-              Marketplace of packs <br/>
-              will be available soon
-            </h1>
-          </div>
-        </div>
+        <MarketplacePacks
+          packs={storeData?.packs}
+          isLoading={Boolean(isStoreLoading)}
+          needsConnectWallet={needsConnectWallet}
+          needsSignIn={needsSignIn}
+          buyingPackTypeId={buyingPackTypeId}
+          onBuy={handleBuyPack}
+        />
 
         {/* Main Content */}
         <BlurCard className="mt-6" backgroundColor="rgba(255, 179, 215, 1)">
           <div data-onboarding="packs-section" className="px-8 py-8">
             <h2 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] mb-2">My packs</h2>
-            <p className="text-base text-[var(--text-muted)] mb-8">
-              In beta you will get 5 new packs to bet every week
-            </p>
           
             <div className="flex flex-col items-center">
               <div className="relative">

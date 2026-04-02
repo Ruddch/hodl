@@ -1,6 +1,8 @@
 "use client";
 
 import { ForgeSlotBox } from "@/components/forge/ForgeSlotBox";
+import { DustIcon } from "@/components/Icons";
+import { FORGE_COMMON_BURN_DUST_REWARD } from "@/lib/forge";
 
 interface ForgeInputsInitialProps {
   onOpenPicker: () => void;
@@ -11,7 +13,12 @@ export function ForgeInputsInitial({ onOpenPicker }: ForgeInputsInitialProps) {
   return (
     <>
       <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-6 max-w-lg">
-        Placeholder hint text. Rules for common vs rare slots will be explained here.
+        Burn common cards in the forge. You earn{" "}
+        <span className="font-semibold text-[var(--text-primary)] tabular-nums">
+          {FORGE_COMMON_BURN_DUST_REWARD}
+        </span>{" "}
+        <DustIcon className="inline-block h-[1em] w-[1em] align-[-0.15em] mx-0.5 text-[var(--text-primary)]" aria-hidden />
+        for each common card you burn.
       </p>
 
       <div className="border-t border-[var(--border-subtle)] pt-5">

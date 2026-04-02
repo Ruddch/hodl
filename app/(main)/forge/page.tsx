@@ -7,7 +7,6 @@ import { ForgeCardSelectModal } from "@/components/ForgeCardSelectModal";
 import { Toast } from "@/components/Toast";
 import { ForgeInputsInitial } from "@/components/forge/ForgeInputsInitial";
 import { ForgeInputsCommonBurn } from "@/components/forge/ForgeInputsCommonBurn";
-import { ForgeInputsNonCommonSwap } from "@/components/forge/ForgeInputsNonCommonSwap";
 import type { UserCard } from "@/lib/types";
 import { useCardBurn } from "@/lib/hooks/useCardBurn";
 import {
@@ -26,8 +25,18 @@ function effectiveChainId(card: UserCard, walletChainId: number | undefined): nu
   return card.chain_id ?? walletChainId;
 }
 
+type ForgeTab = "swap" | "upgrade" | "burn";
+
+const forgeTabSoonButtonClass =
+  "p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center flex items-center gap-2 opacity-60 cursor-not-allowed text-[var(--text-muted)]";
+
+const forgeTabActiveButtonClass =
+  "p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]";
+
 export default function ForgePage() {
   const { chainId: currentChainId } = useAccount();
+  /** Сейчас доступна только вкладка Burn; Swap / Upgrade — soon */
+  const forgeTab: ForgeTab = "burn";
   /** Выбранные карты по порядку слотов; первая задаёт режим common / non-common */
   const [forgeCards, setForgeCards] = useState<UserCard[]>([]);
   const [pickingSlotIndex, setPickingSlotIndex] = useState(0);
@@ -147,12 +156,13 @@ export default function ForgePage() {
     loadImageForCanvas(cardTextureUrl(firstCard), { bust: forgeImageCacheBust }).catch(() => {});
   }, [firstCard, forgeImageCacheBust]);
 
-  const showCommon = Boolean(firstCard && isCommonRarity(firstCard));
-  const showNonCommon = Boolean(firstCard && !isCommonRarity(firstCard));
+  const showCommonBurn = Boolean(firstCard && isCommonRarity(firstCard));
 
-  const modalCommonOnly = Boolean(forgeCards.length > 0 && firstCard && isCommonRarity(firstCard));
+  const modalCommonOnly = forgeTab === "burn";
   const modalMatchChainId =
-    modalCommonOnly && firstCard ? effectiveChainId(firstCard, currentChainId) : undefined;
+    forgeTab === "burn" && forgeCards.length > 0 && firstCard
+      ? effectiveChainId(firstCard, currentChainId)
+      : undefined;
 
   const modalExcludeIds = useMemo(
     () => forgeCards.filter((_, i) => i !== pickingSlotIndex).map((c) => c.user_card_id),
@@ -171,49 +181,61 @@ export default function ForgePage() {
             <button
               type="button"
               aria-current="page"
-              data-ph-capture-attribute-button="forge-tab-swap"
-              className="p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]"
+              data-ph-capture-attribute-button="forge-tab-burn"
+              className={forgeTabActiveButtonClass}
             >
-              Swap
+              Burn
+            </button>
+            <button
+              type="button"
+              disabled
+              aria-disabled
+              data-ph-capture-attribute-button="forge-tab-swap"
+              className={forgeTabSoonButtonClass}
+            >
+              <span>Swap</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--text-muted)]">
+                soon
+              </span>
             </button>
             <button
               type="button"
               disabled
               aria-disabled
               data-ph-capture-attribute-button="forge-tab-upgrade"
-              className="p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center flex items-center gap-2 opacity-60 cursor-not-allowed text-[var(--text-muted)]"
+              className={forgeTabSoonButtonClass}
             >
               <span>Upgrade</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--text-muted)]">
+              <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--text-muted)]">
                 soon
               </span>
             </button>
           </div>
 
           <div className="w-full min-w-0">
-            {forgeCards.length === 0 && (
-              <ForgeInputsInitial onOpenPicker={() => openPickerForSlot(0)} />
-            )}
+            {forgeTab === "burn" && (
+              <>
+                {forgeCards.length === 0 && (
+                  <ForgeInputsInitial onOpenPicker={() => openPickerForSlot(0)} />
+                )}
 
-            {showCommon && firstCard && (
-              <ForgeInputsCommonBurn
-                cards={forgeCards}
-                forgeImageCacheBust={forgeImageCacheBust}
-                burnPlaying={burnPlaying}
-                burnOverlayReady={burnOverlayReady}
-                burnTxLoading={burnTxLoading}
-                canBurn={canBurnCommon}
-                onOpenSlot={openPickerForSlot}
-                onClearSlot={clearSlot}
-                onResetAll={clearAll}
-                onBurn={handleBurn}
-                onBurnVisualReady={() => setBurnOverlayReady(true)}
-                onBurnAnimationComplete={handleBurnAnimationComplete}
-              />
-            )}
-
-            {showNonCommon && firstCard && (
-              <ForgeInputsNonCommonSwap card={firstCard} onOpenPicker={() => openPickerForSlot(0)} onClear={clearAll} />
+                {showCommonBurn && firstCard && (
+                  <ForgeInputsCommonBurn
+                    cards={forgeCards}
+                    forgeImageCacheBust={forgeImageCacheBust}
+                    burnPlaying={burnPlaying}
+                    burnOverlayReady={burnOverlayReady}
+                    burnTxLoading={burnTxLoading}
+                    canBurn={canBurnCommon}
+                    onOpenSlot={openPickerForSlot}
+                    onClearSlot={clearSlot}
+                    onResetAll={clearAll}
+                    onBurn={handleBurn}
+                    onBurnVisualReady={() => setBurnOverlayReady(true)}
+                    onBurnAnimationComplete={handleBurnAnimationComplete}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>
@@ -227,8 +249,8 @@ export default function ForgePage() {
         commonOnly={modalCommonOnly}
         matchChainId={modalMatchChainId}
         walletChainId={currentChainId}
-        title="Placeholder title"
-        subtitle="Placeholder subtitle."
+        title="Select a common card"
+        subtitle={`Only commons can be burned here. Each card grants ${FORGE_COMMON_BURN_DUST_REWARD} dust when burned.`}
       />
 
       <Toast

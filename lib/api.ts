@@ -28,6 +28,9 @@ import type {
   CardTournamentStatsResponse,
   TokensLeaderboardResponse,
   AvailablePacksResponse,
+  PacksStoreResponse,
+  BuyPackRequest,
+  BuyPackResponse,
   OpenPackRequest,
   OpenPackResponse,
   PrepareOpenPackRequest,
@@ -349,6 +352,17 @@ export async function getCardTournamentStats(
 // ==================== Packs API ====================
 export async function getAvailablePacks(): Promise<AvailablePacksResponse> {
   return fetchApi("/api/packs/available");
+}
+
+export async function getPacksStore(): Promise<PacksStoreResponse> {
+  return fetchApi("/api/packs/store");
+}
+
+export async function buyPack(data: BuyPackRequest): Promise<BuyPackResponse> {
+  return fetchApi("/api/packs/buy", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 export async function openPack(data: OpenPackRequest = {}): Promise<OpenPackResponse> {
@@ -703,6 +717,27 @@ export function useAvailablePacks(enabled: boolean = true) {
     queryKey: ["availablePacks"],
     queryFn: getAvailablePacks,
     enabled,
+  });
+}
+
+export function usePacksStore(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ["packsStore"],
+    queryFn: getPacksStore,
+    enabled,
+  });
+}
+
+export function useBuyPack() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: BuyPackRequest) => buyPack(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["availablePacks"] });
+      queryClient.invalidateQueries({ queryKey: ["packsStore"] });
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    },
   });
 }
 

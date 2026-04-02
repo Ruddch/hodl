@@ -461,6 +461,41 @@ export interface AvailablePacksResponse {
   packs: AvailablePack[];
 }
 
+/** Пак в магазине (покупка за dust), GET /api/packs/store */
+export interface StorePack {
+  id: number;
+  name: string;
+  description: string;
+  image_url: string;
+  header_image_url: string;
+  cards_per_pack: number;
+  price: string;
+  currency: string;
+  supply: number;
+  sold: number;
+  remaining: number;
+  available_from: string;
+  available_until: string;
+}
+
+export interface PacksStoreResponse {
+  total: number;
+  packs: StorePack[];
+}
+
+export interface BuyPackRequest {
+  pack_type_id: number;
+}
+
+export interface BuyPackResponse {
+  user_pack_id: number;
+  pack_type_id: number;
+  pack_type_name: string;
+  price: string;
+  currency: string;
+  dust_balance_after: string;
+}
+
 export interface OpenPackRequest {
   pack_type_id?: number | null;
 }

@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 import dynamic from "next/dynamic";
 import { ForgeSlotBox } from "@/components/forge/ForgeSlotBox";
+import { DustIcon } from "@/components/Icons";
 import { FORGE_COMMON_BURN_DUST_REWARD } from "@/lib/forge";
 import type { UserCard } from "@/lib/types";
 
@@ -52,7 +53,12 @@ export function ForgeInputsCommonBurn({
   return (
     <>
       <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-6 max-w-lg">
-        Placeholder hint text. Rules for common vs rare slots will be explained here.
+        Burn common cards in the forge. You earn{" "}
+        <span className="font-semibold text-[var(--text-primary)] tabular-nums">
+          {FORGE_COMMON_BURN_DUST_REWARD}
+        </span>{" "}
+        <DustIcon className="inline-block h-[1em] w-[1em] align-[-0.15em] mx-0.5 text-[var(--text-primary)]" aria-hidden />
+        dust for each common card you burn.
       </p>
       <div className="border-t border-[var(--border-subtle)] pt-5">
         <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--text-muted)] mb-4">Inputs</p>
@@ -117,21 +123,27 @@ export function ForgeInputsCommonBurn({
         </button>
       </div>
 
-      <div className="mt-4 max-w-xl space-y-2 text-sm text-[var(--text-muted)] leading-relaxed">
-        <p>Add common cards here to burn them in the forge.</p>
+      <div className="mt-4 max-w-xl text-sm text-[var(--text-muted)] leading-relaxed">
         <p>
-          For each common card you burn, you receive{" "}
-          <span className="font-semibold text-[var(--text-primary)] tabular-nums">{FORGE_COMMON_BURN_DUST_REWARD}</span>{" "}
-          dust
           {cards.length > 1 ? (
             <>
-              {" "}
-              (
-              <span className="font-semibold text-[var(--text-primary)] tabular-nums">{totalDust}</span> total for{" "}
-              {cards.length} cards)
+              This burn will grant{" "}
+              <span className="inline-flex items-center gap-1 font-semibold text-[var(--text-primary)]">
+                <span className="tabular-nums">{totalDust}</span>
+                <DustIcon className="h-[1em] w-[1em] shrink-0" aria-hidden />
+              </span>{" "}
+              in total.
             </>
-          ) : null}
-          .
+          ) : (
+            <>
+              Burning this card grants{" "}
+              <span className="inline-flex items-center gap-1 font-semibold text-[var(--text-primary)]">
+                <span className="tabular-nums">{FORGE_COMMON_BURN_DUST_REWARD}</span>
+                <DustIcon className="h-[1em] w-[1em] shrink-0" aria-hidden />
+              </span>{" "}
+              dust.
+            </>
+          )}
         </p>
       </div>
     </>
