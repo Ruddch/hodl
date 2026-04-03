@@ -540,6 +540,8 @@ export interface ConfirmOpenPackResponse {
   status: string;
   pack_opening_id: number;
   pack_type_name: string;
+  /** Если бэкенд отдаёт — иначе клиент подставляет из инвентаря при открытии */
+  pack_type_id?: number;
   opened_at: string;
   cards_received: CardReceived[];
   nft_token_ids: number[];

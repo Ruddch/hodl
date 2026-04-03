@@ -59,7 +59,7 @@
 }
 
 .card-fall-0 {
-  animation: cardJumpAndFall0 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+  animation: cardJumpAndFall2 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
 }
 
 .card-fall-1 {
@@ -67,11 +67,11 @@
 }
 
 .card-fall-2 {
-  animation: cardJumpAndFall2 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s both;
+  animation: cardJumpAndFall3 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s both;
 }
 
 .card-fall-3 {
-  animation: cardJumpAndFall3 1.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both;
+  animation: cardJumpAndFall0 1.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both;
 }
 
 .card-fall-4 {
@@ -79,13 +79,13 @@
 }
 
 @media (max-width: 767px) {
-  .card-fall-0 {
+  .card-fall-3 {
     animation: cardJumpAndFall0-m 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
   }
   .card-fall-1 {
     animation: cardJumpAndFall1-m 1.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
   }
-  .card-fall-3 {
+  .card-fall-2 {
     animation: cardJumpAndFall3-m 1.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both;
   }
   .card-fall-4 {

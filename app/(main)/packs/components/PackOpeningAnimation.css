@@ -194,7 +194,8 @@
   width: min(400px, calc(100vw - 4rem));
   aspect-ratio: 473 / 718;
   height: auto;
-  background-image: url('/pack-bottom-3.png');
+  /* Значение задаётся в `PackOpeningAnimation` через `--pack-parallax-bottom-bg` */
+  background-image: var(--pack-parallax-bottom-bg, url('/pack-bottom-3.png'));
   background-size: contain;
   background-repeat: no-repeat;
   background-position: bottom;

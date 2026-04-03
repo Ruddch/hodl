@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import type { StorePack } from "@/lib/types";
 import { BASE_PATH } from "@/lib/constants";
+import { STANDARD_PACK_TYPE_ID } from "@/lib/packConstants";
 import { SignInButton } from "@/components/SignInButton";
 import { ConnectKitButton } from "connectkit";
 import { DustIcon } from "@/components/Icons";
@@ -15,14 +16,12 @@ function publicAssetPath(filename: string): string {
   return base ? `${base}${filename}` : `/${filename}`;
 }
 
-const STANDARD_PACK_ID = 7;
-
 const SHOP_SECTION_BG_URL = publicAssetPath("shop_bg_3.png");
 const SHOP_PACK_IMAGE_SRC = publicAssetPath("pack_2.png");
 const SHOP_PACK_IMAGE_TYPE_7 = publicAssetPath("pack_1.png");
 
 function shopPackImageSrc(packTypeId: number): string {
-  if (packTypeId === STANDARD_PACK_ID) return SHOP_PACK_IMAGE_TYPE_7;
+  if (packTypeId === STANDARD_PACK_TYPE_ID) return SHOP_PACK_IMAGE_TYPE_7;
   return SHOP_PACK_IMAGE_SRC;
 }
 
@@ -119,7 +118,7 @@ export function MarketplacePacks({
                       alt={slot.pack.name}
                       fill
                       sizes="158px"
-                      className={`object-contain ${packArtShadowClass} ${slot.pack.id === STANDARD_PACK_ID ? "" : "brightness-120 contrast-90"}`}
+                      className={`object-contain ${packArtShadowClass} ${slot.pack.id === STANDARD_PACK_TYPE_ID ? "" : "brightness-120 contrast-90"}`}
                     />
                     {slot.pack.remaining > 0 && (
                       <div

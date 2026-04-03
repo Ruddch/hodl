@@ -3,7 +3,7 @@
 import { useAvailablePacks, usePacksStore, useBuyPack } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useUnviewedCards } from "@/lib/unviewed-cards-context";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import type { ConfirmOpenPackResponse } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
@@ -38,6 +38,8 @@ export default function PacksPage() {
   const buyPackMutation = useBuyPack();
   const { setUnviewedCards } = useUnviewedCards();
   const [openedPack, setOpenedPack] = useState<ConfirmOpenPackResponse | null>(null);
+  /** Пока confirm не отдаёт `pack_type_id`, подставляем из выбранного пака в инвентаре */
+  const pendingOpenPackTypeIdRef = useRef<number | undefined>(undefined);
   const [toast, setToast] = useState<{ visible: boolean; variant: "success" | "error"; message?: string }>({
     visible: false,
     variant: "success",
@@ -45,7 +47,11 @@ export default function PacksPage() {
 
   const { openPack, step, isLoading: isOpening, reset } = usePackOpening({
     onSuccess: (result) => {
-      setOpenedPack(result);
+      setOpenedPack({
+        ...result,
+        pack_type_id: result.pack_type_id ?? pendingOpenPackTypeIdRef.current,
+      });
+      pendingOpenPackTypeIdRef.current = undefined;
       refetch();
     },
     onError: (error) => {
@@ -111,6 +117,7 @@ export default function PacksPage() {
 
     setToast((t) => ({ ...t, visible: false }));
     reset();
+    pendingOpenPackTypeIdRef.current = firstPack.pack_type_id;
     await openPack(firstPack.user_pack_id);
   }, [packsData, totalPacks, openPack, reset]);
 

@@ -34,7 +34,10 @@ export function OpenedPackModal({ result, onClose }: OpenedPackModalProps) {
       </button>
 
       {/* Pack Opening Animation */}
-      <PackOpeningAnimation cards={result.cards_received} />
+      <PackOpeningAnimation
+        packTypeId={result.pack_type_id}
+        cards={result.cards_received}
+      />
     </div>
   );
 }
