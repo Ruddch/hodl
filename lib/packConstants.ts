@@ -1,7 +1,7 @@
 import { BASE_PATH } from "@/lib/constants";
 
 /** «Стандартный» тип пака: магазин / нижняя часть анимации открытия (pack-bottom-3). */
-export const STANDARD_PACK_TYPE_ID = 7;
+export const STANDARD_PACK_TYPE_ID = 6;
 
 function publicAssetPath(filename: string): string {
   const base = BASE_PATH ? `${BASE_PATH}/` : "";
