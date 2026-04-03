@@ -82,6 +82,7 @@ export default function PacksPage() {
       "pack-top.png",
       "pack-top copy.png",
       "pack-bottom-3.png",
+      "pack-bottom-5.png",
       "pattern.svg",
       "card1.png",
     ];
@@ -130,7 +131,7 @@ export default function PacksPage() {
       <Onboarding steps={steps} run={run} onClose={close} onComplete={complete} />
       <div className="max-w-8xl mx-auto">
         <MarketplacePacks
-          packs={storeData?.packs}
+          packs={storeData?.packs.sort((a, b) => a.cards_per_pack - b.cards_per_pack)}
           isLoading={Boolean(isStoreLoading)}
           needsConnectWallet={needsConnectWallet}
           needsSignIn={needsSignIn}

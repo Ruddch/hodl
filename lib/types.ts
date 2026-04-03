@@ -464,6 +464,8 @@ export interface AvailablePacksResponse {
 /** Пак в магазине (покупка за dust), GET /api/packs/store */
 export interface StorePack {
   id: number;
+  /** Тип пака; если бэкенд отдаёт отдельно — приоритетнее `id` для отображения/логики типа */
+  pack_type_id?: number;
   name: string;
   description: string;
   image_url: string;

@@ -15,8 +15,16 @@ function publicAssetPath(filename: string): string {
   return base ? `${base}${filename}` : `/${filename}`;
 }
 
+const STANDARD_PACK_ID = 7;
+
 const SHOP_SECTION_BG_URL = publicAssetPath("shop_bg_3.png");
 const SHOP_PACK_IMAGE_SRC = publicAssetPath("pack_2.png");
+const SHOP_PACK_IMAGE_TYPE_7 = publicAssetPath("pack_1.png");
+
+function shopPackImageSrc(packTypeId: number): string {
+  if (packTypeId === STANDARD_PACK_ID) return SHOP_PACK_IMAGE_TYPE_7;
+  return SHOP_PACK_IMAGE_SRC;
+}
 
 /** Как в `html[data-theme="dark"]` — чтобы в светлой теме текст шопа читался на ярком фоне */
 const SHOP_TEXT_VARS = {
@@ -34,7 +42,7 @@ function buildSlots(packs: StorePack[] | undefined, isLoading: boolean): Marketp
   if (isLoading) {
     return [
       { kind: "loading", index: 0 },
-      { kind: "soon", index: 1 },
+      { kind: "loading", index: 1 },
       { kind: "soon", index: 2 },
     ];
   }
@@ -107,11 +115,11 @@ export function MarketplacePacks({
                 {slot.kind === "available" ? (
                   <PackArtDepth>
                     <Image
-                      src={SHOP_PACK_IMAGE_SRC}
+                      src={shopPackImageSrc(slot.pack.id)}
                       alt={slot.pack.name}
                       fill
                       sizes="158px"
-                      className={`object-contain ${packArtShadowClass} contrast-90 brightness-125`}
+                      className={`object-contain ${packArtShadowClass} ${slot.pack.id === STANDARD_PACK_ID ? "" : "brightness-120 contrast-90"}`}
                     />
                     {slot.pack.remaining > 0 && (
                       <div
