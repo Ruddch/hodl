@@ -32,7 +32,7 @@ function BalanceSegment({ item }: { item: UserBalanceItem }) {
     );
   }
 
-  return <span className="tabular-nums">{raw ? `${formatted} ${raw}` : formatted}</span>;
+  return <></> //<span className="tabular-nums">{raw ? `${formatted} ${raw}` : formatted}</span>;
 }
 
 export function UserBalanceDisplay({ balances, className }: UserBalanceDisplayProps) {
