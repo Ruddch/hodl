@@ -14,7 +14,7 @@ function BalanceSegment({ item }: { item: UserBalanceItem }) {
   const raw = (item.name || "").trim();
   const key = raw.toLowerCase();
 
-  if (key === "HP") {
+  if (key === "hp") {
     return (
       <span className="inline-flex items-baseline gap-1 tabular-nums">
         <span>{formatted}</span>
