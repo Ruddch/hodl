@@ -28,6 +28,9 @@ import type {
   CardTournamentStatsResponse,
   TokensLeaderboardResponse,
   AvailablePacksResponse,
+  PacksStoreResponse,
+  BuyPackRequest,
+  BuyPackResponse,
   OpenPackRequest,
   OpenPackResponse,
   PrepareOpenPackRequest,
@@ -37,6 +40,10 @@ import type {
   PackHistoryResponse,
   AlphaTestCheckResponse,
   ClaimTournamentRewardsResponse,
+  PrepareCardBurnRequest,
+  PrepareCardBurnResponse,
+  ConfirmCardBurnRequest,
+  ConfirmCardBurnResponse,
 } from "./types";
 import { API_BASE_URL } from "./constants";
 
@@ -347,6 +354,17 @@ export async function getAvailablePacks(): Promise<AvailablePacksResponse> {
   return fetchApi("/api/packs/available");
 }
 
+export async function getPacksStore(): Promise<PacksStoreResponse> {
+  return fetchApi("/api/packs/store");
+}
+
+export async function buyPack(data: BuyPackRequest): Promise<BuyPackResponse> {
+  return fetchApi("/api/packs/buy", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function openPack(data: OpenPackRequest = {}): Promise<OpenPackResponse> {
   return fetchApi("/api/packs/open", {
     method: "POST",
@@ -387,6 +405,21 @@ export async function getPackHistory(params: GetPackHistoryParams = {}): Promise
   
   const query = searchParams.toString();
   return fetchApi(`/api/packs/history${query ? `?${query}` : ""}`);
+}
+
+// ==================== Card burn API ====================
+export async function prepareCardBurn(data: PrepareCardBurnRequest): Promise<PrepareCardBurnResponse> {
+  return fetchApi("/api/cards/burn/prepare", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function confirmCardBurn(data: ConfirmCardBurnRequest): Promise<ConfirmCardBurnResponse> {
+  return fetchApi("/api/cards/burn/confirm", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 // ==================== Alpha Test API ====================
@@ -687,6 +720,27 @@ export function useAvailablePacks(enabled: boolean = true) {
   });
 }
 
+export function usePacksStore(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ["packsStore"],
+    queryFn: getPacksStore,
+    enabled,
+  });
+}
+
+export function useBuyPack() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: BuyPackRequest) => buyPack(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["availablePacks"] });
+      queryClient.invalidateQueries({ queryKey: ["packsStore"] });
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    },
+  });
+}
+
 export function useOpenPack() {
   const queryClient = useQueryClient();
 
@@ -716,6 +770,24 @@ export function useConfirmOpenPack() {
       queryClient.invalidateQueries({ queryKey: ["availablePacks"] });
       queryClient.invalidateQueries({ queryKey: ["packHistory"] });
       queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    },
+  });
+}
+
+export function usePrepareCardBurn() {
+  return useMutation({
+    mutationFn: (data: PrepareCardBurnRequest) => prepareCardBurn(data),
+  });
+}
+
+export function useConfirmCardBurn() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: ConfirmCardBurnRequest) => confirmCardBurn(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
   });
 }

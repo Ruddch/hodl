@@ -3,9 +3,13 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Tilt from 'react-parallax-tilt';
 import { Card } from './Card';
+import './PackOpeningCards.css';
 import './PackOpeningAnimation.css';
+import { packOpeningParallaxBottomBackground } from '@/lib/packConstants';
 
 interface PackOpeningAnimationProps {
+  /** Тип пака: от него зависит нижняя текстура (см. `packOpeningParallaxBottomBackground`) */
+  packTypeId?: number;
   cards?: Array<{
     user_card_id: number;
     rendered_image_url?: string;
@@ -16,9 +20,9 @@ interface PackOpeningAnimationProps {
 }
 
 const glowMap = {
-  'gold': 'gold',
-  'purple': 'purple',
-  'blue': 'blue',
+  'legendary': 'gold',
+  'epic': 'purple',
+  'rare': 'blue',
   'common': 'silver',
 };
 
@@ -32,6 +36,7 @@ const getPackWidth = () => Math.min(PACK_MAX_WIDTH, Math.max(150, window.innerWi
 const getAngleSize = (packWidth: number) => packWidth * ANGLE_AT_MAX / PACK_MAX_WIDTH;
 
 export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({ 
+  packTypeId,
   cards = [] 
 }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -489,6 +494,11 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
               parallaxElementRef.current = node as unknown as HTMLElement;
             }}
             className={`tilt-wrapper parallax-effect glare-scale ${distance >= openThreshold ? 'pack-opened' : ''}`}
+            style={
+              {
+                '--pack-parallax-bottom-bg': packOpeningParallaxBottomBackground(packTypeId),
+              } as React.CSSProperties
+            }
             tiltEnable={!packOpened}
             tiltMaxAngleX={dragginStarted ? 0 : 10}
             tiltMaxAngleY={dragginStarted ? 0 : 10}

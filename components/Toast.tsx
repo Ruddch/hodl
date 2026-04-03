@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import "./Toast.css";
 
@@ -14,8 +14,8 @@ interface ToastProps {
   onDismiss: () => void;
   /** По умолчанию success — зелёная галочка. error — красный крестик. */
   variant?: ToastVariant;
-  /** Текст сообщения. По умолчанию "Pack opened! View your cards in profile." для success, "Something went wrong" для error */
-  message?: string;
+  /** Текст или разметка сообщения. По умолчанию "Pack opened! View your cards in profile." для success, "Something went wrong" для error */
+  message?: ReactNode;
 }
 
 export function Toast({ visible, onDismiss, variant = "success", message }: ToastProps) {
@@ -45,7 +45,7 @@ export function Toast({ visible, onDismiss, variant = "success", message }: Toas
   if (!visible || typeof document === "undefined") return null;
 
   const isError = variant === "error";
-  const displayMessage =
+  const displayMessage: ReactNode =
     message ?? (isError ? "Something went wrong" : "Pack opened! View your cards in profile.");
 
   const toast = (

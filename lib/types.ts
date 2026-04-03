@@ -461,6 +461,43 @@ export interface AvailablePacksResponse {
   packs: AvailablePack[];
 }
 
+/** Пак в магазине (покупка за dust), GET /api/packs/store */
+export interface StorePack {
+  id: number;
+  /** Тип пака; если бэкенд отдаёт отдельно — приоритетнее `id` для отображения/логики типа */
+  pack_type_id?: number;
+  name: string;
+  description: string;
+  image_url: string;
+  header_image_url: string;
+  cards_per_pack: number;
+  price: string;
+  currency: string;
+  supply: number;
+  sold: number;
+  remaining: number;
+  available_from: string;
+  available_until: string;
+}
+
+export interface PacksStoreResponse {
+  total: number;
+  packs: StorePack[];
+}
+
+export interface BuyPackRequest {
+  pack_type_id: number;
+}
+
+export interface BuyPackResponse {
+  user_pack_id: number;
+  pack_type_id: number;
+  pack_type_name: string;
+  price: string;
+  currency: string;
+  dust_balance_after: string;
+}
+
 export interface OpenPackRequest {
   pack_type_id?: number | null;
 }
@@ -503,6 +540,8 @@ export interface ConfirmOpenPackResponse {
   status: string;
   pack_opening_id: number;
   pack_type_name: string;
+  /** Если бэкенд отдаёт — иначе клиент подставляет из инвентаря при открытии */
+  pack_type_id?: number;
   opened_at: string;
   cards_received: CardReceived[];
   nft_token_ids: number[];
@@ -526,6 +565,34 @@ export interface PackHistoryItem {
 export interface PackHistoryResponse {
   total: number;
   openings: PackHistoryItem[];
+}
+
+// ==================== Card burn (forge) ====================
+export interface PrepareCardBurnRequest {
+  user_card_ids: number[];
+  chain_id: number;
+}
+
+export interface PrepareCardBurnResponse {
+  /** uint256 token id — строки, чтобы не терять точность в JSON */
+  token_ids: string[];
+  /** Большие nonce/deadline — тоже лучше строками в ответе API */
+  nonce: string | number;
+  deadline: string | number;
+  signature: string;
+  burner_contract: string;
+  chain_id: number;
+}
+
+export interface ConfirmCardBurnRequest {
+  tx_hash: string;
+  chain_id: number;
+}
+
+/** Ответ confirm — бэкенд может вернуть минимальное тело */
+export interface ConfirmCardBurnResponse {
+  success?: boolean;
+  message?: string;
 }
 
 // ==================== Users ====================
@@ -599,6 +666,8 @@ export interface UserCard {
   acquired_at: string;
   expires_at?: string | null;
   is_locked: boolean;
+  /** Сеть NFT-карты (для prepare burn и т.п.) */
+  chain_id?: number;
 }
 
 export interface UserBalanceItem {
