@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Tilt from 'react-parallax-tilt';
 import { Card } from './Card';
+import './PackOpeningCards.css';
 import './PackOpeningAnimation.css';
 
 interface PackOpeningAnimationProps {
