@@ -27,6 +27,7 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const foilRef = useRef<HTMLDivElement>(null);
+  const tiltRafRef = useRef<number | null>(null);
 
   const handleCardMouseEnter = () => {
     if (!cardRef.current) return;
@@ -35,37 +36,44 @@ export const Card: React.FC<CardProps> = ({
   const handleCardMouseMove = (e: React.MouseEvent) => {
     if (!cardRef.current || !foilRef.current) return;
 
-    const card = cardRef.current;
-    const foil = foilRef.current;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
 
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    if (tiltRafRef.current !== null) {
+      cancelAnimationFrame(tiltRafRef.current);
+    }
 
-    const midX = rect.width / 2;
-    const midY = rect.height / 2;
+    tiltRafRef.current = requestAnimationFrame(() => {
+      tiltRafRef.current = null;
+      if (!cardRef.current || !foilRef.current) return;
 
-    const tiltIntensity = packOpened ? 0.4 : 1.0;
-    
-    const rotateY = ((x - midX) / midX) * 10 * tiltIntensity;
-    const rotateX = -((y - midY) / midY) * 10 * tiltIntensity;
+      const card = cardRef.current;
+      const foil = foilRef.current;
 
-    card.style.transform = `
-      rotateX(${rotateX}deg)
-      rotateY(${rotateY}deg)
-    `;
+      const rect = card.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
 
-    foil.style.backgroundPosition = `
-      ${50 + rotateY * 5}% 
-      ${50 + rotateX * 5}%
-    `;
+      const midX = rect.width / 2;
+      const midY = rect.height / 2;
+
+      const tiltIntensity = packOpened ? 0.4 : 1.0;
+
+      const rotateY = ((x - midX) / midX) * 10 * tiltIntensity;
+      const rotateX = -((y - midY) / midY) * 10 * tiltIntensity;
+
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      foil.style.backgroundPosition = `${50 + rotateY * 5}% ${50 + rotateX * 5}%`;
+    });
   };
 
   const handleCardMouseLeave = () => {
+    if (tiltRafRef.current !== null) {
+      cancelAnimationFrame(tiltRafRef.current);
+      tiltRafRef.current = null;
+    }
     if (!cardRef.current) return;
-
-    const card = cardRef.current;
-    card.style.transform = '';
+    cardRef.current.style.transform = '';
   };
 
   return (
@@ -79,7 +87,6 @@ export const Card: React.FC<CardProps> = ({
       style={{
         zIndex: 50 - index,
         ...(transform && { transform }),
-        transformStyle: 'preserve-3d',
       }}
     >
       <div ref={cardRef} className="card-container">

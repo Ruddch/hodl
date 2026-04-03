@@ -9,7 +9,6 @@
   height: 700px;
   pointer-events: none;
   transform: translateY(15%) scale(1.1) scale(var(--container-scale, 1.1));
-  transform-style: preserve-3d;
   transition: transform 0.2s ease-in-out;
   z-index: 0;
   perspective: 1000px;
@@ -46,7 +45,6 @@
   transition: filter 0.3s ease;
   pointer-events: auto;
   cursor: pointer;
-  transform-style: preserve-3d;
   perspective: 1000px;
 }
 
@@ -179,17 +177,16 @@
   width: 100%;
   height: auto;
   transform-style: preserve-3d;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
   transform-origin: center center;
   will-change: transform;
   cursor: pointer;
+  border-radius: 29px;
 }
 
 .card-shadow {
-  transform-style: preserve-3d;
   transition: transform 0.3s ease-in-out;
   transform-origin: center center;
-  will-change: transform;
 }
 
 .card-wrapper.rotated {
@@ -256,7 +253,6 @@
   filter: brightness(1.1) contrast(1.1) saturate(1.2);
   mix-blend-mode: color-dodge;
   opacity: 0.75;
-  transform: translateZ(30px);
   mask-image: var(--pattern-url, url("/pattern.svg"));
   -webkit-mask-image: var(--pattern-url, url("/pattern.svg"));
   mask-size: 100% 100%;
@@ -267,164 +263,145 @@
   -webkit-mask-repeat: no-repeat;
 }
 
+@supports (-moz-orient: inline) {
+  .foil {
+    mix-blend-mode: normal;
+  }
+}
+
 @keyframes smoothGoldGlow {
   0%, 100% {
-    filter: 
-      drop-shadow(0 0 8px rgba(255, 185, 100, 0.8))
-      drop-shadow(0 0 10px rgba(245, 170, 85, 0.6))
-      drop-shadow(0 0 16px rgba(235, 155, 70, 0.4))
-      brightness(1.05);
+    box-shadow:
+      0 0 25px rgba(255, 185, 100, 0.8),
+      0 0 40px rgba(245, 170, 85, 0.5),
+      0 0 55px rgba(235, 155, 70, 0.3);
   }
   50% {
-    filter: 
-      drop-shadow(0 0 15px rgba(255, 195, 110, 1))
-      drop-shadow(0 0 28px rgba(245, 175, 95, 0.8))
-      drop-shadow(0 0 36px rgba(235, 160, 80, 0.6))
-      brightness(1.12);
+    box-shadow:
+      0 0 50px rgba(255, 195, 110, 1),
+      0 0 80px rgba(245, 175, 95, 0.7),
+      0 0 110px rgba(235, 160, 80, 0.5);
   }
 }
 
 @keyframes smoothPurpleGlow {
   0%, 100% {
-    filter: 
-      drop-shadow(0 0 10px rgba(175, 145, 205, 0.6))
-      drop-shadow(0 0 16px rgba(175, 145, 205, 0.4))
-      brightness(1.05);
+    box-shadow:
+      0 0 20px rgba(175, 145, 205, 0.6),
+      0 0 40px rgba(175, 145, 205, 0.35);
   }
   50% {
-    filter: 
-      drop-shadow(0 0 28px rgba(182, 152, 212, 0.75))
-      drop-shadow(0 0 36px rgba(182, 152, 212, 0.6))
-      brightness(1.12);
+    box-shadow:
+      0 0 40px rgba(182, 152, 212, 0.8),
+      0 0 60px rgba(182, 152, 212, 0.5),
+      0 0 80px rgba(182, 152, 212, 0.3);
   }
 }
 
 @keyframes smoothBlueGlow {
   0%, 100% {
-    filter: 
-      drop-shadow(0 0 8px rgba(105, 176, 237, 0.8))
-      drop-shadow(0 0 10px rgba(97, 169, 233, 0.6))
-      drop-shadow(0 0 16px rgba(120, 170, 215, 0.4))
-      brightness(1.05);
+    box-shadow:
+      0 0 15px rgba(105, 176, 237, 0.8),
+      0 0 30px rgba(97, 169, 233, 0.5),
+      0 0 40px rgba(120, 170, 215, 0.3);
   }
   50% {
-    filter: 
-      drop-shadow(0 0 12px rgb(120, 188, 244))
-      drop-shadow(0 0 25px rgba(101, 171, 229, 0.8))
-      drop-shadow(0 0 30px rgba(130, 180, 220, 0.6))
-      brightness(1.12);
+    box-shadow:
+      0 0 30px rgba(120, 188, 244, 0.9),
+      0 0 50px rgba(101, 171, 229, 0.65),
+      0 0 70px rgba(130, 180, 220, 0.4);
   }
 }
 
 @keyframes smoothSilverGlow {
   0%, 100% {
-    filter: 
-      drop-shadow(0 0 6px rgba(220, 230, 240, 0.55))
-      drop-shadow(0 0 12px rgba(200, 210, 220, 0.6))
-      drop-shadow(0 0 22px rgba(180, 190, 200, 0.4))
-      brightness(1.05);
+    box-shadow:
+      0 0 10px rgba(220, 230, 240, 0.55),
+      0 0 15px rgba(200, 210, 220, 0.5),
+      0 0 25px rgba(180, 190, 200, 0.3);
   }
   50% {
-    filter: 
-      drop-shadow(0 0 12px rgba(240, 250, 255, 0.75))
-      drop-shadow(0 0 16px rgba(220, 230, 240, 0.75))
-      drop-shadow(0 0 28px rgba(200, 210, 220, 0.6))
-      brightness(1.12);
+    box-shadow:
+      0 0 20px rgba(240, 250, 255, 0.75),
+      0 0 30px rgba(220, 230, 240, 0.6),
+      0 0 50px rgba(200, 210, 220, 0.4);
   }
 }
 
-.card.glow-gold:hover:not(.flipped):not(.flipping) .card-shadow {
-  z-index: 200 !important;
-  animation-play-state: paused;
-  transform: scale(1.05) rotateX(0deg) rotateY(0deg) !important;
-  position: relative;
-  animation: smoothGoldGlow 3s ease-in-out infinite !important;
-}
-
-.card.glow-gold.flipping .card-shadow,
-.card.glow-gold.flipped .card-shadow {
-  z-index: 200 !important;
-  position: relative;
-  animation: smoothGoldGlow 3s ease-in-out infinite !important;
-}
-
-.card.glow-purple:hover:not(.flipped):not(.flipping) .card-shadow {
-  z-index: 200 !important;
-  animation-play-state: paused;
-  transform: scale(1.05) rotateX(0deg) rotateY(0deg) !important;
-  position: relative;
-  animation: smoothPurpleGlow 3s ease-in-out infinite !important;
-}
-
-.card.glow-purple.flipping .card-shadow,
-.card.glow-purple.flipped .card-shadow {
-  z-index: 200 !important;
-  position: relative;
-  animation: smoothPurpleGlow 3s ease-in-out infinite !important;
-}
-
-.card.glow-blue:hover:not(.flipped):not(.flipping) .card-shadow {
-  z-index: 200 !important;
-  animation-play-state: paused;
-  transform: scale(1.05) rotateX(0deg) rotateY(0deg) !important;
-  position: relative;
-  animation: smoothBlueGlow 3s ease-in-out infinite !important;
-}
-
-.card.glow-blue.flipping .card-shadow,
-.card.glow-blue.flipped .card-shadow {
-  z-index: 200 !important;
-  position: relative;
-  animation: smoothBlueGlow 3s ease-in-out infinite !important;
-}
-
+/* Hover scale — анимируется только трансформ, без filter/box-shadow на .card-shadow */
+.card.glow-gold:hover:not(.flipped):not(.flipping) .card-shadow,
+.card.glow-purple:hover:not(.flipped):not(.flipping) .card-shadow,
+.card.glow-blue:hover:not(.flipped):not(.flipping) .card-shadow,
 .card.glow-silver:hover:not(.flipped):not(.flipping) .card-shadow {
-  z-index: 200 !important;
-  animation-play-state: paused;
-  transform: scale(1.05) rotateX(0deg) rotateY(0deg) !important;
-  position: relative;
-  animation: smoothSilverGlow 6s ease-in-out infinite !important;
+  transform: scale(1.05);
+}
+
+/* Hover: статический box-shadow на .card-wrapper (разный элемент от img — нет конфликта с анимацией).
+   Silver — без hover-shadow. */
+.card.glow-gold:hover .card-wrapper {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.9), 0 0 30px rgba(255, 215, 0, 0.7), 0 0 40px rgba(255, 215, 0, 0.5);
+}
+.card.glow-purple:hover .card-wrapper {
+  box-shadow: 0 0 20px rgba(138, 43, 226, 0.9), 0 0 30px rgba(138, 43, 226, 0.7), 0 0 40px rgba(138, 43, 226, 0.5);
+}
+.card.glow-blue:hover .card-wrapper {
+  box-shadow: 0 0 20px rgba(23, 184, 237, 0.6), 0 0 30px rgba(107, 206, 239, 0.5), 0 0 40px rgba(84, 193, 230, 0.4);
+}
+
+/* Hover: «дышащая» анимация на img — работает одновременно со статическим shadow на .card-wrapper */
+.card.glow-gold:hover:not(.flipped):not(.flipping) .card-wrapper img {
+  animation: smoothGoldGlow 3s ease-in-out infinite;
+}
+.card.glow-purple:hover:not(.flipped):not(.flipping) .card-wrapper img {
+  animation: smoothPurpleGlow 3s ease-in-out infinite;
+}
+.card.glow-blue:hover:not(.flipped):not(.flipping) .card-wrapper img {
+  animation: smoothBlueGlow 3s ease-in-out infinite;
+}
+.card.glow-silver:hover:not(.flipped):not(.flipping) .card-wrapper img {
+  animation: smoothSilverGlow 6s ease-in-out infinite;
+}
+
+/* Flipping / Flipped */
+.card.glow-gold.flipping .card-wrapper img,
+.card.glow-gold.flipped .card-wrapper img {
+  animation: smoothGoldGlow 3s ease-in-out infinite;
+}
+.card.glow-purple.flipping .card-wrapper img,
+.card.glow-purple.flipped .card-wrapper img {
+  animation: smoothPurpleGlow 3s ease-in-out infinite;
+}
+.card.glow-blue.flipping .card-wrapper img,
+.card.glow-blue.flipped .card-wrapper img {
+  animation: smoothBlueGlow 3s ease-in-out infinite;
+}
+.card.glow-silver.flipping .card-wrapper img,
+.card.glow-silver.flipped .card-wrapper img {
+  animation: smoothSilverGlow 6s ease-in-out infinite;
 }
 
 /* На touch-устройствах (мобильные) подсветка по редкости всегда видна — :hover там не срабатывает */
 @media (hover: none) {
-  .card.glow-gold:not(.flipped):not(.flipping) .card-shadow {
-    z-index: 200 !important;
-    position: relative;
-    animation: smoothGoldGlow 3s ease-in-out infinite !important;
+  .card.glow-gold:not(.flipped):not(.flipping) .card-wrapper img {
+    animation: smoothGoldGlow 3s ease-in-out infinite;
   }
-  .card.glow-purple:not(.flipped):not(.flipping) .card-shadow {
-    z-index: 200 !important;
-    position: relative;
-    animation: smoothPurpleGlow 3s ease-in-out infinite !important;
+  .card.glow-purple:not(.flipped):not(.flipping) .card-wrapper img {
+    animation: smoothPurpleGlow 3s ease-in-out infinite;
   }
-  .card.glow-blue:not(.flipped):not(.flipping) .card-shadow {
-    z-index: 200 !important;
-    position: relative;
-    animation: smoothBlueGlow 3s ease-in-out infinite !important;
+  .card.glow-blue:not(.flipped):not(.flipping) .card-wrapper img {
+    animation: smoothBlueGlow 3s ease-in-out infinite;
   }
-  .card.glow-silver:not(.flipped):not(.flipping) .card-shadow {
-    z-index: 200 !important;
-    position: relative;
-    animation: smoothSilverGlow 6s ease-in-out infinite !important;
+  .card.glow-silver:not(.flipped):not(.flipping) .card-wrapper img {
+    animation: smoothSilverGlow 6s ease-in-out infinite;
   }
 }
 
-.card.glow-silver.flipping .card-shadow,
-.card.glow-silver.flipped .card-shadow {
-  z-index: 200 !important;
-  position: relative;
-  animation: smoothSilverGlow 6s ease-in-out infinite !important;
-}
-
+/* Сброс scale при перевороте */
 .card.flipping .card-shadow,
-.card.flipped .card-shadow {
-  transform: scale(1.0) rotateX(0deg) rotateY(0deg) !important;
-}
-
+.card.flipped .card-shadow,
 .card.flipping:hover .card-shadow,
 .card.flipped:hover .card-shadow {
-  transform: scale(1.0) rotateX(0deg) rotateY(0deg) !important;
+  transform: scale(1);
 }
 
 .card-wrapper img {
@@ -435,19 +412,7 @@
   transition: box-shadow 0.3s ease;
 }
 
-.card.glow-gold:hover .card-wrapper img {
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.9), 0 0 30px rgba(255, 215, 0, 0.7), 0 0 40px rgba(255, 215, 0, 0.5);
-}
-
-.card.glow-purple:hover .card-wrapper img {
-  box-shadow: 0 0 20px rgba(138, 43, 226, 0.9), 0 0 30px rgba(138, 43, 226, 0.7), 0 0 40px rgba(138, 43, 226, 0.5);
-}
-
-.card.glow-blue:hover .card-wrapper img {
-  box-shadow: 0 0 20px rgba(23, 184, 237, 0.6), 0 0 30px rgba(107, 206, 239, 0.5), 0 0 40px rgba(84, 193, 230, 0.4);
-}
 
 .card-container {
   transform: rotateX(0deg) rotateY(0deg);
-  transform-style: preserve-3d;
 }
