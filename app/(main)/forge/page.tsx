@@ -169,8 +169,8 @@ export default function ForgePage() {
   );
 
   return (
-    <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0 h-full">
-      <BlurCard backgroundColor="rgb(255, 196, 168)" className="flex-1 min-h-0 flex flex-col min-w-0">
+    <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0 min-h-full">
+      <BlurCard backgroundColor="rgb(255, 196, 168)" className="flex flex-col min-w-0">
         <div className="flex flex-col gap-5 px-4 sm:px-6 pt-4 md:pt-6 pb-6 md:pb-8 flex-shrink-0 w-full text-left items-stretch">
           <div>
             <h2 className="text-xl md:text-2xl font-semibold leading-8 text-[var(--text-primary)]">Forge</h2>
