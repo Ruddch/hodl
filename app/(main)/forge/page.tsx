@@ -149,12 +149,11 @@ export default function ForgePage() {
     });
   }, [canBurnCommon, forgeCards, currentChainId, burnCards]);
 
-  const forgeImageCacheBust = firstCard?.user_card_id ?? 0;
-
   useEffect(() => {
-    if (!firstCard) return;
-    loadImageForCanvas(cardTextureUrl(firstCard), { bust: forgeImageCacheBust }).catch(() => {});
-  }, [firstCard, forgeImageCacheBust]);
+    forgeCards.forEach((card) => {
+      loadImageForCanvas(cardTextureUrl(card), { bust: card.user_card_id }).catch(() => {});
+    });
+  }, [forgeCards]);
 
   const showCommonBurn = Boolean(firstCard && isCommonRarity(firstCard));
 
@@ -222,7 +221,6 @@ export default function ForgePage() {
                 {showCommonBurn && firstCard && (
                   <ForgeInputsCommonBurn
                     cards={forgeCards}
-                    forgeImageCacheBust={forgeImageCacheBust}
                     burnPlaying={burnPlaying}
                     burnOverlayReady={burnOverlayReady}
                     burnTxLoading={burnTxLoading}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { ForgeSlotBox } from "@/components/forge/ForgeSlotBox";
 import { DustIcon } from "@/components/Icons";
@@ -18,7 +18,6 @@ function cardTextureUrl(card: UserCard): string {
 
 interface ForgeInputsCommonBurnProps {
   cards: UserCard[];
-  forgeImageCacheBust: number;
   burnPlaying: boolean;
   burnOverlayReady: boolean;
   burnTxLoading: boolean;
@@ -34,7 +33,6 @@ interface ForgeInputsCommonBurnProps {
 /** Common: сетка слотов (auto-fill + перенос строк), Burn/Reset, текст под кнопками */
 export function ForgeInputsCommonBurn({
   cards,
-  forgeImageCacheBust,
   burnPlaying,
   burnOverlayReady,
   burnTxLoading,
@@ -46,9 +44,32 @@ export function ForgeInputsCommonBurn({
   onBurnVisualReady,
   onBurnAnimationComplete,
 }: ForgeInputsCommonBurnProps) {
-  const firstCard = cards[0];
   const totalDust = FORGE_COMMON_BURN_DUST_REWARD * cards.length;
   const trailingEmptyIndex = cards.length;
+
+  const burnReadyCountRef = useRef(0);
+  const burnCompleteCountRef = useRef(0);
+
+  useEffect(() => {
+    if (burnPlaying) {
+      burnReadyCountRef.current = 0;
+      burnCompleteCountRef.current = 0;
+    }
+  }, [burnPlaying]);
+
+  const handleBurnSlotVisualReady = useCallback(() => {
+    burnReadyCountRef.current += 1;
+    if (burnReadyCountRef.current >= cards.length) {
+      onBurnVisualReady();
+    }
+  }, [cards.length, onBurnVisualReady]);
+
+  const handleBurnSlotComplete = useCallback(() => {
+    burnCompleteCountRef.current += 1;
+    if (burnCompleteCountRef.current >= cards.length) {
+      onBurnAnimationComplete();
+    }
+  }, [cards.length, onBurnAnimationComplete]);
 
   return (
     <>
@@ -74,17 +95,17 @@ export function ForgeInputsCommonBurn({
                   onOpenPicker={() => onOpenSlot(index)}
                   onClear={() => onClearSlot(index)}
                   clearLabel={cards.length === 1 ? "Clear forge" : "Remove"}
-                  visualEmpty={index === 0 && burnPlaying && burnOverlayReady}
+                  visualEmpty={burnPlaying && burnOverlayReady}
                 />
-                {index === 0 && burnPlaying && firstCard ? (
+                {burnPlaying ? (
                   <CardBurnAnimation
-                    key={firstCard.user_card_id}
-                    imageUrl={cardTextureUrl(firstCard)}
-                    imageCacheBust={forgeImageCacheBust}
+                    key={card.user_card_id}
+                    imageUrl={cardTextureUrl(card)}
+                    imageCacheBust={card.user_card_id}
                     active={burnPlaying}
                     overlay
-                    onBurnVisualReady={onBurnVisualReady}
-                    onComplete={onBurnAnimationComplete}
+                    onBurnVisualReady={handleBurnSlotVisualReady}
+                    onComplete={handleBurnSlotComplete}
                   />
                 ) : null}
               </div>
