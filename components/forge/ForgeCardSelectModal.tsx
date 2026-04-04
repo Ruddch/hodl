@@ -43,7 +43,7 @@ export function ForgeCardSelectModal({
   const excludeSet = useMemo(() => new Set(excludeUserCardIds), [excludeUserCardIds]);
 
   const cards = useMemo(() => {
-    let list = profile?.cards?.filter((c) => !c.is_locked && !excludeSet.has(c.user_card_id)) ?? [];
+    let list = profile?.cards?.filter((c) => c.status === "available" && !excludeSet.has(c.user_card_id)) ?? [];
     if (sameCardIdAs != null) {
       list = list.filter((c) => c.card_id === sameCardIdAs);
     }
