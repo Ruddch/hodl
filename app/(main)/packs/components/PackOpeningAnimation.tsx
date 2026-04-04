@@ -74,6 +74,13 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   const animationStartTimeRef = useRef<number | null>(null);
   const animationStartProgressRef = useRef<number>(ANGLE_AT_MAX);
   const animationStartDistanceRef = useRef<number>(ANGLE_AT_MAX);
+
+  // Refs для текущих значений progress/distance — позволяют читать актуальное
+  // значение без замыкания на state и обновлять DOM напрямую в RAF-петле.
+  const progressRef = useRef<number>(ANGLE_AT_MAX);
+  const distanceRef = useRef<number>(ANGLE_AT_MAX);
+  const glowParticlesRef = useRef<HTMLDivElement>(null);
+  const glowBacklightRef = useRef<HTMLDivElement>(null);
   
   // Вспомогательная функция для безопасного получения DOM элемента
   const getParallaxElement = useCallback(() => {
@@ -175,6 +182,8 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   const animateToEnd = useCallback(() => {
     const duration = 400;
     const target = packWidth;
+    const currentAngleSize = getAngleSize(packWidth);
+    const threshold = packWidth * 0.97;
 
     const animate = (currentTime: number) => {
       if (!animationStartTimeRef.current) {
@@ -185,23 +194,49 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
       const progressValue = Math.min(elapsed / duration, 1);
       const easedProgress = easeOutCubic(progressValue);
 
-      const currentProgressX = animationStartProgressRef.current + 
+      const currentProgressX = animationStartProgressRef.current +
         (target - animationStartProgressRef.current) * easedProgress;
-      const currentDistance = animationStartDistanceRef.current + 
+      const currentDistance = animationStartDistanceRef.current +
         (target - animationStartDistanceRef.current) * easedProgress;
 
-      setProgress({ x: currentProgressX });
-      setDistance(currentDistance);
-      
-      setMousePos(prev => ({ x: 1000, y: prev.y }));
+      // Обновляем refs без setState — нет React-ре-рендера на каждый кадр
+      progressRef.current = currentProgressX;
+      distanceRef.current = currentDistance;
+
+      // Ширина «верхней» части пака
+      if (topElementRef.current) {
+        topElementRef.current.style.width = `calc(100% - ${currentProgressX}px)`;
+      }
+
+      // Высота уголка
+      if (angleContainerRef.current) {
+        angleContainerRef.current.style.height =
+          `${Math.max(currentAngleSize, currentDistance - currentAngleSize)}px`;
+      }
+
+      // Прозрачность лучей свечения
+      const normalized = Math.max(
+        0,
+        Math.min(1, (currentDistance - currentAngleSize) / (target - currentAngleSize)),
+      );
+      const glowOpacity = String(1 - Math.pow(1 - normalized, 2));
+      if (glowParticlesRef.current) glowParticlesRef.current.style.opacity = glowOpacity;
+      if (glowBacklightRef.current) glowBacklightRef.current.style.opacity = glowOpacity;
+
+      // Класс pack-opened на свечениях при пересечении порога
+      if (currentDistance >= threshold) {
+        glowParticlesRef.current?.classList.add('pack-opened');
+        glowBacklightRef.current?.classList.add('pack-opened');
+      }
 
       if (progressValue < 1) {
         animationRafIdRef.current = requestAnimationFrame(animate);
       } else {
+        // Один React-ре-рендер в самом конце анимации
         setPackOpened(true);
         setProgress({ x: target });
         setDistance(target);
-        
+
         animationStartTimeRef.current = null;
         animationRafIdRef.current = null;
       }
@@ -247,6 +282,8 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
         const newDistance = Math.min(maxDist, Math.max(minDist, relativeZ / (2 * Math.cos(alpha))));
         const newProgressX = Math.min(maxDist, Math.max(minDist, relativeX));
 
+        progressRef.current = newProgressX;
+        distanceRef.current = newDistance;
         setMousePos({ x: relativeX, y: relativeY });
         setProgress({ x: newProgressX });
         setDistance(newDistance);
@@ -285,12 +322,12 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
       rafIdRef.current = null;
     }
 
-    animationStartProgressRef.current = progress.x;
-    animationStartDistanceRef.current = distance;
+    animationStartProgressRef.current = progressRef.current;
+    animationStartDistanceRef.current = distanceRef.current;
     animationStartTimeRef.current = null;
 
     animateToEnd();
-  }, [isDragging, progress.x, distance, animateToEnd]);
+  }, [isDragging, animateToEnd]);
   
   // Открытие пака по кнопке / Space
   const triggerOpenPack = useCallback(() => {
@@ -310,11 +347,11 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
       setMousePos({ x: rect.left, y: rect.top });
     }
 
-    animationStartProgressRef.current = progress.x;
-    animationStartDistanceRef.current = distance;
+    animationStartProgressRef.current = progressRef.current;
+    animationStartDistanceRef.current = distanceRef.current;
     animationStartTimeRef.current = null;
     animateToEnd();
-  }, [packOpened, isDragging, progress.x, distance, animateToEnd, getParallaxElement]);
+  }, [packOpened, isDragging, animateToEnd, getParallaxElement]);
 
   // Обработчик клика для переворота карточки
   const handleCardFlip = useCallback((index: number) => {
@@ -358,6 +395,8 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   // Сброс progress/distance при ресайзе, если пак закрыт
   useEffect(() => {
     if (!packOpened && !isDragging) {
+      progressRef.current = angleSize;
+      distanceRef.current = angleSize;
       setProgress({ x: angleSize });
       setDistance(angleSize);
     }
@@ -460,6 +499,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
           })}
         </div>
         <div 
+          ref={glowParticlesRef}
           style={{ opacity: glowRaysOpacity }} 
           className={`glow-backlight-particles ${distance >= openThreshold && !isDragging ? 'pack-opened' : ''}`}
         >
@@ -473,6 +513,7 @@ export const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
           <div className="backlight-particle backlight-particle-8"></div>
         </div>
         <div 
+          ref={glowBacklightRef}
           style={{ opacity: glowRaysOpacity }} 
           className={`glow-backlight ${distance >= openThreshold && !isDragging ? 'pack-opened' : ''}`}
         >
