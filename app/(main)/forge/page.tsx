@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { useAccount } from "wagmi";
 import { BlurCard } from "@/components/BlurCard";
-import { ForgeCardSelectModal } from "@/components/ForgeCardSelectModal";
+import { ForgeCardSelectModal } from "@/components/forge/ForgeCardSelectModal";
 import { Toast } from "@/components/Toast";
 import { ForgeInputsInitial } from "@/components/forge/ForgeInputsInitial";
 import { ForgeInputsCommonBurn } from "@/components/forge/ForgeInputsCommonBurn";

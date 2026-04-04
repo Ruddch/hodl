@@ -666,6 +666,7 @@ export interface UserCard {
   acquired_at: string;
   expires_at?: string | null;
   is_locked: boolean;
+  status: "locked" | "available" | "expired";
   /** Сеть NFT-карты (для prepare burn и т.п.) */
   chain_id?: number;
 }
