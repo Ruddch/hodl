@@ -20,7 +20,7 @@ interface MainLayoutProps {
 function MainLayoutInner({ children, title }: MainLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { showWelcome, closeWelcome } = useWelcomeModal();
-  const { showModal: showTournamentResult, entry: tournamentResultEntry, close: closeTournamentResult } = useTournamentResultModal();
+  const { showModal: showTournamentResult, entries: tournamentResultEntries, close: closeTournamentResult } = useTournamentResultModal();
   const { isConnected } = useAccount();
   const [welcomeJustClosed, setWelcomeJustClosed] = useState(false);
 
@@ -119,9 +119,9 @@ function MainLayoutInner({ children, title }: MainLayoutProps) {
       {showWelcome && isConnected === false && <WelcomeModal onClose={handleWelcomeClose} />}
 
       {/* Модалка результатов последнего завершённого турнира */}
-      {showTournamentResult && tournamentResultEntry && (
+      {showTournamentResult && tournamentResultEntries && tournamentResultEntries.length > 0 && (
         <TournamentResultModal
-          entry={tournamentResultEntry}
+          entries={tournamentResultEntries}
           onClose={closeTournamentResult}
         />
       )}

@@ -7,6 +7,7 @@ import {
   orderedPrizeKeys,
   type PrizeLike,
 } from "@/lib/prize-rewards";
+import { DustIcon } from "@/components/Icons";
 
 const PACK_IMG = "/packs.png";
 
@@ -43,9 +44,12 @@ function PrizeSegment({
   }
 
   if (prizeKey === "dust") {
+    const dustIconClass =
+      size === "sm" ? "h-4 w-4 shrink-0" : "h-5 w-5 shrink-0";
     return (
-      <span>
-        {amount} dust
+      <span className="inline-flex items-center gap-1" title="Dust">
+        <span>{amount}</span>
+        <DustIcon className={dustIconClass} />
       </span>
     );
   }

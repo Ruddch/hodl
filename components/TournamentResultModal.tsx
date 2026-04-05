@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { useMyTournaments, useClaimTournamentRewards } from "@/lib/api";
 import { BlurCard } from "@/components/BlurCard";
 import { PrizeRewardsDisplay } from "@/components/PrizeRewardsDisplay";
+import { flattenDeckPrizes } from "@/lib/prize-rewards";
 import type { MyTournamentEntry } from "@/lib/types";
 
 const STORAGE_KEY_PREFIX = "hodleague_tournament_result_seen_";
@@ -28,23 +29,45 @@ function getTournamentName(entry: MyTournamentEntry): string {
   return `${month.charAt(0).toUpperCase() + month.slice(1)} fire`;
 }
 
+/** API возвращает отдельную запись на каждую колоду; группируем по tournament_id. */
+function groupFinishedEntriesByTournament(
+  tournaments: MyTournamentEntry[]
+): Map<number, MyTournamentEntry[]> {
+  const map = new Map<number, MyTournamentEntry[]>();
+  for (const t of tournaments) {
+    if (t.status !== "finished") continue;
+    const list = map.get(t.tournament_id) ?? [];
+    list.push(t);
+    map.set(t.tournament_id, list);
+  }
+  return map;
+}
+
+function entriesHaveUnclaimedRewards(entries: MyTournamentEntry[]): boolean {
+  return entries.some((e) => hasUnclaimedRewards(e));
+}
+
 export function useTournamentResultModal() {
   const { isAuthenticated, signedWalletAddress } = useAuth();
   const { data } = useMyTournaments(isAuthenticated);
   const [showModal, setShowModal] = useState(false);
-  const [entry, setEntry] = useState<MyTournamentEntry | null>(null);
+  const [entries, setEntries] = useState<MyTournamentEntry[] | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || !signedWalletAddress || !data?.tournaments) return;
 
     const timer = requestAnimationFrame(() => {
-      const latest = [...data.tournaments]
-        .filter((t) => t.status === "finished" && hasUnclaimedRewards(t))
-        .sort(
-          (a, b) =>
-            new Date(b.end_date).getTime() - new Date(a.end_date).getTime()
-        )[0];
+      const byTournament = groupFinishedEntriesByTournament(data.tournaments);
+      const candidates = [...byTournament.entries()]
+        .filter(([, group]) => entriesHaveUnclaimedRewards(group))
+        .map(([tournamentId, group]) => ({
+          tournamentId,
+          group,
+          end: new Date(group[0].end_date).getTime(),
+        }))
+        .sort((a, b) => b.end - a.end);
 
+      const latest = candidates[0];
       if (!latest) return;
 
       const key = getSeenKey(signedWalletAddress);
@@ -55,8 +78,9 @@ export function useTournamentResultModal() {
         seen = [];
       }
 
-      if (!seen.includes(latest.tournament_id)) {
-        setEntry(latest);
+      if (!seen.includes(latest.tournamentId)) {
+        latest.group.sort((a, b) => a.deck_id - b.deck_id);
+        setEntries(latest.group);
         setShowModal(true);
       }
     });
@@ -65,7 +89,8 @@ export function useTournamentResultModal() {
   }, [isAuthenticated, signedWalletAddress, data]);
 
   const close = useCallback(() => {
-    if (entry && signedWalletAddress) {
+    if (entries?.length && signedWalletAddress) {
+      const tournamentId = entries[0].tournament_id;
       const key = getSeenKey(signedWalletAddress);
       let seen: number[] = [];
       try {
@@ -73,26 +98,26 @@ export function useTournamentResultModal() {
       } catch {
         seen = [];
       }
-      if (!seen.includes(entry.tournament_id)) {
+      if (!seen.includes(tournamentId)) {
         localStorage.setItem(
           key,
-          JSON.stringify([...seen, entry.tournament_id])
+          JSON.stringify([...seen, tournamentId])
         );
       }
     }
     setShowModal(false);
-  }, [entry, signedWalletAddress]);
+  }, [entries, signedWalletAddress]);
 
-  return { showModal, entry, close };
+  return { showModal, entries, close };
 }
 
 interface TournamentResultModalProps {
-  entry: MyTournamentEntry;
+  entries: MyTournamentEntry[];
   onClose: () => void;
 }
 
 export function TournamentResultModal({
-  entry,
+  entries,
   onClose,
 }: TournamentResultModalProps) {
   const claimMutation = useClaimTournamentRewards();
@@ -110,12 +135,17 @@ export function TournamentResultModal({
     };
   }, []);
 
-  const canClaim = hasUnclaimedRewards(entry);
-  const tournamentName = getTournamentName(entry);
+  const primary = entries[0];
+  const mergedPrizes = useMemo(
+    () => flattenDeckPrizes(entries),
+    [entries]
+  );
+  const canClaim = entries.some((e) => hasUnclaimedRewards(e));
+  const tournamentName = getTournamentName(primary);
 
   const handleClaim = async () => {
     try {
-      await claimMutation.mutateAsync(entry.tournament_id);
+      await claimMutation.mutateAsync(primary.tournament_id);
       setClosingAfterSuccess(true);
       closeAfterClaimTimerRef.current = setTimeout(() => {
         closeAfterClaimTimerRef.current = null;
@@ -160,7 +190,7 @@ export function TournamentResultModal({
               style={{ fontFamily: "var(--font-instrument-sans), sans-serif" }}
             >
               Congrats! Your prize{" "}
-              <PrizeRewardsDisplay prizes={entry.prizes} size="md" className="align-middle" />
+              <PrizeRewardsDisplay prizes={mergedPrizes} size="md" className="align-middle" />
             </h2>
             <p
               className="text-sm md:text-base font-normal leading-6 md:leading-8 tracking-normal text-[var(--text-secondary)]"
