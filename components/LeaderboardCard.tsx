@@ -149,12 +149,15 @@ export function LeaderboardCard({
     return [myPosition, ...entries];
   }, [entries, myPosition]);
 
-  // Фильтруем записи по поисковому запросу
+  // Фильтруем записи по поисковому запросу. При поиске не используем entriesWithMyPosition:
+  // закрепление «моей» лучшей колоды сверху дублирует ту же строку в выдаче.
   const filteredEntries = useMemo(() => {
-    if (!searchQuery.trim()) return entriesWithMyPosition;
+    const trimmed = searchQuery.trim();
+    const source = trimmed ? entries : entriesWithMyPosition;
+    if (!trimmed) return source;
 
-    const query = searchQuery.toLowerCase().trim();
-    return entriesWithMyPosition.filter((entry) => {
+    const query = trimmed.toLowerCase();
+    return source.filter((entry) => {
       // Поиск по nickname
       if (entry.nickname?.toLowerCase().includes(query)) return true;
       // Поиск по адресу кошелька
@@ -163,7 +166,7 @@ export function LeaderboardCard({
       if (String(entry.user_id).includes(query)) return true;
       return false;
     });
-  }, [entriesWithMyPosition, searchQuery]);
+  }, [entries, entriesWithMyPosition, searchQuery]);
 
   return (
     <BlurCard backgroundColor="rgb(193, 238, 170)" className={`${height === "full" ? "h-full flex flex-col" : ""} min-w-0`}>
