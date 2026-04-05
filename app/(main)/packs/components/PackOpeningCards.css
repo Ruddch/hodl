@@ -412,6 +412,15 @@
   transition: box-shadow 0.3s ease;
 }
 
+.card-back img {
+  filter: blur(20px) grayscale(1);
+}
+
+.card-wrapper.rotated .card-back img {
+  filter: none;
+  transition: filter 375ms ease-out;
+}
+
 
 .card-container {
   transform: rotateX(0deg) rotateY(0deg);
