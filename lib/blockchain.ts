@@ -68,6 +68,16 @@ export function getPackOpenerAddress(chainId: number): `0x${string}` | undefined
   return IS_DEVELOPMENT ? PACK_OPENER_UAT[chainId] : PACK_OPENER_PROD[chainId];
 }
 
+/** Адреса контракта CardUpgrader (burn + on-chain roll) по цепочкам. */
+const CARD_UPGRADER_PROD: Record<number, `0x${string}`> = {
+  [CHAIN_ID_ABSTRACT]:  "0x69BeBEA84e5e9EeD2387A0Ce7a837e68fbCBd798",
+  [CHAIN_ID_AVALANCHE]: "0x535E14273E0bbD53E914D45015ea41008370a356",
+};
+
+export function getCardUpgraderAddress(chainId: number): `0x${string}` | undefined {
+  return CARD_UPGRADER_PROD[chainId];
+}
+
 export type PreferredNetwork = "abstract" | "avalanche";
 
 const PREFERRED_NETWORK_TO_CHAIN_ID: Record<PreferredNetwork, SupportedChainId> = {

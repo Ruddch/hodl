@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
+import { useAccount } from "wagmi";
 import { ForgeSlotBox } from "@/components/forge/ForgeSlotBox";
 import { ForgeCardSelectModal } from "@/components/forge/ForgeCardSelectModal";
 import { ForgeSpinOverlay } from "@/components/forge/ForgeSpinOverlay";
 import type { UserCard } from "@/lib/types";
+import { useCardUpgrade } from "@/lib/hooks/useCardUpgrade";
+
+const MIN_ANIM_MS = 5000;
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -14,8 +18,8 @@ const MAX_CARDS = 5;
 const UPGRADE_PROBABILITIES: Record<number, number> = {
   0: 0,
   1: 0.10,
-  2: 0.30,
-  3: 0.50,
+  2: 0.35,
+  3: 0.55,
   4: 0.75,
   5: 1.00,
 };
@@ -25,15 +29,42 @@ type UpgradePhase = "idle" | "spinning" | "done";
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export function ForgeUpgrade() {
+  const { chainId: walletChainId } = useAccount();
+
   const [cards,            setCards]            = useState<UserCard[]>([]);
   const [upgradePhase,     setUpgradePhase]     = useState<UpgradePhase>("idle");
   const [upgradeResult,    setUpgradeResult]    = useState<"success" | "failure" | null>(null);
+  const [nextCardImageUrl, setNextCardImageUrl] = useState<string | undefined>(undefined);
+  const [upgradeError,     setUpgradeError]     = useState<string | null>(null);
   const [pickingSlotIndex, setPickingSlotIndex] = useState(0);
   const [pickOpen,         setPickOpen]         = useState(false);
 
-  const firstCard   = cards[0] ?? null;
-  const probability = UPGRADE_PROBABILITIES[Math.min(cards.length, MAX_CARDS)] ?? 0;
-  const canUpgrade  = cards.length >= 1 && upgradePhase === "idle";
+  const firstCard        = cards[0] ?? null;
+  const probability      = UPGRADE_PROBABILITIES[Math.min(cards.length, MAX_CARDS)] ?? 0;
+  const animStartedAtRef = useRef<number | null>(null);
+
+  const { startUpgrade, step: upgradeStep, isLoading: upgradeLoading, reset: resetUpgrade } = useCardUpgrade({
+    onPrepared: (data) => {
+      setNextCardImageUrl(data.outcome_card_image_url);
+    },
+    onTxSubmitted: () => {
+      animStartedAtRef.current = Date.now();
+      setUpgradePhase("spinning");
+    },
+    onSuccess: (result) => {
+      const elapsed   = animStartedAtRef.current != null ? Date.now() - animStartedAtRef.current : MIN_ANIM_MS;
+      const remaining = Math.max(0, MIN_ANIM_MS - elapsed);
+      setTimeout(() => {
+        setUpgradeResult(result.roll_success ? "success" : "failure");
+      }, remaining);
+    },
+    onError: (err) => {
+      setUpgradePhase("idle");
+      setUpgradeError(err.message);
+    },
+  });
+
+  const canUpgrade = cards.length >= 2 && upgradePhase === "idle" && !upgradeLoading;
 
   const excludeIds = useMemo(
     () => cards.filter((_, i) => i !== pickingSlotIndex).map((c) => c.user_card_id),
@@ -69,27 +100,40 @@ export function ForgeUpgrade() {
   );
 
   const handleReset = useCallback(() => {
+    resetUpgrade();
     setCards([]);
     setUpgradePhase("idle");
     setUpgradeResult(null);
-  }, []);
+    setNextCardImageUrl(undefined);
+    setUpgradeError(null);
+    animStartedAtRef.current = null;
+  }, [resetUpgrade]);
 
-  const handleUpgrade = useCallback(() => {
-    if (!canUpgrade) return;
-    // Start animation immediately — result arrives later (from API in production).
+  const handleUpgrade = useCallback(async () => {
+    if (!canUpgrade || !firstCard) return;
+
+    const chainId = firstCard.chain_id ?? walletChainId;
+    if (!chainId) {
+      setUpgradeError("Unable to detect network. Please connect your wallet.");
+      return;
+    }
+
     setUpgradeResult(null);
-    setUpgradePhase("spinning");
-    // TODO: replace with a real API call; call setUpgradeResult() on response
-    const result = Math.random() < probability ? "success" : "failure";
-    setTimeout(() => setUpgradeResult(result), 12500 + Math.random() * 2500);
-  }, [canUpgrade, probability]);
+    setNextCardImageUrl(undefined);
+    setUpgradeError(null);
+
+    await startUpgrade({
+      user_card_ids: cards.map((c) => c.user_card_id),
+      chain_id: chainId,
+    });
+  }, [canUpgrade, firstCard, walletChainId, cards, startUpgrade]);
 
   const handleSpinComplete = useCallback(() => setUpgradePhase("done"), []);
 
   return (
     <>
       <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-6 max-w-lg">
-        Select 1 to 5 cards of the same token and rarity. The more cards you add,
+        Select 2 to 5 cards of the same token and rarity. The more cards you add,
         the higher your chance of a successful upgrade.
       </p>
 
@@ -146,7 +190,7 @@ export function ForgeUpgrade() {
 
         {/* Probability step indicators */}
         <div className="mt-6 flex gap-2 flex-wrap">
-          {([1, 2, 3, 4, 5] as const).map((n) => {
+          {([2, 3, 4, 5] as const).map((n) => {
             const p      = UPGRADE_PROBABILITIES[n];
             const active = cards.length >= n;
             return (
@@ -179,13 +223,15 @@ export function ForgeUpgrade() {
             className="py-2.5 px-8 rounded-[15px] text-sm font-medium text-white bg-[var(--primary)] hover:opacity-90 transition-opacity shadow-[0px_4px_12px_0px_rgba(74,106,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
             data-ph-capture-attribute-button="forge-upgrade"
           >
-            Upgrade
+            {upgradeStep === "preparing" ? "Preparing…"
+              : upgradeStep === "signing" ? "Sign in wallet…"
+              : "Upgrade"}
           </button>
           {cards.length > 0 && (
             <button
               type="button"
               onClick={handleReset}
-              disabled={upgradePhase !== "idle"}
+              disabled={upgradePhase !== "idle" || upgradeLoading}
               className="py-2.5 px-6 rounded-[15px] text-sm font-medium border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               data-ph-capture-attribute-button="forge-upgrade-reset"
             >
@@ -195,14 +241,18 @@ export function ForgeUpgrade() {
         </div>
       </div>
 
+      {/* Upgrade error */}
+      {upgradeError && upgradePhase === "idle" && (
+        <p className="mt-4 text-sm text-red-400">{upgradeError}</p>
+      )}
+
       {/* Upgrade animation overlay */}
       {(upgradePhase === "spinning" || upgradePhase === "done") && (
         <ForgeSpinOverlay
           result={upgradeResult}
           probability={probability}
           cards={cards}
-          // TODO: replace with the real next-rarity card URL from the API
-          nextCardImageUrl="https://cdn-uat.hodleague.com/card_renders/card_62_1775617213.webp"
+          nextCardImageUrl={nextCardImageUrl}
           onSpinComplete={handleSpinComplete}
           onClose={handleReset}
         />
