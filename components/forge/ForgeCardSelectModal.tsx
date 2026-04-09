@@ -21,6 +21,12 @@ interface ForgeCardSelectModalProps {
   /** Оставить карты с той же эффективной сетью: `card.chain_id ?? walletChainId` */
   matchChainId?: number;
   walletChainId?: number;
+  /** Фильтр по токену (Upgrade: только одинаковый token_symbol) */
+  matchTokenSymbol?: string;
+  /** Фильтр по редкости (Upgrade: только одинаковая rarity_name) */
+  matchRarityName?: string;
+  /** Исключить карты с этими редкостями */
+  excludeRarityNames?: string[];
   title?: string;
   subtitle?: string;
 }
@@ -34,6 +40,9 @@ export function ForgeCardSelectModal({
   commonOnly = false,
   matchChainId,
   walletChainId,
+  matchTokenSymbol,
+  matchRarityName,
+  excludeRarityNames,
   title = "Placeholder title",
   subtitle = "Placeholder subtitle.",
 }: ForgeCardSelectModalProps) {
@@ -53,13 +62,25 @@ export function ForgeCardSelectModal({
     if (matchChainId != null) {
       list = list.filter((c) => (c.chain_id ?? walletChainId) === matchChainId);
     }
+    if (matchTokenSymbol != null) {
+      const sym = matchTokenSymbol.toLowerCase();
+      list = list.filter((c) => c.token_symbol.toLowerCase() === sym);
+    }
+    if (matchRarityName != null) {
+      const rar = matchRarityName.trim().toLowerCase();
+      list = list.filter((c) => c.rarity_name.trim().toLowerCase() === rar);
+    }
+    if (excludeRarityNames != null && excludeRarityNames.length > 0) {
+      const excluded = new Set(excludeRarityNames.map((r) => r.trim().toLowerCase()));
+      list = list.filter((c) => !excluded.has(c.rarity_name.trim().toLowerCase()));
+    }
     if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase().trim();
     return list.filter(
       (c) =>
         c.token_name.toLowerCase().includes(q) || c.token_symbol.toLowerCase().includes(q)
     );
-  }, [profile?.cards, searchQuery, sameCardIdAs, excludeSet, commonOnly, matchChainId, walletChainId]);
+  }, [profile?.cards, searchQuery, sameCardIdAs, excludeSet, commonOnly, matchChainId, walletChainId, matchTokenSymbol, matchRarityName, excludeRarityNames]);
 
   useEffect(() => {
     if (!open) setSearchQuery("");

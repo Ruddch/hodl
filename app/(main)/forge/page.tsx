@@ -7,6 +7,7 @@ import { ForgeCardSelectModal } from "@/components/forge/ForgeCardSelectModal";
 import { Toast } from "@/components/Toast";
 import { ForgeInputsInitial } from "@/components/forge/ForgeInputsInitial";
 import { ForgeInputsCommonBurn } from "@/components/forge/ForgeInputsCommonBurn";
+import { ForgeUpgrade } from "@/components/forge/ForgeUpgrade";
 import type { UserCard } from "@/lib/types";
 import { useCardBurn } from "@/lib/hooks/useCardBurn";
 import {
@@ -33,10 +34,12 @@ const forgeTabSoonButtonClass =
 const forgeTabActiveButtonClass =
   "p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[0_1px_1px_0_rgba(0,0,0,0.09),_0_1px_1px_0_rgba(0,0,0,0.05),_0_2px_1px_0_rgba(0,0,0,0.01)]";
 
+const forgeTabInactiveButtonClass =
+  "p-2 sm:p-[12px] rounded-[10px] text-[14px] sm:text-[16px] font-normal leading-none tracking-normal text-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer";
+
 export default function ForgePage() {
   const { chainId: currentChainId } = useAccount();
-  /** Сейчас доступна только вкладка Burn; Swap / Upgrade — soon */
-  const forgeTab: ForgeTab = "burn";
+  const [forgeTab, setForgeTab] = useState<ForgeTab>("burn");
   /** Выбранные карты по порядку слотов; первая задаёт режим common / non-common */
   const [forgeCards, setForgeCards] = useState<UserCard[]>([]);
   const [pickingSlotIndex, setPickingSlotIndex] = useState(0);
@@ -179,9 +182,10 @@ export default function ForgePage() {
           <div className="flex flex-wrap gap-[1px] rounded-[16px] p-2 w-fit bg-[var(--input-bg)]">
             <button
               type="button"
-              aria-current="page"
+              onClick={() => setForgeTab("burn")}
+              aria-current={forgeTab === "burn" ? "page" : undefined}
               data-ph-capture-attribute-button="forge-tab-burn"
-              className={forgeTabActiveButtonClass}
+              className={forgeTab === "burn" ? forgeTabActiveButtonClass : forgeTabInactiveButtonClass}
             >
               Burn
             </button>
@@ -199,15 +203,12 @@ export default function ForgePage() {
             </button>
             <button
               type="button"
-              disabled
-              aria-disabled
+              onClick={() => setForgeTab("upgrade")}
+              aria-current={forgeTab === "upgrade" ? "page" : undefined}
               data-ph-capture-attribute-button="forge-tab-upgrade"
-              className={forgeTabSoonButtonClass}
+              className={forgeTab === "upgrade" ? forgeTabActiveButtonClass : forgeTabInactiveButtonClass}
             >
-              <span>Upgrade</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--text-muted)]">
-                soon
-              </span>
+              Upgrade
             </button>
           </div>
 
@@ -235,6 +236,8 @@ export default function ForgePage() {
                 )}
               </>
             )}
+
+            {forgeTab === "upgrade" && <ForgeUpgrade />}
           </div>
         </div>
       </BlurCard>
