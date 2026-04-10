@@ -198,9 +198,9 @@ export function ForgeUpgrade() {
                 key={n}
                 className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-[10px] border text-xs transition-all duration-200"
                 style={{
-                  borderColor: active ? "var(--primary)" : "var(--border)",
-                  background:  active ? "rgba(34,0,239,0.07)" : "transparent",
-                  color:       active ? "var(--primary)" : "var(--text-muted)",
+                  borderColor: active ? "var(--primary)" : "rgba(255,255,255,0.18)",
+                  background:  active ? "rgba(99,102,241,0.18)" : "rgba(255,255,255,0.05)",
+                  color:       active ? "#a5b4fc" : "rgba(255,255,255,0.65)",
                 }}
               >
                 <span className="font-bold text-[13px] tabular-nums">

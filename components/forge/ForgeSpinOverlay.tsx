@@ -76,7 +76,7 @@ const CARD_ASPECT = 567 / 889;
 /** Initial fast rise from bottom to the fight zone */
 const APPROACH_MS  = 1100;
 /** Minimum fighting time before the result is allowed to trigger resolving */
-const MIN_FIGHT_MS = 600;
+const MIN_FIGHT_MS = 7500;
 /** Final resolution durations */
 const RESOLVE_S_MS = 950;
 const RESOLVE_F_MS = 700;
@@ -125,6 +125,7 @@ export function ForgeSpinOverlay({
   const [burnActive,    setBurnActive]    = useState(false);
   const [canvasFading,  setCanvasFading]  = useState(false);
   const [burnGeom,      setBurnGeom]      = useState<{ left: number; top: number; width: number } | null>(null);
+  const [cardBottomY,   setCardBottomY]   = useState<number | null>(null);
 
   // Refs that cross into the RAF loop
   const resultRef      = useRef(result);
@@ -326,9 +327,13 @@ export function ForgeSpinOverlay({
           a.linePhase = "done";
           cbRef.current();
           if (isS) {
-            setTimeout(() => setResultVisible(true), 350);
+            setTimeout(() => {
+              setCardBottomY(a.cy + a.ch);
+              setResultVisible(true);
+            }, 350);
           } else {
             setTimeout(() => {
+              setCardBottomY(a.cy + a.ch);
               setBurnGeom({ left: a.cx, top: a.cy, width: a.cw });
               setBurnScene("burning");
             }, 200);
@@ -551,8 +556,9 @@ export function ForgeSpinOverlay({
       {/* Success UI */}
       {isSuccess && (
         <div
-          className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-4 pb-14 px-6"
+          className="absolute left-0 right-0 flex flex-col items-center gap-4 pt-6 px-6"
           style={{
+            top:        cardBottomY ?? undefined,
             opacity:    resultVisible ? 1 : 0,
             transform:  resultVisible ? "translateY(0)" : "translateY(20px)",
             transition: "opacity 0.55s ease, transform 0.55s ease",
@@ -567,10 +573,10 @@ export function ForgeSpinOverlay({
               letterSpacing: "0.06em",
             }}
           >
-            YOU WON!
+            SUCCESS
           </p>
           <p className="text-sm text-white/55 text-center leading-relaxed">
-            Your card has been upgraded successfully.
+            Your card has been upgraded.
           </p>
           <button
             type="button"
@@ -610,8 +616,9 @@ export function ForgeSpinOverlay({
           </div>
 
           <div
-            className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-4 pb-14 px-6"
+            className="absolute left-0 right-0 flex flex-col items-center gap-4 pt-6 px-6"
             style={{
+              top:        cardBottomY ?? undefined,
               opacity:    burnScene === "burnt" ? 1 : 0,
               transform:  burnScene === "burnt" ? "translateY(0)" : "translateY(12px)",
               transition: "opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s",
@@ -626,7 +633,7 @@ export function ForgeSpinOverlay({
                 letterSpacing: "0.06em",
               }}
             >
-              FAILED!
+              FAILED
             </p>
             <p className="text-sm text-white/55 text-center leading-relaxed">
               Better luck next time.
