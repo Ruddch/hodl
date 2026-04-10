@@ -44,6 +44,10 @@ import type {
   PrepareCardBurnResponse,
   ConfirmCardBurnRequest,
   ConfirmCardBurnResponse,
+  PrepareCardUpgradeRequest,
+  PrepareCardUpgradeResponse,
+  ConfirmCardUpgradeRequest,
+  ConfirmCardUpgradeResponse,
 } from "./types";
 import { API_BASE_URL } from "./constants";
 
@@ -422,6 +426,21 @@ export async function confirmCardBurn(data: ConfirmCardBurnRequest): Promise<Con
   });
 }
 
+// ==================== Card upgrade API ====================
+export async function prepareCardUpgrade(data: PrepareCardUpgradeRequest): Promise<PrepareCardUpgradeResponse> {
+  return fetchApi("/api/cards/upgrade/prepare", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function confirmCardUpgrade(data: ConfirmCardUpgradeRequest): Promise<ConfirmCardUpgradeResponse> {
+  return fetchApi("/api/cards/upgrade/confirm", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 // ==================== Alpha Test API ====================
 export async function checkAlphaTestAccess(walletAddress: string): Promise<AlphaTestCheckResponse> {
   return fetchApi(`/api/alpha-test/check/${walletAddress}`);
@@ -785,6 +804,24 @@ export function useConfirmCardBurn() {
 
   return useMutation({
     mutationFn: (data: ConfirmCardBurnRequest) => confirmCardBurn(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    },
+  });
+}
+
+export function usePrepareCardUpgrade() {
+  return useMutation({
+    mutationFn: (data: PrepareCardUpgradeRequest) => prepareCardUpgrade(data),
+  });
+}
+
+export function useConfirmCardUpgrade() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: ConfirmCardUpgradeRequest) => confirmCardUpgrade(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myProfile"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });

@@ -595,6 +595,41 @@ export interface ConfirmCardBurnResponse {
   message?: string;
 }
 
+// ==================== Card upgrade (forge) ====================
+export interface PrepareCardUpgradeRequest {
+  user_card_ids: number[];
+  chain_id: number;
+}
+
+export interface PrepareCardUpgradeResponse {
+  user_card_ids: number[];
+  /** uint256 token ids — строки для сохранения точности */
+  token_ids: string[];
+  outcome_card_id: number;
+  outcome_card_image_url: string;
+  salt: string;
+  nonce: string | number;
+  deadline: string | number;
+  signature: string;
+  chain_id: number;
+  upgrader_contract: string;
+  success_threshold_percent: number;
+}
+
+export interface ConfirmCardUpgradeRequest {
+  tx_hash: string;
+  chain_id: number;
+}
+
+export interface ConfirmCardUpgradeResponse {
+  status: string;
+  roll_success: boolean;
+  outcome_card_id: number;
+  new_nft_token_id: string | null;
+  burned_count: number;
+  outcome_card_image_url: string;
+}
+
 // ==================== Users ====================
 export interface MyTournamentCard {
   user_card_id: number;
