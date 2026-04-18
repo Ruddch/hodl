@@ -42,7 +42,6 @@ export default function ForgePage() {
   const [forgeTab, setForgeTab] = useState<ForgeTab>("burn");
   /** Выбранные карты по порядку слотов; первая задаёт режим common / non-common */
   const [forgeCards, setForgeCards] = useState<UserCard[]>([]);
-  const [pickingSlotIndex, setPickingSlotIndex] = useState(0);
   const [pickOpen, setPickOpen] = useState(false);
   const [burnPlaying, setBurnPlaying] = useState(false);
   const [burnOverlayReady, setBurnOverlayReady] = useState(false);
@@ -88,8 +87,7 @@ export default function ForgePage() {
     );
   }, [forgeCards, recipe, currentChainId]);
 
-  const openPickerForSlot = useCallback((slotIndex: number) => {
-    setPickingSlotIndex(slotIndex);
+  const openPicker = useCallback(() => {
     setPickOpen(true);
   }, []);
 
@@ -101,18 +99,22 @@ export default function ForgePage() {
     setForgeCards((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleSelectCard = useCallback(
-    (card: UserCard) => {
-      setForgeCards((prev) => {
-        if (pickingSlotIndex < prev.length) {
-          const next = [...prev];
-          next[pickingSlotIndex] = card;
-          return next;
-        }
-        return [...prev, card];
-      });
+  const handleBurnMultiToggle = useCallback((card: UserCard) => {
+    setForgeCards((prev) => {
+      const isSelected = prev.some((c) => c.user_card_id === card.user_card_id);
+      if (isSelected) return prev.filter((c) => c.user_card_id !== card.user_card_id);
+      return [...prev, card];
+    });
+  }, []);
+
+  // Returns true if card is incompatible with the first burn card's chain
+  const burnMultiDisabled = useCallback(
+    (card: UserCard): boolean => {
+      if (!firstCard) return false;
+      const refChain = firstCard.chain_id ?? currentChainId;
+      return (card.chain_id ?? currentChainId) !== refChain;
     },
-    [pickingSlotIndex]
+    [firstCard, currentChainId],
   );
 
   const handleBurnAnimationComplete = useCallback(() => {
@@ -160,15 +162,9 @@ export default function ForgePage() {
 
   const showCommonBurn = Boolean(firstCard && isCommonRarity(firstCard));
 
-  const modalCommonOnly = forgeTab === "burn";
-  const modalMatchChainId =
-    forgeTab === "burn" && forgeCards.length > 0 && firstCard
-      ? effectiveChainId(firstCard, currentChainId)
-      : undefined;
-
-  const modalExcludeIds = useMemo(
-    () => forgeCards.filter((_, i) => i !== pickingSlotIndex).map((c) => c.user_card_id),
-    [forgeCards, pickingSlotIndex]
+  const burnSelectedIds = useMemo(
+    () => forgeCards.map((c) => c.user_card_id),
+    [forgeCards],
   );
 
   return (
@@ -216,7 +212,7 @@ export default function ForgePage() {
             {forgeTab === "burn" && (
               <>
                 {forgeCards.length === 0 && (
-                  <ForgeInputsInitial onOpenPicker={() => openPickerForSlot(0)} />
+                  <ForgeInputsInitial onOpenPicker={openPicker} />
                 )}
 
                 {showCommonBurn && firstCard && (
@@ -226,7 +222,7 @@ export default function ForgePage() {
                     burnOverlayReady={burnOverlayReady}
                     burnTxLoading={burnTxLoading}
                     canBurn={canBurnCommon}
-                    onOpenSlot={openPickerForSlot}
+                    onOpenSlot={() => openPicker()}
                     onClearSlot={clearSlot}
                     onResetAll={clearAll}
                     onBurn={handleBurn}
@@ -245,13 +241,14 @@ export default function ForgePage() {
       <ForgeCardSelectModal
         open={pickOpen}
         onClose={() => setPickOpen(false)}
-        onSelect={handleSelectCard}
-        excludeUserCardIds={modalExcludeIds}
-        commonOnly={modalCommonOnly}
-        matchChainId={modalMatchChainId}
+        multiSelect
+        multiSelectedIds={burnSelectedIds}
+        onMultiToggle={handleBurnMultiToggle}
+        multiDisabled={burnMultiDisabled}
+        commonOnly
         walletChainId={currentChainId}
-        title="Select a common card"
-        subtitle={`Only commons can be burned here. Each card grants ${FORGE_COMMON_BURN_DUST_REWARD} dust when burned.`}
+        title="Select cards to burn"
+        subtitle={`Only commons can be burned. Each card grants ${FORGE_COMMON_BURN_DUST_REWARD} dust.`}
       />
 
       <Toast

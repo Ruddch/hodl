@@ -36,11 +36,10 @@ export function ForgeUpgrade() {
   const [upgradeResult,    setUpgradeResult]    = useState<"success" | "failure" | null>(null);
   const [nextCardImageUrl, setNextCardImageUrl] = useState<string | undefined>(undefined);
   const [upgradeError,     setUpgradeError]     = useState<string | null>(null);
-  const [pickingSlotIndex, setPickingSlotIndex] = useState(0);
   const [pickOpen,         setPickOpen]         = useState(false);
 
-  const firstCard        = cards[0] ?? null;
-  const probability      = UPGRADE_PROBABILITIES[Math.min(cards.length, MAX_CARDS)] ?? 0;
+  const firstCard   = cards[0] ?? null;
+  const probability = UPGRADE_PROBABILITIES[Math.min(cards.length, MAX_CARDS)] ?? 0;
   const animStartedAtRef = useRef<number | null>(null);
 
   const { startUpgrade, step: upgradeStep, isLoading: upgradeLoading, reset: resetUpgrade } = useCardUpgrade({
@@ -66,38 +65,34 @@ export function ForgeUpgrade() {
 
   const canUpgrade = cards.length >= 2 && upgradePhase === "idle" && !upgradeLoading;
 
-  const excludeIds = useMemo(
-    () => cards.filter((_, i) => i !== pickingSlotIndex).map((c) => c.user_card_id),
-    [cards, pickingSlotIndex],
-  );
-
-  const openPicker = useCallback((slotIndex: number) => {
-    setPickingSlotIndex(slotIndex);
-    setPickOpen(true);
-  }, []);
-
-  const handleSelectCard = useCallback(
-    (card: UserCard) => {
-      setCards((prev) => {
-        const next = [...prev];
-        if (pickingSlotIndex < next.length) {
-          // Replacing slot 0 with a different token/rarity resets the whole list
-          if (
-            pickingSlotIndex === 0 &&
-            (card.token_symbol !== prev[0]?.token_symbol ||
-              card.rarity_name.trim().toLowerCase() !== prev[0]?.rarity_name.trim().toLowerCase())
-          ) {
-            return [card];
-          }
-          next[pickingSlotIndex] = card;
-        } else {
-          next.push(card);
-        }
-        return next;
-      });
+  // Returns true if a card is incompatible with the current selection
+  // (different token or rarity from the first selected card)
+  const multiDisabled = useCallback(
+    (card: UserCard): boolean => {
+      if (!firstCard) return false;
+      return (
+        card.token_symbol.toLowerCase() !== firstCard.token_symbol.toLowerCase() ||
+        card.rarity_name.trim().toLowerCase() !== firstCard.rarity_name.trim().toLowerCase()
+      );
     },
-    [pickingSlotIndex],
+    [firstCard],
   );
+
+  const multiSelectedIds = useMemo(
+    () => cards.map((c) => c.user_card_id),
+    [cards],
+  );
+
+  const handleMultiToggle = useCallback((card: UserCard) => {
+    setCards((prev) => {
+      const isSelected = prev.some((c) => c.user_card_id === card.user_card_id);
+      if (isSelected) {
+        return prev.filter((c) => c.user_card_id !== card.user_card_id);
+      }
+      if (prev.length >= MAX_CARDS) return prev;
+      return [...prev, card];
+    });
+  }, []);
 
   const handleReset = useCallback(() => {
     resetUpgrade();
@@ -168,7 +163,7 @@ export function ForgeUpgrade() {
               key={card.user_card_id}
               filled={card}
               emptyLabel={`Slot ${idx + 1}`}
-              onOpenPicker={() => openPicker(idx)}
+              onOpenPicker={() => setPickOpen(true)}
               onClear={() =>
                 setCards((p) => {
                   const next = p.filter((_, i) => i !== idx);
@@ -182,7 +177,7 @@ export function ForgeUpgrade() {
             <ForgeSlotBox
               filled={null}
               emptyLabel={`Slot ${cards.length + 1}`}
-              onOpenPicker={() => openPicker(cards.length)}
+              onOpenPicker={() => setPickOpen(true)}
               clearLabel=""
             />
           )}
@@ -258,20 +253,22 @@ export function ForgeUpgrade() {
         />
       )}
 
-      {/* Card picker modal */}
+      {/* Card picker modal — multi-select */}
       <ForgeCardSelectModal
         open={pickOpen}
         onClose={() => setPickOpen(false)}
-        onSelect={handleSelectCard}
-        excludeUserCardIds={excludeIds}
+        multiSelect
+        multiSelectedIds={multiSelectedIds}
+        onMultiToggle={handleMultiToggle}
+        maxMultiSelect={MAX_CARDS}
+        multiDisabled={multiDisabled}
         excludeRarityNames={["legendary"]}
-        matchTokenSymbol={pickingSlotIndex > 0 ? firstCard?.token_symbol : undefined}
-        matchRarityName={pickingSlotIndex > 0 ? firstCard?.rarity_name : undefined}
-        title="Select a card"
+        minCopiesRequired={cards.length === 0 ? 2 : undefined}
+        title="Select cards to upgrade"
         subtitle={
-          pickingSlotIndex === 0 || !firstCard
-            ? "Choose any card — subsequent slots will match its token and rarity."
-            : `Only ${firstCard.token_symbol} · ${firstCard.rarity_name} cards allowed here.`
+          !firstCard
+            ? "Choose any card to start — others will be filtered to the same token and rarity."
+            : `Only ${firstCard.token_symbol} · ${firstCard.rarity_name} cards are compatible.`
         }
       />
     </>
