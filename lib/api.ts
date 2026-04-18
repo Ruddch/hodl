@@ -235,6 +235,7 @@ export async function getTournamentDetails(
 export interface GetLeaderboardParams {
   page?: number;
   limit?: number;
+  search?: string;
 }
 
 export async function getTournamentLeaderboard(
@@ -244,7 +245,8 @@ export async function getTournamentLeaderboard(
   const searchParams = new URLSearchParams();
   if (params.page) searchParams.set("page", String(params.page));
   if (params.limit) searchParams.set("limit", String(params.limit));
-  
+  if (params.search) searchParams.set("search", params.search);
+
   const query = searchParams.toString();
   return fetchApi(`/api/tournaments/${tournamentId}/leaderboard${query ? `?${query}` : ""}`);
 }
@@ -601,12 +603,13 @@ const LEADERBOARD_PAGE_SIZE = 50;
 
 export function useTournamentLeaderboardInfinite(
   tournamentId: number | undefined,
+  params: { search?: string } = {},
   options?: { refetchInterval?: number }
 ) {
   return useInfiniteQuery({
-    queryKey: ["leaderboard", tournamentId, "infinite"],
+    queryKey: ["leaderboard", tournamentId, "infinite", params.search ?? ""],
     queryFn: ({ pageParam }) =>
-      getTournamentLeaderboard(tournamentId!, { page: pageParam, limit: LEADERBOARD_PAGE_SIZE }),
+      getTournamentLeaderboard(tournamentId!, { page: pageParam, limit: LEADERBOARD_PAGE_SIZE, search: params.search }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => (lastPage.has_next ? lastPage.page + 1 : undefined),
     enabled: !!tournamentId,

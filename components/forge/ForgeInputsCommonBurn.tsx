@@ -22,7 +22,7 @@ interface ForgeInputsCommonBurnProps {
   burnOverlayReady: boolean;
   burnTxLoading: boolean;
   canBurn: boolean;
-  onOpenSlot: (slotIndex: number) => void;
+  onOpenSlot: () => void;
   onClearSlot: (slotIndex: number) => void;
   onResetAll: () => void;
   onBurn: () => void;
@@ -92,7 +92,7 @@ export function ForgeInputsCommonBurn({
                 <ForgeSlotBox
                   filled={card}
                   emptyLabel={`Slot ${index + 1}`}
-                  onOpenPicker={() => onOpenSlot(index)}
+                  onOpenPicker={onOpenSlot}
                   onClear={() => onClearSlot(index)}
                   clearLabel={cards.length === 1 ? "Clear forge" : "Remove"}
                   visualEmpty={burnPlaying && burnOverlayReady}
@@ -116,7 +116,7 @@ export function ForgeInputsCommonBurn({
             <ForgeSlotBox
               filled={null}
               emptyLabel={`Slot ${trailingEmptyIndex + 1}`}
-              onOpenPicker={() => onOpenSlot(trailingEmptyIndex)}
+              onOpenPicker={onOpenSlot}
               clearLabel="Clear forge"
             />
           </div>

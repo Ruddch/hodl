@@ -418,7 +418,7 @@
 
 .card-wrapper.rotated .card-back img {
   filter: none;
-  transition: filter 375ms ease-out;
+  transition: none;
 }
 
 

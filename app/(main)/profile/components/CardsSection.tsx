@@ -29,8 +29,19 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [selectedCardInfo, setSelectedCardInfo] = useState<{ imageUrl?: string | null; name?: string } | null>(null);
 
-  // Отображаем все карты поштучно, не скрывая дубликаты
-  const visibleCards = cards;
+  const RARITY_ORDER: Record<string, number> = {
+    legendary: 0,
+    epic:      1,
+    rare:      2,
+    common:    3,
+  };
+
+  // Отображаем все карты поштучно, не скрывая дубликаты; сортируем от легендарных к обычным
+  const visibleCards = [...cards].sort((a, b) => {
+    const ra = RARITY_ORDER[a.rarity_name?.trim().toLowerCase()] ?? 99;
+    const rb = RARITY_ORDER[b.rarity_name?.trim().toLowerCase()] ?? 99;
+    return ra - rb;
+  });
   const expiresAt = cards[0]?.expires_at;
   const expiresLabel = expiresAt
     ? new Date(expiresAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
@@ -108,7 +119,7 @@ export function CardsSection({ profile, activeTab, onTabChange, showTournamentSt
                     "data-ph-capture-attribute-button": "profile-card-view",
                     onClick: handleClick,
                     onKeyDown: handleKeyDown,
-                    className: "relative rounded-2xl overflow-hidden border border-[var(--border-subtle)] shadow-sm cursor-pointer",
+                    className: "relative rounded-xl overflow-hidden shadow-sm cursor-pointer",
                     style: { background: "var(--profile-card-bg)" } as React.CSSProperties,
                   };
 
