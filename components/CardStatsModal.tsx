@@ -107,6 +107,13 @@ function formatWeekLabel(dateStr: string): string {
   }
 }
 
+const RARITY_COLORS: Record<string, string> = {
+  legendary: "rgb(255, 195, 110)",
+  epic:      "rgb(175, 145, 205)",
+  rare:      "rgb(105, 176, 237)",
+  common:    "rgb(200, 210, 220)",
+};
+
 type ChartMode = "price" | "score" | "weight";
 
 function StatChart({
@@ -250,6 +257,7 @@ export function CardStatsModal({
   cardId,
   cardImageUrl,
   cardName,
+  cardRarity,
 }: CardStatsModalProps) {
   const [chartMode, setChartMode] = useState<ChartMode>("score");
   const { data: cardDetails, isLoading: cardLoading, error: cardError } = useCardDetails(cardId ?? undefined);
@@ -263,8 +271,8 @@ export function CardStatsModal({
   const currentWeight = cardDetails?.token_weight;
   const calculatedScore = cardDetails?.calculated_score;
   const marketCap = cardDetails?.market_cap;
-  const rarityName = cardDetails?.rarity_name;
-  const rarityColor = cardDetails?.rarity_color;
+  const rarityName = cardDetails?.rarity_name ?? cardRarity;
+  const rarityColor = RARITY_COLORS[rarityName?.trim().toLowerCase() ?? ""] ?? null;
   const displayImage = cardDetails?.rendered_image_url ?? cardImageUrl;
   const displayName = cardDetails?.token_name ?? cardName;
 
@@ -345,7 +353,7 @@ export function CardStatsModal({
                 <div className="flex-shrink-0 w-full sm:w-[230px] flex flex-row sm:flex-col items-end sm:items-start gap-3 sm:gap-0 sm:items-center">
                   {displayImage && (
                     <div
-                      className="relative rounded-[14px] overflow-hidden shrink-0 w-[45%] sm:w-full sm:mb-4"
+                      className="relative shrink-0 w-[45%] sm:w-full sm:mb-4"
                       style={{
                         aspectRatio: CARD_ASPECT_RATIO,
                         boxShadow:
@@ -362,12 +370,22 @@ export function CardStatsModal({
                   <div className="flex flex-col flex-1 min-w-0 sm:w-full text-[14px] sm:text-[14px] leading-7 sm:leading-8 font-normal">
                     <div className="flex justify-between items-center">
                       <span className="text-[var(--text-secondary)]">Rarity</span>
-                      <span
-                        className="text-right font-medium"
-                        style={{ color: rarityColor ?? "inherit" }}
-                      >
-                        {rarityName ?? "—"}
-                      </span>
+                      {rarityName ? (
+                        <span
+                          className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold tracking-wide capitalize"
+                          style={{
+                            color: rarityColor ?? "var(--text-primary)",
+                            border: `1px solid ${rarityColor ?? "var(--border)"}`,
+                            backgroundColor: rarityColor
+                              ? `color-mix(in srgb, ${rarityColor} 15%, transparent)`
+                              : "transparent",
+                          }}
+                        >
+                          {rarityName}
+                        </span>
+                      ) : (
+                        <span className="text-[var(--text-primary)]">—</span>
+                      )}
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-[var(--text-secondary)]">Score</span>

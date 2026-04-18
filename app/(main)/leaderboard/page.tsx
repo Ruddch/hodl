@@ -5,7 +5,16 @@ import { useTournamentSelector } from "@/lib/hooks/useTournamentSelector";
 import { LeaderboardCard, LeaderboardTableSkeleton } from "@/components/LeaderboardCard";
 import { TournamentFilters } from "@/components/tournament";
 import { BlurCard } from "@/components/BlurCard";
-import { useMemo, Suspense } from "react";
+import { useMemo, useState, useEffect, useCallback, Suspense } from "react";
+
+function useDebounce(value: string, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
 
 function LeaderboardPageContent() {
   const selector = useTournamentSelector({ defaultStrategy: "finished" });
@@ -20,15 +29,24 @@ function LeaderboardPageContent() {
     onSelectTournament,
   } = selector;
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
   const {
     data: leaderboardData,
     isLoading: leaderboardLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useTournamentLeaderboardInfinite(currentTournamentId ?? undefined, {
-    refetchInterval: 5 * 60 * 1000,
-  });
+  } = useTournamentLeaderboardInfinite(
+    currentTournamentId ?? undefined,
+    { search: debouncedSearch || undefined },
+    { refetchInterval: debouncedSearch ? undefined : 5 * 60 * 1000 },
+  );
 
   const allEntries = useMemo(() => {
     if (!leaderboardData?.pages) return [];
@@ -64,11 +82,12 @@ function LeaderboardPageContent() {
         height="full"
         isLoading={isLoading}
         emptyMessage={!selectedTournament ? "No tournaments available" : "No participants yet"}
-        myPosition={myPosition}
+        myPosition={debouncedSearch ? undefined : myPosition}
         tournamentId={selectedTournament?.id}
         onLoadMore={hasNextPage ? () => fetchNextPage() : undefined}
         hasMore={!!hasNextPage}
         isLoadingMore={isFetchingNextPage}
+        onSearchChange={handleSearchChange}
       />
     </div>
   );

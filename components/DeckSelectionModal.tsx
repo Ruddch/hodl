@@ -168,7 +168,7 @@ export function DeckSelectionModal({
       if (slot.mode === "locked") return false;
       const card = slot.card;
       if (selectedCards.some((c) => c.user_card_id === card.user_card_id)) return true;
-      if (selectedCards.some((c) => c.card_id === card.card_id)) return false;
+      if (selectedCards.some((c) => c.token_symbol === card.token_symbol)) return false;
       if (selectedCards.length >= DECK_SIZE) return false;
       if (card.token_weight > remainingWeight) return false;
       return true;
@@ -184,7 +184,7 @@ export function DeckSelectionModal({
         const isSelected = prev.some((c) => c.user_card_id === card.user_card_id);
         if (isSelected) return prev.filter((c) => c.user_card_id !== card.user_card_id);
         if (prev.length >= DECK_SIZE) return prev;
-        if (prev.some((c) => c.card_id === card.card_id)) return prev;
+        if (prev.some((c) => c.token_symbol === card.token_symbol)) return prev;
         const rw = tournament.weight_limit - prev.reduce((s, c) => s + c.token_weight, 0);
         if (card.token_weight > rw) return prev;
         return [...prev, card];
@@ -330,7 +330,7 @@ export function DeckSelectionModal({
                       const duplicateCardType =
                         !isSelected &&
                         !lockedInOtherDeck &&
-                        selectedCards.some((c) => c.card_id === card.card_id);
+                        selectedCards.some((c) => c.token_symbol === card.token_symbol);
 
                       return (
                         <button

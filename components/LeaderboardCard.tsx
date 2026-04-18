@@ -108,6 +108,8 @@ interface LeaderboardCardProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  /** Если передан — поиск серверный: вызываем callback вместо клиентской фильтрации */
+  onSearchChange?: (query: string) => void;
 }
 
 export function LeaderboardCard({
@@ -123,6 +125,7 @@ export function LeaderboardCard({
   onLoadMore,
   hasMore = false,
   isLoadingMore = false,
+  onSearchChange,
 }: LeaderboardCardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [deckModalOpen, setDeckModalOpen] = useState(false);
@@ -135,38 +138,38 @@ export function LeaderboardCard({
     }
   }, []);
 
-  // Добавляем позицию пользователя в начало списка, если она есть и не первая
-  const entriesWithMyPosition = useMemo(() => {
-    if (!myPosition || myPosition.position === 1) {
-      return entries;
-    }
-    // Проверяем, нет ли уже этой записи в начале списка
-    const firstEntry = entries[0];
-    if (firstEntry && firstEntry.user_id === myPosition.user_id) {
-      return entries;
-    }
-    // Добавляем myPosition в начало
-    return [myPosition, ...entries];
-  }, [entries, myPosition]);
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    onSearchChange?.(query);
+  }, [onSearchChange]);
 
-  // Фильтруем записи по поисковому запросу. При поиске не используем entriesWithMyPosition:
-  // закрепление «моей» лучшей колоды сверху дублирует ту же строку в выдаче.
+  // Когда поиск серверный (onSearchChange передан) — отдаём записи без клиентской фильтрации.
+  // Когда поиск клиентский — фильтруем локально.
+  const entriesWithMyPosition = useMemo(() => {
+    if (onSearchChange) return entries; // серверный поиск — myPosition не закрепляем при поиске
+    if (!myPosition || myPosition.position === 1) return entries;
+    const firstEntry = entries[0];
+    if (firstEntry && firstEntry.user_id === myPosition.user_id) return entries;
+    return [myPosition, ...entries];
+  }, [entries, myPosition, onSearchChange]);
+
   const filteredEntries = useMemo(() => {
+    // Серверный поиск — фильтрацию делает бек
+    if (onSearchChange) return entriesWithMyPosition;
+
+    // Клиентская фильтрация (для превью-карточки без пагинации)
     const trimmed = searchQuery.trim();
     const source = trimmed ? entries : entriesWithMyPosition;
     if (!trimmed) return source;
 
     const query = trimmed.toLowerCase();
     return source.filter((entry) => {
-      // Поиск по nickname
       if (entry.nickname?.toLowerCase().includes(query)) return true;
-      // Поиск по адресу кошелька
       if (entry.wallet_address?.toLowerCase().includes(query)) return true;
-      // Поиск по user_id
       if (String(entry.user_id).includes(query)) return true;
       return false;
     });
-  }, [entries, entriesWithMyPosition, searchQuery]);
+  }, [entries, entriesWithMyPosition, searchQuery, onSearchChange]);
 
   return (
     <BlurCard backgroundColor="rgb(193, 238, 170)" className={`${height === "full" ? "h-full flex flex-col" : ""} min-w-0`}>
@@ -185,7 +188,7 @@ export function LeaderboardCard({
         {showSearch && (
           <SearchInput
             value={searchQuery}
-            onChange={setSearchQuery}
+            onChange={handleSearchChange}
             placeholder="Search by username or wallet address"
             className="flex items-center w-full md:w-[396px] shrink-0"
             dataPhCaptureAttributeButton="search-leaderboard"

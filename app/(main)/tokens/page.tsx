@@ -7,13 +7,7 @@ import type { TokenWithRate } from "@/lib/types";
 import { BlurCard } from "@/components/BlurCard";
 import { DropdownSelect } from "@/components/DropdownSelect";
 import { SearchInput } from "@/components/SearchInput";
-
-function formatPrice(price: number): string {
-  if (price >= 1) return price.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-  if (price >= 0.01) return price.toLocaleString("en-US", { maximumFractionDigits: 4, minimumFractionDigits: 2 });
-  if (price >= 0.0001) return price.toLocaleString("en-US", { maximumFractionDigits: 6, minimumFractionDigits: 4 });
-  return price.toExponential(2);
-}
+import { formatPrice } from "@/lib/formatPrice";
 
 function formatMarketCap(cap: number): string {
   if (cap >= 1e9) return `$${(cap / 1e9).toFixed(1)}B`;
