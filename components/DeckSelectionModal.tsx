@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect, useId } from "react";
 import { useVirtualizer, measureElement } from "@tanstack/react-virtual";
 import { useMyProfile } from "@/lib/api";
+import { AiDeckFillButton } from "@/components/AiDeckFillButton";
 import type { UserCard, Tournament, MyDeckEntry } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { SearchInput } from "@/components/SearchInput";
@@ -18,6 +19,7 @@ interface DeckSelectionModalProps {
 
 const DECK_SIZE = 5;
 const ROW_HEIGHT_ESTIMATE = 300; // грубая оценка, measureElement скорректирует
+
 
 /** user_card_id из профиля vs card_id (число в API) */
 function collectCardsUsedInOtherDecks(
@@ -202,6 +204,17 @@ export function DeckSelectionModal({
   const resetSelection = useCallback(() => {
     setSelectedCards([]);
   }, []);
+
+  // Карты доступные для AI-автозаполнения (без поискового фильтра)
+  const availableCards = useMemo(
+    () =>
+      (profile?.cards ?? []).filter(
+        (card) =>
+          !card.is_locked &&
+          !isCardLockedInOtherDeck(card, usedUserCardIds, usedCardIds)
+      ),
+    [profile?.cards, usedUserCardIds, usedCardIds]
+  );
 
   // Название турнира
   const tournamentName = useMemo(() => {
@@ -474,6 +487,13 @@ export function DeckSelectionModal({
                 </defs>
               </svg>
             </button>
+            {/* Кнопка AI-автозаполнения колоды (ff: ff_ai_deck_fill) */}
+            <AiDeckFillButton
+              availableCards={availableCards}
+              weightLimit={tournament.weight_limit}
+              onFill={setSelectedCards}
+              disabled={isLoading}
+            />
           </div>
 
           {/* Footer content */}
