@@ -158,7 +158,7 @@ export interface Tournament {
 
 /** Сеть, в которой пользователь зарегистрировал колоду (приходит в include_deck=true) */
 export interface MyRegistrationNetwork {
-  network: "abstract" | "avalanche";
+  network: "abstract" | "avalanche" | "base";
   chain_id: number;
   contract_address: string;
 }
@@ -403,7 +403,7 @@ export interface DeckValidateResponse {
   cards: CardInDeckResponse[];
   message: string;
   /** Рекомендуемая сеть для регистрации (бэкенд выбирает по балансу газа) */
-  preferred_network?: "abstract" | "avalanche";
+  preferred_network?: "abstract" | "avalanche" | "base";
   /** Информация о балансе по блокчейнам (если бэкенд её возвращает) */
   chain_balances?: ChainBalanceInfo[];
 }
@@ -412,7 +412,7 @@ export interface DeckRegisterRequest {
   deck_composition: number[];
   tx_hash: string;
   /** Название сети, в которой происходила регистрация */
-  network?: "abstract" | "avalanche";
+  network?: "abstract" | "avalanche" | "base";
 }
 
 export interface DeckRegisterResponse {
@@ -429,7 +429,7 @@ export interface DeckUnregisterRequest {
   deck_id: number;
   tx_hash: string;
   /** Название сети, в которой происходила отмена регистрации */
-  network?: "abstract" | "avalanche";
+  network?: "abstract" | "avalanche" | "base";
 }
 
 export interface DeckUnregisterResponse {
