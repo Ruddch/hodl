@@ -1,5 +1,5 @@
 import { createConfig, http } from "wagmi";
-import { abstract, avalanche, avalancheFuji } from "wagmi/chains";
+import { abstract, avalanche, avalancheFuji, base } from "wagmi/chains";
 import { injected } from "wagmi/connectors";
 import { createClient } from "viem";
 import { eip712WalletActions } from "viem/zksync";
@@ -8,7 +8,7 @@ import { IS_AVAX } from "./constants";
 
 const chains = IS_AVAX
   ? ([avalanche, avalancheFuji] as const)
-  : ([abstract, avalanche, avalancheFuji] as const);
+  : ([abstract, avalanche, avalancheFuji, base] as const);
 
 const connectors = IS_AVAX
   ? [injected()]

@@ -6,29 +6,34 @@
 
 import { abstract } from "wagmi/chains";
 import { avalanche } from "wagmi/chains";
+import { base } from "wagmi/chains";
 import { IS_AVAX, IS_DEVELOPMENT } from "./constants";
 
 export const CHAIN_ABSTRACT = abstract;
 export const CHAIN_AVALANCHE = avalanche;
+export const CHAIN_BASE = base;
 
 /** ID блокчейнов */
 export const CHAIN_ID_ABSTRACT = abstract.id; // 2741
 export const CHAIN_ID_AVALANCHE = avalanche.id; // 43114
+export const CHAIN_ID_BASE = base.id; // 8453
 
 /** Дефолтная цепочка (для fallback). В режиме AVAX — Fuji для регистрации в турнирах */
 export const DEFAULT_CHAIN_ID = IS_AVAX ? CHAIN_ID_AVALANCHE : CHAIN_ID_ABSTRACT;
 
 /** Поддерживаемые цепочки для регистрации в турнирах */
-export const SUPPORTED_REGISTRATION_CHAINS = ([CHAIN_ABSTRACT, CHAIN_AVALANCHE] as const);
+export const SUPPORTED_REGISTRATION_CHAINS = ([CHAIN_ABSTRACT, CHAIN_AVALANCHE, CHAIN_BASE] as const);
 
 export type SupportedChainId =
   | typeof CHAIN_ID_ABSTRACT
-  | typeof CHAIN_ID_AVALANCHE;
+  | typeof CHAIN_ID_AVALANCHE
+  | typeof CHAIN_ID_BASE;
 
 /** Production — mainnet-деплои */
 const TOURNAMENT_REGISTRY_PROD: Record<number, `0x${string}`> = {
   [CHAIN_ID_ABSTRACT]: "0x658817E2a14538BC4d5a4452586d56eb28340493",
   [CHAIN_ID_AVALANCHE]: "0x658817E2a14538BC4d5a4452586d56eb28340493",
+  [CHAIN_ID_BASE]: "0xf2A080bC06e2d2a00D6e665DCFf4d717316F0578",
 };
 
 /**
@@ -37,6 +42,7 @@ const TOURNAMENT_REGISTRY_PROD: Record<number, `0x${string}`> = {
 const TOURNAMENT_REGISTRY_UAT: Record<number, `0x${string}`> = {
   [CHAIN_ID_ABSTRACT]: "0x1B95b5E48FacD5c825EC706bd8EE4380b5E3cBbd",
   [CHAIN_ID_AVALANCHE]: "0xb637d4D74c03580f649D7E6DaC4873E06B314a3C",
+  [CHAIN_ID_BASE]: "0xf2A080bC06e2d2a00D6e665DCFf4d717316F0578",
 };
 
 /** Получить адрес контракта для chainId */
@@ -46,7 +52,7 @@ export function getTournamentRegistryAddress(chainId: number): `0x${string}` | u
 
 export function isChainSupported(chainId: number): boolean {
   if (IS_AVAX) return chainId === CHAIN_ID_AVALANCHE;
-  if (IS_DEVELOPMENT) return chainId === CHAIN_ID_ABSTRACT || chainId === CHAIN_ID_AVALANCHE;
+  if (IS_DEVELOPMENT) return chainId === CHAIN_ID_ABSTRACT || chainId === CHAIN_ID_AVALANCHE || chainId === CHAIN_ID_BASE;
   return chainId in TOURNAMENT_REGISTRY_PROD;
 }
 
@@ -57,11 +63,13 @@ export function isChainSupported(chainId: number): boolean {
 const PACK_OPENER_PROD: Record<number, `0x${string}`> = {
   [CHAIN_ID_ABSTRACT]: "0x424b8D42b645D26d687B675B5753543D882c73E5",
   [CHAIN_ID_AVALANCHE]: "0x424b8D42b645D26d687B675B5753543D882c73E5",
+  [CHAIN_ID_BASE]: "0x0101C2AcAfA69933aD3Bcb450ED8f19115f990C1",
 };
 
 const PACK_OPENER_UAT: Record<number, `0x${string}`> = {
   [CHAIN_ID_ABSTRACT]: "0x88f735241AeAEfC83e753355fEb522Eaf4B4Fc60",
   [CHAIN_ID_AVALANCHE]: "0xf4c848d9C00832B564353493c11C97A757F2eE10",
+  [CHAIN_ID_BASE]: "0x0101C2AcAfA69933aD3Bcb450ED8f19115f990C1",
 };
 
 export function getPackOpenerAddress(chainId: number): `0x${string}` | undefined {
@@ -72,17 +80,19 @@ export function getPackOpenerAddress(chainId: number): `0x${string}` | undefined
 const CARD_UPGRADER_PROD: Record<number, `0x${string}`> = {
   [CHAIN_ID_ABSTRACT]:  "0x69BeBEA84e5e9EeD2387A0Ce7a837e68fbCBd798",
   [CHAIN_ID_AVALANCHE]: "0x535E14273E0bbD53E914D45015ea41008370a356",
+  [CHAIN_ID_BASE]:      "0xDA1159a56c8F35d124dCbD62c94373eba26A1302",
 };
 
 export function getCardUpgraderAddress(chainId: number): `0x${string}` | undefined {
   return CARD_UPGRADER_PROD[chainId];
 }
 
-export type PreferredNetwork = "abstract" | "avalanche";
+export type PreferredNetwork = "abstract" | "avalanche" | "base";
 
 const PREFERRED_NETWORK_TO_CHAIN_ID: Record<PreferredNetwork, SupportedChainId> = {
-  avalanche: CHAIN_ID_AVALANCHE,
   abstract: CHAIN_ID_ABSTRACT,
+  avalanche: CHAIN_ID_AVALANCHE,
+  base: CHAIN_ID_BASE,
 };
 
 /** Получить chainId по preferred_network */
@@ -94,5 +104,6 @@ export function getChainIdFromPreferredNetwork(network: PreferredNetwork): Suppo
 export function getNetworkFromChainId(chainId: number): PreferredNetwork | undefined {
   if (chainId === CHAIN_ID_ABSTRACT) return "abstract";
   if (chainId === CHAIN_ID_AVALANCHE) return "avalanche";
+  if (chainId === CHAIN_ID_BASE) return "base";
   return undefined;
 }
