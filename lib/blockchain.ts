@@ -63,7 +63,7 @@ export function isChainSupported(chainId: number): boolean {
 const PACK_OPENER_PROD: Record<number, `0x${string}`> = {
   [CHAIN_ID_ABSTRACT]: "0x424b8D42b645D26d687B675B5753543D882c73E5",
   [CHAIN_ID_AVALANCHE]: "0x424b8D42b645D26d687B675B5753543D882c73E5",
-  [CHAIN_ID_BASE]: "0x0101C2AcAfA69933aD3Bcb450ED8f19115f990C1",
+  [CHAIN_ID_BASE]: "0x658817E2a14538BC4d5a4452586d56eb28340493",
 };
 
 const PACK_OPENER_UAT: Record<number, `0x${string}`> = {
