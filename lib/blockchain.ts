@@ -33,7 +33,7 @@ export type SupportedChainId =
 const TOURNAMENT_REGISTRY_PROD: Record<number, `0x${string}`> = {
   [CHAIN_ID_ABSTRACT]: "0x658817E2a14538BC4d5a4452586d56eb28340493",
   [CHAIN_ID_AVALANCHE]: "0x658817E2a14538BC4d5a4452586d56eb28340493",
-  [CHAIN_ID_BASE]: "0xf2A080bC06e2d2a00D6e665DCFf4d717316F0578",
+  [CHAIN_ID_BASE]: "0x7A96dA20D7360B9b9A93fd921C52C8016eb01fD0",
 };
 
 /**
@@ -63,7 +63,7 @@ export function isChainSupported(chainId: number): boolean {
 const PACK_OPENER_PROD: Record<number, `0x${string}`> = {
   [CHAIN_ID_ABSTRACT]: "0x424b8D42b645D26d687B675B5753543D882c73E5",
   [CHAIN_ID_AVALANCHE]: "0x424b8D42b645D26d687B675B5753543D882c73E5",
-  [CHAIN_ID_BASE]: "0x0101C2AcAfA69933aD3Bcb450ED8f19115f990C1",
+  [CHAIN_ID_BASE]: "0x658817E2a14538BC4d5a4452586d56eb28340493",
 };
 
 const PACK_OPENER_UAT: Record<number, `0x${string}`> = {
@@ -80,7 +80,7 @@ export function getPackOpenerAddress(chainId: number): `0x${string}` | undefined
 const CARD_UPGRADER_PROD: Record<number, `0x${string}`> = {
   [CHAIN_ID_ABSTRACT]:  "0x69BeBEA84e5e9EeD2387A0Ce7a837e68fbCBd798",
   [CHAIN_ID_AVALANCHE]: "0x535E14273E0bbD53E914D45015ea41008370a356",
-  [CHAIN_ID_BASE]:      "0xDA1159a56c8F35d124dCbD62c94373eba26A1302",
+  [CHAIN_ID_BASE]:      "0xE3Cdd342cBF2A669127f3ab966DD87fA34033632",
 };
 
 export function getCardUpgraderAddress(chainId: number): `0x${string}` | undefined {
