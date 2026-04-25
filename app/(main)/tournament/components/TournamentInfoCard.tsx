@@ -107,7 +107,7 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
       <div className="absolute right-0 top-0 bottom-0 w-[35%] sm:w-[50%] overflow-hidden rounded-r-[16px]">
         <div className="absolute inset-0 z-10" style={{ background: `linear-gradient(to left, transparent, transparent 50%, var(--tournament-card-accent))` }} />
         <Image 
-          src={"https://back.hodleague.com/static/card_templates/tournament_background_classic_common_20260120_215329.png"}
+          src={"https://cdn.hodleague.com/card_templates/tournament_classic_common_20260425_131412.png"}
           alt="Tournament background"
           fill
           className="object-cover object-right"

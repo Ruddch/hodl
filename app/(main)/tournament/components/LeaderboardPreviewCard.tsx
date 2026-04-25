@@ -31,7 +31,7 @@ function LeaderboardEmpty() {
         {/* Изображение пьедестала */}
         <div className="mb-0">
           <Image
-            src={"https://back.hodleague.com/static/card_templates/leaderboard_classic_common_20260120_215412.png"}
+            src={"https://cdn.hodleague.com/card_templates/leaderboard_classic_common_20260425_131412.png"}
             alt="Podium"
             width={376}
             height={195}
