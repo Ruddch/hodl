@@ -357,3 +357,14 @@ canvas.forge-burn-gl.is-burning {
   filter: drop-shadow(0 0 40px rgba(255, 120, 0, 0.55)) drop-shadow(0 0 60px rgba(255, 50, 0, 0.25));
 }
 
+/* Скрыть полосу прокрутки, скролл колесом/тачем сохраняется */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+

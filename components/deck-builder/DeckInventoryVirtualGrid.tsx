@@ -282,7 +282,7 @@ export function DeckInventoryVirtualGrid({
   return (
     <div
       ref={parentRef}
-      className={`flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6 ${scrollClassName}`.trim()}
+      className={`hide-scrollbar flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6 ${scrollClassName}`.trim()}
       style={{ minHeight: "280px" }}
     >
       {isLoading ? (

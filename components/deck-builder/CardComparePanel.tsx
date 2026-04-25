@@ -557,7 +557,7 @@ export function CardComparePanel({
 
   if (mobileSection === "stats") {
     return (
-      <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto p-4 pb-32">
+      <div className="hide-scrollbar flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto p-4 pb-32">
         {statsGridMobile}
       </div>
     );
@@ -579,7 +579,7 @@ export function CardComparePanel({
   }
 
   return (
-    <div className="flex flex-col h-full p-4 gap-4 overflow-y-auto min-h-0">
+    <div className="hide-scrollbar flex min-h-0 h-full flex-col gap-4 overflow-y-auto p-4">
       {cardsStrip}
       {chartModeTabs}
       {chartLegend}

@@ -293,7 +293,7 @@ function BuildDeckPageContent() {
               Compare
             </span>
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="hide-scrollbar flex-1 min-h-0 overflow-y-auto">
             <CardComparePanel
               pinnedCards={pinnedCards}
               deckCardIds={deckCardIds}
@@ -344,7 +344,7 @@ function BuildDeckPageContent() {
             </>
           )}
           {mobileTab === "stat" && (
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="hide-scrollbar flex-1 min-h-0 overflow-y-auto">
               <CardComparePanel
                 mobileSection="stats"
                 pinnedCards={pinnedCards}
