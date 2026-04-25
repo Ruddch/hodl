@@ -1,6 +1,5 @@
 "use client";
 
-import { DeckSelectionModal } from "@/components/DeckSelectionModal";
 import { Toast } from "@/components/Toast";
 import { Onboarding } from "@/components/OnboardingLazy";
 import { useTournamentDetails } from "@/lib/api";
@@ -13,6 +12,7 @@ import {
 import { usePageOnboarding } from "@/lib/useOnboarding";
 import { TOURNAMENT_ONBOARDING } from "@/lib/onboarding-config";
 import { useState, Suspense } from "react";
+import { useRouter } from "next/navigation";
 
 import { TournamentFilters } from "@/components/tournament";
 import { TournamentInfoCard } from "./components/TournamentInfoCard";
@@ -43,7 +43,7 @@ function getFriendlyErrorMessage(rawMessage: string, context: RegistrationErrorC
 
 function TournamentPageContent() {
   const { isAuthenticated, login } = useAuth();
-  const [showDeckModal, setShowDeckModal] = useState(false);
+  const router = useRouter();
   const [toastError, setToastError] = useState<{ visible: boolean; message: string }>({
     visible: false,
     message: "",
@@ -77,11 +77,10 @@ function TournamentPageContent() {
 
   const canRegister = tournamentDisplay?.status === "registration";
 
-  const { register, unregister, isRegistering, isUnregistering } = useTournamentRegistration({
+  const { unregister, isUnregistering } = useTournamentRegistration({
     onSuccess: () => {
       selector.refetchTournaments();
       refetchDetails();
-      setShowDeckModal(false);
     },
     onError: (error, context) => {
       const message = getFriendlyErrorMessage(error.message, context);
@@ -94,15 +93,8 @@ function TournamentPageContent() {
       login();
       return;
     }
-    setShowDeckModal(true);
-  };
-
-  const handleCloseDeckModal = () => setShowDeckModal(false);
-
-  const handleRegister = async (selectedCardIds: number[]) => {
-    if (!tournamentDisplay) return;
-    const existing = tournamentDetails?.my_decks?.length ?? 0;
-    await register(tournamentDisplay, selectedCardIds, { deckOrdinal: existing + 1 });
+    if (!currentTournamentId) return;
+    router.push(`/tournament/build-deck?tournamentId=${currentTournamentId}`);
   };
 
   const handleUnregisterDeck = async (deck: MyDeckEntry) => {
@@ -157,16 +149,6 @@ function TournamentPageContent() {
       </div>
 
       <Onboarding steps={steps} run={run} onClose={close} onComplete={complete} />
-
-      {showDeckModal && tournamentDisplay && (
-        <DeckSelectionModal
-          tournament={tournamentDisplay}
-          myDecks={tournamentDetails?.my_decks}
-          onClose={handleCloseDeckModal}
-          onRegister={handleRegister}
-          isRegistering={isRegistering}
-        />
-      )}
 
       <Toast
         visible={toastError.visible}
