@@ -472,7 +472,10 @@ export function CardComparePanel({
     pinnedCards.length * slotWidthPx + Math.max(0, pinnedCards.length - 1) * STRIP_GAP_PX;
 
   const cardsStrip = (
-    <div ref={stripViewportRef} className="w-full min-w-0 overflow-x-auto overflow-y-hidden pb-1">
+    <div
+      ref={stripViewportRef}
+      className="w-full min-w-0 overflow-x-auto overflow-y-hidden pb-1"
+    >
       <div
         className="flex flex-row flex-nowrap"
         style={{ gap: STRIP_GAP_PX, width: Math.max(stripViewportWidth, stripInnerWidth) }}
@@ -557,7 +560,7 @@ export function CardComparePanel({
 
   if (mobileSection === "stats") {
     return (
-      <div className="hide-scrollbar flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto p-4 pb-32">
+      <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto p-4 pb-32">
         {statsGridMobile}
       </div>
     );
@@ -579,7 +582,7 @@ export function CardComparePanel({
   }
 
   return (
-    <div className="hide-scrollbar flex min-h-0 h-full flex-col gap-4 overflow-y-auto p-4">
+    <div className="flex min-h-0 h-full flex-col gap-4 overflow-y-auto p-4">
       {cardsStrip}
       {chartModeTabs}
       {chartLegend}
