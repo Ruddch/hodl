@@ -93,7 +93,7 @@ export default function PacksPage() {
       "card1.png",
     ];
     const path = (p: string) => (base ? `${base}${p}` : `/${p}`);
-    [...localPaths.map(path), "https://back.hodleague.com/static/card_templates/packs_background_classic_common_20260120_215426.png"].forEach(
+    localPaths.map(path).forEach(
       (url) => {
         const img = new window.Image();
         img.src = url;
