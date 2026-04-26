@@ -11,10 +11,13 @@ export interface DeckPackFooterProps {
   selectedCards: UserCard[];
   onRemoveCard: (userCardId: number) => void;
   onResetSelection: () => void;
-  availableCards: UserCard[];
+  /** Все карты профиля — для AI suggest (сопоставление id с карточками) */
+  allUserCards: UserCard[];
   weightLimit: number;
   onFillDeck: (cards: UserCard[]) => void;
-  /** Для AiDeckFillButton */
+  /** Турнир для POST /api/tournaments/{id}/suggest-deck */
+  tournamentId: number | undefined;
+  onSuggestError?: (message: string) => void;
   aiFillDisabled?: boolean;
   onSecondaryClick: () => void;
   secondaryButtonLabel: string;
@@ -30,9 +33,11 @@ export function DeckPackFooter({
   selectedCards,
   onRemoveCard,
   onResetSelection,
-  availableCards,
+  allUserCards,
   weightLimit,
   onFillDeck,
+  tournamentId,
+  onSuggestError,
   aiFillDisabled = false,
   onSecondaryClick,
   secondaryButtonLabel,
@@ -112,40 +117,41 @@ export function DeckPackFooter({
             </div>
           );
         })}
-        {/* Кнопка сброса всех выбранных карт */}
-        <button
-          type="button"
-          onClick={onResetSelection}
-          disabled={selectedCards.length === 0}
-          data-ph-capture-attribute-button="deck-selection-reset"
-          className="self-start -ml-0 md:-ml-2 w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0 rounded-lg border flex items-center justify-center transition-colors disabled:cursor-not-allowed text-[var(--primary)] [background-color:var(--icon-button-bg)] [border-color:var(--icon-button-border)] [border-width:1px] hover:[background-color:var(--icon-button-hover)] disabled:hover:[background-color:var(--icon-button-bg)] pointer-events-auto"
-          aria-label="Reset all selected cards"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g clipPath={`url(#${resetIconClipId})`}>
-              <path
-                d="M9.15355 10.6182H12.815M12.815 10.6182V6.95676M12.815 10.6182L8.97047 6.77369C8.43639 6.2396 7.71201 5.93955 6.95669 5.93955C6.20138 5.93955 5.477 6.2396 4.94291 6.77369C4.67846 7.03814 4.46869 7.35209 4.32556 7.69762C4.18244 8.04314 4.10878 8.41347 4.10878 8.78747C4.10878 9.54278 4.40883 10.2672 4.94291 10.8012L6.22441 12.0827"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </g>
-            <defs>
-              <clipPath id={resetIconClipId}>
-                <rect width="12.4273" height="12.4273" fill="white" transform="translate(8.7874) rotate(45)" />
-              </clipPath>
-            </defs>
-          </svg>
-        </button>
-        {/* Кнопка AI-автозаполнения колоды (ff: ff_ai_deck_fill) */}
-        <span className="pointer-events-auto self-start">
+        <div className="flex flex-col gap-1.5 sm:gap-2 pointer-events-auto self-start -ml-0 md:-ml-2 flex-shrink-0">
+          {/* Кнопка сброса всех выбранных карт */}
+          <button
+            type="button"
+            onClick={onResetSelection}
+            disabled={selectedCards.length === 0}
+            data-ph-capture-attribute-button="deck-selection-reset"
+            className="w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0 rounded-lg border flex items-center justify-center transition-colors disabled:cursor-not-allowed text-[var(--primary)] [background-color:var(--icon-button-bg)] [border-color:var(--icon-button-border)] [border-width:1px] hover:[background-color:var(--icon-button-hover)] disabled:hover:[background-color:var(--icon-button-bg)]"
+            aria-label="Reset all selected cards"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g clipPath={`url(#${resetIconClipId})`}>
+                <path
+                  d="M9.15355 10.6182H12.815M12.815 10.6182V6.95676M12.815 10.6182L8.97047 6.77369C8.43639 6.2396 7.71201 5.93955 6.95669 5.93955C6.20138 5.93955 5.477 6.2396 4.94291 6.77369C4.67846 7.03814 4.46869 7.35209 4.32556 7.69762C4.18244 8.04314 4.10878 8.41347 4.10878 8.78747C4.10878 9.54278 4.40883 10.2672 4.94291 10.8012L6.22441 12.0827"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+              <defs>
+                <clipPath id={resetIconClipId}>
+                  <rect width="12.4273" height="12.4273" fill="white" transform="translate(8.7874) rotate(45)" />
+                </clipPath>
+              </defs>
+            </svg>
+          </button>
           <AiDeckFillButton
-            availableCards={availableCards}
-            weightLimit={weightLimit}
+            tournamentId={tournamentId}
+            allUserCards={allUserCards}
+            selectedUserCardIds={selectedCards.map((c) => c.user_card_id)}
             onFill={onFillDeck}
+            onError={onSuggestError}
             disabled={aiFillDisabled}
           />
-        </span>
+        </div>
       </div>
 
       <div className="bg-[var(--surface)] border-t border-[var(--border)] px-4 sm:px-8 py-4 sm:py-5">

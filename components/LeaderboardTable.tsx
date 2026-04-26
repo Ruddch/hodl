@@ -146,6 +146,7 @@ function LeaderboardMobileCard({
   profileHref,
   canOpenDeck,
   onDeckClick,
+  variant = "tournament",
 }: {
   entry: LeaderboardEntry;
   isCurrentUser: boolean;
@@ -153,6 +154,7 @@ function LeaderboardMobileCard({
   profileHref: string | null;
   canOpenDeck: boolean;
   onDeckClick: ((entry: LeaderboardEntry) => void) | undefined;
+  variant?: "tournament" | "hp";
 }) {
   const interactive = canOpenDeck
     ? {
@@ -222,23 +224,29 @@ function LeaderboardMobileCard({
           {nameInline}
         </div>
         <div className="shrink-0 pl-1 text-right leading-tight">
-          <span className="text-sm text-[var(--text-secondary)]">Score: </span>
+          <span className="text-sm text-[var(--text-secondary)]">
+            {variant === "hp" ? "HP: " : "Score: "}
+          </span>
           <span className="text-sm font-medium tabular-nums text-[var(--text-primary)]">
             {formatScore(entry.final_score)}
           </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-sm text-[var(--text-secondary)] shrink-0 leading-none">Rewards:</span>
-        <span className="text-sm font-medium text-[var(--text-primary)] min-w-0 flex items-center">
-          <PrizeRewardsDisplay prizes={entry.prizes} size="sm" />
-        </span>
-      </div>
+      {variant === "tournament" && (
+        <>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm text-[var(--text-secondary)] shrink-0 leading-none">Rewards:</span>
+            <span className="text-sm font-medium text-[var(--text-primary)] min-w-0 flex items-center">
+              <PrizeRewardsDisplay prizes={entry.prizes} size="sm" />
+            </span>
+          </div>
 
-      <div className="mt-3 pt-3 border-t border-[var(--leaderboard-row-border)]">
-        <PlayerCards cards={entry.cards} spread />
-      </div>
+          <div className="mt-3 pt-3 border-t border-[var(--leaderboard-row-border)]">
+            <PlayerCards cards={entry.cards} spread />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -248,10 +256,12 @@ function LeaderboardRow({
   entry,
   isCurrentUser,
   onDeckClick,
+  variant = "tournament",
 }: {
   entry: LeaderboardEntry;
   isCurrentUser: boolean;
   onDeckClick: ((entry: LeaderboardEntry) => void) | undefined;
+  variant?: "tournament" | "hp";
 }) {
   const playerName = entry.nickname
     ? entry.nickname
@@ -304,31 +314,34 @@ function LeaderboardRow({
     </div>
   );
 
-  const rowContent = (
-    <>
-      {/* Player */}
-      {playerCell}
-
-      {/* Score */}
-      <div className="min-w-0 shrink-0">
-        <span className="text-base font-medium text-[var(--text-primary)]">
-          {formatScore(entry.final_score)}
-        </span>
-      </div>
-
-      {/* Cards */}
-      <div>
-        <PlayerCards cards={entry.cards} />
-      </div>
-
-      {/* Rewards */}
-      <div className="min-w-0 shrink-0">
-        <span className="text-base font-medium text-[var(--text-primary)]">
-          <PrizeRewardsDisplay prizes={entry.prizes} size="md" />
-        </span>
-      </div>
-    </>
-  );
+  const rowContent =
+    variant === "hp" ? (
+      <>
+        {playerCell}
+        <div className="min-w-0 shrink-0 text-right md:text-left">
+          <span className="text-base font-medium tabular-nums text-[var(--text-primary)]">
+            {formatScore(entry.final_score)}
+          </span>
+        </div>
+      </>
+    ) : (
+      <>
+        {playerCell}
+        <div className="min-w-0 shrink-0">
+          <span className="text-base font-medium text-[var(--text-primary)]">
+            {formatScore(entry.final_score)}
+          </span>
+        </div>
+        <div>
+          <PlayerCards cards={entry.cards} />
+        </div>
+        <div className="min-w-0 shrink-0">
+          <span className="text-base font-medium text-[var(--text-primary)]">
+            <PrizeRewardsDisplay prizes={entry.prizes} size="md" />
+          </span>
+        </div>
+      </>
+    );
 
   const rowClassName = `items-center py-3 border-b border-[var(--leaderboard-row-border)] ${
     isCurrentUser ? "" : ""
@@ -337,7 +350,9 @@ function LeaderboardRow({
   }`;
 
   const gridClasses =
-    "grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4";
+    variant === "hp"
+      ? "grid-cols-[minmax(0,1.5fr)_minmax(88px,0.55fr)] gap-3 md:gap-4"
+      : "grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4";
 
   return (
     <>
@@ -348,6 +363,7 @@ function LeaderboardRow({
         profileHref={profileHref}
         canOpenDeck={canOpenDeck}
         onDeckClick={onDeckClick}
+        variant={variant}
       />
 
       <div
@@ -381,9 +397,20 @@ interface LeaderboardTableProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  /** HP all-time: две колонки, без колоды и наград */
+  variant?: "tournament" | "hp";
 }
 
-export function LeaderboardTable({ entries, height, className = "", onDeckClick, onLoadMore, hasMore = false, isLoadingMore = false }: LeaderboardTableProps) {
+export function LeaderboardTable({
+  entries,
+  height,
+  className = "",
+  onDeckClick,
+  onLoadMore,
+  hasMore = false,
+  isLoadingMore = false,
+  variant = "tournament",
+}: LeaderboardTableProps) {
   const { address } = useAccount();
   const parentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -419,7 +446,7 @@ export function LeaderboardTable({ entries, height, className = "", onDeckClick,
   const virtualizer = useVirtualizer({
     count: entries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 200,
+    estimateSize: () => (variant === "hp" ? 96 : 200),
     measureElement,
     overscan: 5,
   });
@@ -436,20 +463,28 @@ export function LeaderboardTable({ entries, height, className = "", onDeckClick,
     <div className={`min-w-0 overflow-hidden ${height === undefined ? `flex flex-col ${className}` : className || ""}`}>
       {/* Table Header — только десктоп (на мобилке карточки без шапки таблицы, как в профиле) */}
       <div
-        className="hidden md:grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4"
+        className={
+          variant === "hp"
+            ? "hidden md:grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 grid-cols-[minmax(0,1.5fr)_minmax(88px,0.55fr)] gap-3 md:gap-4"
+            : "hidden md:grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 grid-cols-[minmax(0,1.5fr)_minmax(56px,0.5fr)_minmax(100px,1fr)_minmax(64px,0.5fr)] md:grid-cols-4 gap-3 md:gap-4"
+        }
       >
         <div>
           <span className="text-sm font-medium text-[var(--text-muted)]">Player</span>
         </div>
         <div>
-          <span className="text-sm font-medium text-[var(--text-muted)]">Score</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">{variant === "hp" ? "HP" : "Score"}</span>
         </div>
-        <div>
-          <span className="text-sm font-medium text-[var(--text-muted)]">Cards</span>
-        </div>
-        <div>
-          <span className="text-sm font-medium text-[var(--text-muted)]">Rewards</span>
-        </div>
+        {variant === "tournament" && (
+          <>
+            <div>
+              <span className="text-sm font-medium text-[var(--text-muted)]">Cards</span>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-[var(--text-muted)]">Rewards</span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Virtualized Table Rows */}
@@ -488,6 +523,7 @@ export function LeaderboardTable({ entries, height, className = "", onDeckClick,
                   entry={entry}
                   isCurrentUser={isCurrentUser(entry)}
                   onDeckClick={onDeckClick}
+                  variant={variant}
                 />
               </div>
             );

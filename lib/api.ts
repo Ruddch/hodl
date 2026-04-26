@@ -10,9 +10,12 @@ import type {
   PaginatedTournamentsResponse,
   TournamentDetail,
   LeaderboardResponse,
+  HpLeaderboardResponse,
   DeckDetailResponse,
   DeckValidateRequest,
   DeckValidateResponse,
+  SuggestDeckRequest,
+  SuggestDeckResponse,
   DeckRegisterRequest,
   DeckRegisterResponse,
   DeckUnregisterRequest,
@@ -268,6 +271,16 @@ export async function validateDeck(
   });
 }
 
+export async function suggestTournamentDeck(
+  tournamentId: number,
+  data: SuggestDeckRequest
+): Promise<SuggestDeckResponse> {
+  return fetchApi(`/api/tournaments/${tournamentId}/suggest-deck`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function registerForTournament(
   tournamentId: number,
   data: DeckRegisterRequest
@@ -311,6 +324,28 @@ export async function updateMyNickname(data: UpdateNicknameRequest): Promise<Use
     method: "PATCH",
     body: JSON.stringify(data),
   });
+}
+
+export interface GetHpLeaderboardParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  nickname?: string;
+  wallet_address?: string;
+}
+
+export async function getUsersHpLeaderboard(
+  params: GetHpLeaderboardParams = {}
+): Promise<HpLeaderboardResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.page != null) searchParams.set("page", String(params.page));
+  if (params.limit != null) searchParams.set("limit", String(params.limit));
+  if (params.search) searchParams.set("search", params.search);
+  if (params.nickname) searchParams.set("nickname", params.nickname);
+  if (params.wallet_address) searchParams.set("wallet_address", params.wallet_address);
+
+  const query = searchParams.toString();
+  return fetchApi(`/api/users/leaderboard/hp${query ? `?${query}` : ""}`);
 }
 
 export async function claimTournamentRewards(
@@ -617,6 +652,35 @@ export function useTournamentLeaderboardInfinite(
   });
 }
 
+const HP_LEADERBOARD_PAGE_SIZE = 50;
+
+export function useUsersHpLeaderboard(params: GetHpLeaderboardParams = {}) {
+  return useQuery({
+    queryKey: ["hpLeaderboard", params],
+    queryFn: () => getUsersHpLeaderboard(params),
+  });
+}
+
+export function useUsersHpLeaderboardInfinite(
+  params: Omit<GetHpLeaderboardParams, "page" | "limit"> = {},
+  options?: { refetchInterval?: number }
+) {
+  return useInfiniteQuery({
+    queryKey: [
+      "hpLeaderboard",
+      "infinite",
+      params.search ?? "",
+      params.nickname ?? "",
+      params.wallet_address ?? "",
+    ],
+    queryFn: ({ pageParam }) =>
+      getUsersHpLeaderboard({ ...params, page: pageParam, limit: HP_LEADERBOARD_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => (lastPage.has_next ? lastPage.page + 1 : undefined),
+    ...options,
+  });
+}
+
 export function useTournamentDeck(tournamentId: number | undefined, deckId: number | undefined) {
   return useQuery({
     queryKey: ["deck", tournamentId, deckId],
@@ -629,6 +693,13 @@ export function useValidateDeck() {
   return useMutation({
     mutationFn: ({ tournamentId, data }: { tournamentId: number; data: DeckValidateRequest }) =>
       validateDeck(tournamentId, data),
+  });
+}
+
+export function useSuggestTournamentDeck() {
+  return useMutation({
+    mutationFn: ({ tournamentId, data }: { tournamentId: number; data: SuggestDeckRequest }) =>
+      suggestTournamentDeck(tournamentId, data),
   });
 }
 

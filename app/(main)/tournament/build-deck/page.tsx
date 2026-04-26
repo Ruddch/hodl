@@ -12,12 +12,7 @@ import { SearchInput } from "@/components/SearchInput";
 import { Toast } from "@/components/Toast";
 import { CardComparePanel } from "@/components/deck-builder/CardComparePanel";
 import { DeckPackFooter } from "@/components/deck-builder/DeckPackFooter";
-import {
-  DeckInventoryVirtualGrid,
-  collectCardsUsedInOtherDecks,
-  isCardLockedInOtherDeck,
-  type DeckInventorySortMode,
-} from "@/components/deck-builder/DeckInventoryVirtualGrid";
+import { DeckInventoryVirtualGrid, type DeckInventorySortMode } from "@/components/deck-builder/DeckInventoryVirtualGrid";
 import type { UserCard } from "@/lib/types";
 
 const DECK_SIZE = 5;
@@ -107,20 +102,6 @@ function BuildDeckPageContent() {
   const currentWeight = useMemo(
     () => selectedCards.reduce((sum, c) => sum + c.token_weight, 0),
     [selectedCards],
-  );
-
-  const { usedUserCardIds, usedCardIds } = useMemo(
-    () => collectCardsUsedInOtherDecks(tournamentDetails?.my_decks, profile?.cards),
-    [tournamentDetails?.my_decks, profile?.cards],
-  );
-
-  const availableCards = useMemo(
-    () =>
-      (profile?.cards ?? []).filter(
-        (card) =>
-          !card.is_locked && !isCardLockedInOtherDeck(card, usedUserCardIds, usedCardIds),
-      ),
-    [profile?.cards, usedUserCardIds, usedCardIds],
   );
 
   const removeCard = useCallback((userCardId: number) => {
@@ -378,7 +359,9 @@ function BuildDeckPageContent() {
         selectedCards={selectedCards}
         onRemoveCard={removeCard}
         onResetSelection={resetSelection}
-        availableCards={availableCards}
+        allUserCards={profile?.cards ?? []}
+        tournamentId={tournamentId}
+        onSuggestError={(message) => setToastError({ visible: true, message })}
         weightLimit={weightLimit}
         onFillDeck={setSelectedCards}
         aiFillDisabled={profileLoading}

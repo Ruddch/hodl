@@ -56,6 +56,7 @@ function invalidateUserQueries(queryClient: QueryClient) {
   queryClient.invalidateQueries({ queryKey: ["packHistory"] });
   queryClient.invalidateQueries({ queryKey: ["tournaments"] });
   queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+  queryClient.invalidateQueries({ queryKey: ["hpLeaderboard"] });
   // Удаляем кэш для паков и колоды (не инвалидируем, а полностью удаляем)
   queryClient.removeQueries({ queryKey: ["availablePacks"] });
   queryClient.removeQueries({ queryKey: ["packOpening"] });

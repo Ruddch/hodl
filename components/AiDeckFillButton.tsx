@@ -1,95 +1,65 @@
 "use client";
 
-import { useId, useMemo, useCallback } from "react";
-import { useCards } from "@/lib/api";
-import { useFeatureFlag } from "@/lib/hooks/useFeatureFlag";
+import { useId, useCallback } from "react";
+import { useSuggestTournamentDeck } from "@/lib/api";
 import type { UserCard } from "@/lib/types";
 
-const DECK_SIZE = 5;
-
-const RARITY_ORDER: Record<string, number> = {
-  legendary: 0,
-  epic: 1,
-  rare: 2,
-  common: 3,
-};
-
 interface AiDeckFillButtonProps {
-  /** Карты доступные для выбора (не заблокированные, не занятые в других колодах) */
-  availableCards: UserCard[];
-  weightLimit: number;
+  tournamentId: number | undefined;
+  /** Все карты пользователя (для сопоставления full_deck с сущностями) */
+  allUserCards: UserCard[];
+  /** Уже выбранные в колоде id — бэкенд дозаполняет лучшей пятёркой */
+  selectedUserCardIds: number[];
   onFill: (cards: UserCard[]) => void;
+  onError?: (message: string) => void;
   disabled?: boolean;
 }
 
 export function AiDeckFillButton({
-  availableCards,
-  weightLimit,
+  tournamentId,
+  allUserCards,
+  selectedUserCardIds,
   onFill,
+  onError,
   disabled,
 }: AiDeckFillButtonProps) {
-  const enabled = useFeatureFlag("ai_deck_fill");
   const clipId = useId();
+  const { mutateAsync, isPending } = useSuggestTournamentDeck();
 
-  const { data: catalogData } = useCards();
-
-  const marketCapBySymbol = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const card of catalogData?.cards ?? []) {
-      if (card.market_cap != null && !map.has(card.token_symbol)) {
-        map.set(card.token_symbol, card.market_cap);
+  const handleClick = useCallback(async () => {
+    if (tournamentId == null) return;
+    try {
+      const res = await mutateAsync({
+        tournamentId,
+        data: { selected_user_card_ids: selectedUserCardIds },
+      });
+      const byId = new Map(allUserCards.map((c) => [c.user_card_id, c]));
+      const full = res.full_deck
+        .map((id) => byId.get(id))
+        .filter((c): c is UserCard => c != null);
+      if (full.length !== res.full_deck.length) {
+        onError?.(
+          "Not all cards from the suggestion are in your collection. Try refreshing the page.",
+        );
+        return;
       }
+      onFill(full);
+    } catch (e) {
+      onError?.(e instanceof Error ? e.message : "Suggestion failed");
     }
-    return map;
-  }, [catalogData]);
-
-  const autoFillDeck = useCallback(() => {
-    // Для каждого уникального токена берём карту с наивысшей редкостью
-    const bySymbol = new Map<string, UserCard>();
-    for (const card of availableCards) {
-      const existing = bySymbol.get(card.token_symbol);
-      if (!existing) {
-        bySymbol.set(card.token_symbol, card);
-      } else {
-        const existRank = RARITY_ORDER[existing.rarity_name?.trim().toLowerCase()] ?? 99;
-        const curRank = RARITY_ORDER[card.rarity_name?.trim().toLowerCase()] ?? 99;
-        if (curRank < existRank) bySymbol.set(card.token_symbol, card);
-      }
-    }
-
-    // Сортируем по market_cap убыв., при равной — по редкости
-    const candidates = Array.from(bySymbol.values()).sort((a, b) => {
-      const mcA = marketCapBySymbol.get(a.token_symbol) ?? 0;
-      const mcB = marketCapBySymbol.get(b.token_symbol) ?? 0;
-      if (mcB !== mcA) return mcB - mcA;
-      const rA = RARITY_ORDER[a.rarity_name?.trim().toLowerCase()] ?? 99;
-      const rB = RARITY_ORDER[b.rarity_name?.trim().toLowerCase()] ?? 99;
-      return rA - rB;
-    });
-
-    // Жадный алгоритм: берём карту с наибольшей market_cap, если вписывается в лимит
-    const result: UserCard[] = [];
-    let usedWeight = 0;
-    for (const card of candidates) {
-      if (result.length >= DECK_SIZE) break;
-      if (usedWeight + card.token_weight <= weightLimit) {
-        result.push(card);
-        usedWeight += card.token_weight;
-      }
-    }
-
-    onFill(result);
-  }, [availableCards, marketCapBySymbol, weightLimit, onFill]);
-
-  if (!enabled) return null;
+  }, [tournamentId, selectedUserCardIds, allUserCards, onFill, onError, mutateAsync]);
 
   return (
     <button
-      onClick={autoFillDeck}
-      disabled={disabled}
+      type="button"
+      onClick={() => {
+        void handleClick();
+      }}
+      disabled={disabled || isPending || tournamentId == null}
       data-ph-capture-attribute-button="deck-selection-ai-fill"
       className="self-start w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0 rounded-lg border flex items-center justify-center transition-colors disabled:cursor-not-allowed text-[var(--primary)] [background-color:var(--icon-button-bg)] [border-color:var(--icon-button-border)] [border-width:1px] hover:[background-color:var(--icon-button-hover)] disabled:opacity-40"
       aria-label="Auto-fill deck with AI"
+      aria-busy={isPending}
     >
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>

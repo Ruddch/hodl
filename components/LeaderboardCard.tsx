@@ -12,7 +12,36 @@ const TABLE_GRID =
 
 const ROW_HEIGHT = 75; // как virtualizer estimateSize в LeaderboardTable
 
-export function LeaderboardTableSkeleton({ fullHeight }: { fullHeight: boolean }) {
+export function LeaderboardTableSkeleton({
+  fullHeight,
+  variant = "tournament",
+}: {
+  fullHeight: boolean;
+  variant?: "tournament" | "hp";
+}) {
+  const tableGridClass =
+    variant === "hp"
+      ? "grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 grid-cols-[minmax(0,1.5fr)_minmax(88px,0.55fr)] gap-3 md:gap-4"
+      : `grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 ${TABLE_GRID}`;
+
+  const rowGridClass =
+    variant === "hp"
+      ? `grid items-center py-3 border-b border-[var(--leaderboard-row-border)] grid-cols-[minmax(0,1.5fr)_minmax(88px,0.55fr)] gap-3 md:gap-4`
+      : `grid items-center py-3 border-b border-[var(--leaderboard-row-border)] ${TABLE_GRID}`;
+
+  const hpCardSkeleton = (
+    <div className="p-4 rounded-xl border border-[var(--leaderboard-row-border)] bg-[var(--surface)]/50">
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="w-8 h-8 shrink-0 rounded-lg bg-[var(--surface-hover)] animate-pulse border border-[var(--leaderboard-row-border)]" />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="w-10 h-10 rounded-full bg-[var(--surface-hover)] animate-pulse shrink-0" />
+          <div className="h-4 flex-1 min-w-0 max-w-[140px] bg-[var(--surface-hover)] rounded animate-pulse" />
+        </div>
+        <div className="h-4 w-20 shrink-0 bg-[var(--surface-hover)] rounded animate-pulse" />
+      </div>
+    </div>
+  );
+
   const cardSkeleton = (
     <div className="p-4 rounded-xl border border-[var(--leaderboard-row-border)] bg-[var(--surface)]/50">
       <div className="flex items-center gap-2 mb-3 min-w-0">
@@ -45,13 +74,15 @@ export function LeaderboardTableSkeleton({ fullHeight }: { fullHeight: boolean }
     <div className={`flex flex-col min-w-0 ${fullHeight ? "flex-1 min-h-0 overflow-hidden" : ""}`}>
       {/* Десктоп — таблица */}
       <div className={`hidden md:flex flex-col min-h-0 ${fullHeight ? "flex-1 overflow-hidden" : ""}`}>
-        <div
-          className={`grid items-center py-2 border-b border-[var(--leaderboard-row-border)] mb-2 flex-shrink-0 ${TABLE_GRID}`}
-        >
+        <div className={tableGridClass}>
           <div className="h-6 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
           <div className="h-6 w-10 bg-[var(--surface-hover)] rounded animate-pulse" />
-          <div className="h-6 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
-          <div className="h-6 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+          {variant === "tournament" && (
+            <>
+              <div className="h-6 w-12 bg-[var(--surface-hover)] rounded animate-pulse" />
+              <div className="h-6 w-14 bg-[var(--surface-hover)] rounded animate-pulse" />
+            </>
+          )}
         </div>
         <div className={`flex flex-col gap-0 ${fullHeight ? "flex-1 min-h-0 overflow-y-auto overflow-x-hidden" : ""}`}>
           {Array.from(
@@ -59,7 +90,7 @@ export function LeaderboardTableSkeleton({ fullHeight }: { fullHeight: boolean }
             (_, i) => (
               <div
                 key={i}
-                className={`grid items-center py-3 border-b border-[var(--leaderboard-row-border)] ${TABLE_GRID}`}
+                className={rowGridClass}
                 style={{ minHeight: ROW_HEIGHT }}
               >
                 <div className="flex items-center gap-2 md:gap-[18px] min-w-0">
@@ -68,26 +99,30 @@ export function LeaderboardTableSkeleton({ fullHeight }: { fullHeight: boolean }
                   <div className="h-4 flex-1 min-w-0 max-w-[120px] bg-[var(--surface-hover)] rounded animate-pulse" />
                 </div>
                 <div className="h-4 w-14 bg-[var(--surface-hover)] rounded animate-pulse shrink-0" />
-                <div className="flex gap-1.5 items-center [&>*+*]:-ml-4 md:[&>*+*]:ml-0">
-                  {[1, 2, 3, 4, 5].map((j) => (
-                    <div
-                      key={j}
-                      className="w-8 rounded-[7%] bg-[var(--surface-hover)] animate-pulse shrink-0"
-                      style={{ aspectRatio: "567/889" }}
-                    />
-                  ))}
-                </div>
-                <div className="h-4 w-16 bg-[var(--surface-hover)] rounded animate-pulse shrink-0" />
+                {variant === "tournament" && (
+                  <>
+                    <div className="flex gap-1.5 items-center [&>*+*]:-ml-4 md:[&>*+*]:ml-0">
+                      {[1, 2, 3, 4, 5].map((j) => (
+                        <div
+                          key={j}
+                          className="w-8 rounded-[7%] bg-[var(--surface-hover)] animate-pulse shrink-0"
+                          style={{ aspectRatio: "567/889" }}
+                        />
+                      ))}
+                    </div>
+                    <div className="h-4 w-16 bg-[var(--surface-hover)] rounded animate-pulse shrink-0" />
+                  </>
+                )}
               </div>
             )
           )}
         </div>
       </div>
 
-      {/* Мобилка — карточки как в профиле */}
+      {/* Мобилка — карточки как в профиле (HP — компактнее) */}
       <div className={`md:hidden space-y-3 ${fullHeight ? "flex-1 min-h-0 overflow-y-auto overflow-x-hidden" : ""}`}>
-        {Array.from({ length: fullHeight ? 8 : 3 }, (_, i) => (
-          <div key={i}>{cardSkeleton}</div>
+        {Array.from({ length: fullHeight ? (variant === "hp" ? 12 : 8) : 3 }, (_, i) => (
+          <div key={i}>{variant === "hp" ? hpCardSkeleton : cardSkeleton}</div>
         ))}
       </div>
     </div>
@@ -110,6 +145,8 @@ interface LeaderboardCardProps {
   isLoadingMore?: boolean;
   /** Если передан — поиск серверный: вызываем callback вместо клиентской фильтрации */
   onSearchChange?: (query: string) => void;
+  /** All-time HP: две колонки, без колоды */
+  tableVariant?: "tournament" | "hp";
 }
 
 export function LeaderboardCard({
@@ -126,6 +163,7 @@ export function LeaderboardCard({
   hasMore = false,
   isLoadingMore = false,
   onSearchChange,
+  tableVariant = "tournament",
 }: LeaderboardCardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [deckModalOpen, setDeckModalOpen] = useState(false);
@@ -146,12 +184,13 @@ export function LeaderboardCard({
   // Когда поиск серверный (onSearchChange передан) — отдаём записи без клиентской фильтрации.
   // Когда поиск клиентский — фильтруем локально.
   const entriesWithMyPosition = useMemo(() => {
-    if (onSearchChange) return entries; // серверный поиск — myPosition не закрепляем при поиске
-    if (!myPosition || myPosition.position === 1) return entries;
-    const firstEntry = entries[0];
-    if (firstEntry && firstEntry.user_id === myPosition.user_id) return entries;
+    // Пока идёт серверный поиск по строке — список целиком с API, свою строку не дублируем сверху
+    if (onSearchChange && searchQuery.trim()) return entries;
+    if (!myPosition) return entries;
+    // Уже первая строка отчёта — не дублировать сверху
+    if (entries[0]?.user_id === myPosition.user_id) return entries;
     return [myPosition, ...entries];
-  }, [entries, myPosition, onSearchChange]);
+  }, [entries, myPosition, onSearchChange, searchQuery]);
 
   const filteredEntries = useMemo(() => {
     // Серверный поиск — фильтрацию делает бек
@@ -199,7 +238,7 @@ export function LeaderboardCard({
       {/* Table */}
       <div className={`px-4 md:px-6 pb-4 md:pb-6 min-w-0 overflow-hidden ${height === "full" ? "flex-1 min-h-0 flex flex-col" : ""}`}>
         {isLoading ? (
-          <LeaderboardTableSkeleton fullHeight={height === "full"} />
+          <LeaderboardTableSkeleton fullHeight={height === "full"} variant={tableVariant} />
         ) : filteredEntries.length === 0 ? (
           <div className="py-8 text-center text-[var(--text-muted)]">
             {searchQuery ? "No results found" : emptyMessage}
@@ -214,6 +253,7 @@ export function LeaderboardCard({
               onLoadMore={onLoadMore}
               hasMore={hasMore}
               isLoadingMore={isLoadingMore}
+              variant={tableVariant}
             />
           </div>
         )}
