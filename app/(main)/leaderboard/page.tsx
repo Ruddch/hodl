@@ -62,7 +62,7 @@ function LeaderboardPageContent() {
     : undefined;
 
   return (
-    <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0 h-full">
+    <>
       <TournamentFilters
         isLoading={tournamentsLoading}
         epochKeys={epochKeys}
@@ -89,7 +89,7 @@ function LeaderboardPageContent() {
         isLoadingMore={isFetchingNextPage}
         onSearchChange={handleSearchChange}
       />
-    </div>
+    </>
   );
 }
 
@@ -97,7 +97,7 @@ export default function LeaderboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0 h-full">
+        <div className="flex flex-col min-w-0 h-full">
           {/* Filters — как TournamentFilters loading */}
           <div className="flex flex-col md:flex-row gap-4 md:gap-9 mb-4 md:mb-6">
             <div className="h-12 min-w-[198px] w-40 bg-[var(--surface-elevated)] rounded-[15px] animate-pulse" />

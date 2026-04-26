@@ -10,6 +10,7 @@ import type {
   PaginatedTournamentsResponse,
   TournamentDetail,
   LeaderboardResponse,
+  HpLeaderboardResponse,
   DeckDetailResponse,
   DeckValidateRequest,
   DeckValidateResponse,
@@ -325,6 +326,28 @@ export async function updateMyNickname(data: UpdateNicknameRequest): Promise<Use
   });
 }
 
+export interface GetHpLeaderboardParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  nickname?: string;
+  wallet_address?: string;
+}
+
+export async function getUsersHpLeaderboard(
+  params: GetHpLeaderboardParams = {}
+): Promise<HpLeaderboardResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.page != null) searchParams.set("page", String(params.page));
+  if (params.limit != null) searchParams.set("limit", String(params.limit));
+  if (params.search) searchParams.set("search", params.search);
+  if (params.nickname) searchParams.set("nickname", params.nickname);
+  if (params.wallet_address) searchParams.set("wallet_address", params.wallet_address);
+
+  const query = searchParams.toString();
+  return fetchApi(`/api/users/leaderboard/hp${query ? `?${query}` : ""}`);
+}
+
 export async function claimTournamentRewards(
   tournamentId: number
 ): Promise<ClaimTournamentRewardsResponse> {
@@ -625,6 +648,35 @@ export function useTournamentLeaderboardInfinite(
     initialPageParam: 1,
     getNextPageParam: (lastPage) => (lastPage.has_next ? lastPage.page + 1 : undefined),
     enabled: !!tournamentId,
+    ...options,
+  });
+}
+
+const HP_LEADERBOARD_PAGE_SIZE = 50;
+
+export function useUsersHpLeaderboard(params: GetHpLeaderboardParams = {}) {
+  return useQuery({
+    queryKey: ["hpLeaderboard", params],
+    queryFn: () => getUsersHpLeaderboard(params),
+  });
+}
+
+export function useUsersHpLeaderboardInfinite(
+  params: Omit<GetHpLeaderboardParams, "page" | "limit"> = {},
+  options?: { refetchInterval?: number }
+) {
+  return useInfiniteQuery({
+    queryKey: [
+      "hpLeaderboard",
+      "infinite",
+      params.search ?? "",
+      params.nickname ?? "",
+      params.wallet_address ?? "",
+    ],
+    queryFn: ({ pageParam }) =>
+      getUsersHpLeaderboard({ ...params, page: pageParam, limit: HP_LEADERBOARD_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => (lastPage.has_next ? lastPage.page + 1 : undefined),
     ...options,
   });
 }

@@ -262,6 +262,26 @@ export interface LeaderboardResponse {
   last_updated?: string | null;
 }
 
+/** GET /api/users/leaderboard/hp — all-time лидерборд по балансу HP (HPS) */
+export interface HpLeaderboardEntry {
+  position: number;
+  user_id: number;
+  wallet_address: string;
+  nickname: string;
+  avatar_url: string;
+  hp_balance: number;
+}
+
+export interface HpLeaderboardResponse {
+  leaderboard: HpLeaderboardEntry[];
+  total_participants: number;
+  page: number;
+  limit: number;
+  has_next: boolean;
+  has_prev: boolean;
+  my_position: HpLeaderboardEntry | null;
+}
+
 export interface PrizeInfo {
   reward_type_id: number;
   reward_name: string;
