@@ -408,6 +408,20 @@ export interface DeckValidateResponse {
   chain_balances?: ChainBalanceInfo[];
 }
 
+/** POST /api/tournaments/{id}/suggest-deck */
+export interface SuggestDeckRequest {
+  selected_user_card_ids: number[];
+}
+
+export interface SuggestDeckResponse {
+  selected: number[];
+  suggested: number[];
+  full_deck: number[];
+  total_weight: number;
+  weight_limit: number;
+  score_breakdown: Record<string, number>;
+}
+
 export interface DeckRegisterRequest {
   deck_composition: number[];
   tx_hash: string;

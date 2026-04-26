@@ -13,6 +13,8 @@ import type {
   DeckDetailResponse,
   DeckValidateRequest,
   DeckValidateResponse,
+  SuggestDeckRequest,
+  SuggestDeckResponse,
   DeckRegisterRequest,
   DeckRegisterResponse,
   DeckUnregisterRequest,
@@ -263,6 +265,16 @@ export async function validateDeck(
   data: DeckValidateRequest
 ): Promise<DeckValidateResponse> {
   return fetchApi(`/api/tournaments/${tournamentId}/validate-deck`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function suggestTournamentDeck(
+  tournamentId: number,
+  data: SuggestDeckRequest
+): Promise<SuggestDeckResponse> {
+  return fetchApi(`/api/tournaments/${tournamentId}/suggest-deck`, {
     method: "POST",
     body: JSON.stringify(data),
   });
@@ -629,6 +641,13 @@ export function useValidateDeck() {
   return useMutation({
     mutationFn: ({ tournamentId, data }: { tournamentId: number; data: DeckValidateRequest }) =>
       validateDeck(tournamentId, data),
+  });
+}
+
+export function useSuggestTournamentDeck() {
+  return useMutation({
+    mutationFn: ({ tournamentId, data }: { tournamentId: number; data: SuggestDeckRequest }) =>
+      suggestTournamentDeck(tournamentId, data),
   });
 }
 

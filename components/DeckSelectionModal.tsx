@@ -3,13 +3,10 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import type { UserCard, Tournament, MyDeckEntry } from "@/lib/types";
 import { SearchInput } from "@/components/SearchInput";
-import {
-  DeckInventoryVirtualGrid,
-  collectCardsUsedInOtherDecks,
-  isCardLockedInOtherDeck,
-} from "@/components/deck-builder/DeckInventoryVirtualGrid";
+import { DeckInventoryVirtualGrid } from "@/components/deck-builder/DeckInventoryVirtualGrid";
 import { DeckPackFooter } from "@/components/deck-builder/DeckPackFooter";
 import { useMyProfile } from "@/lib/api";
+import { Toast } from "@/components/Toast";
 
 interface DeckSelectionModalProps {
   tournament: Tournament;
@@ -32,11 +29,7 @@ export function DeckSelectionModal({
   const { data: profile, isLoading } = useMyProfile(true);
   const [selectedCards, setSelectedCards] = useState<UserCard[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const { usedUserCardIds, usedCardIds } = useMemo(
-    () => collectCardsUsedInOtherDecks(myDecks, profile?.cards),
-    [myDecks, profile?.cards]
-  );
+  const [toastError, setToastError] = useState({ visible: false, message: "" });
 
   // Удаление карты из выбранных
   const removeCard = useCallback((userCardId: number) => {
@@ -47,17 +40,6 @@ export function DeckSelectionModal({
   const resetSelection = useCallback(() => {
     setSelectedCards([]);
   }, []);
-
-  // Карты доступные для AI-автозаполнения (без поискового фильтра)
-  const availableCards = useMemo(
-    () =>
-      (profile?.cards ?? []).filter(
-        (card) =>
-          !card.is_locked &&
-          !isCardLockedInOtherDeck(card, usedUserCardIds, usedCardIds)
-      ),
-    [profile?.cards, usedUserCardIds, usedCardIds]
-  );
 
   // Название турнира
   const tournamentName = useMemo(() => {
@@ -143,7 +125,9 @@ export function DeckSelectionModal({
           selectedCards={selectedCards}
           onRemoveCard={removeCard}
           onResetSelection={resetSelection}
-          availableCards={availableCards}
+          allUserCards={profile?.cards ?? []}
+          tournamentId={tournament.id}
+          onSuggestError={(message) => setToastError({ visible: true, message })}
           weightLimit={tournament.weight_limit}
           onFillDeck={setSelectedCards}
           aiFillDisabled={isLoading}
@@ -154,6 +138,12 @@ export function DeckSelectionModal({
           isRegistering={isRegistering}
         />
       </div>
+      <Toast
+        visible={toastError.visible}
+        onDismiss={() => setToastError((p) => ({ ...p, visible: false }))}
+        variant="error"
+        message={toastError.message}
+      />
     </div>
   );
 }
