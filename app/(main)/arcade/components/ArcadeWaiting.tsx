@@ -5,6 +5,7 @@ import type { PvpReplayPlayer } from "@/lib/types";
 
 interface ArcadeWaitingProps {
   secondsLeft: number;
+  totalSeconds: number;
   player1: PvpReplayPlayer | null;
   player2: PvpReplayPlayer | null;
   onCancel: () => void;
@@ -42,9 +43,9 @@ function PlayerSlot({ player, label }: { player: PvpReplayPlayer | null; label: 
   );
 }
 
-export function ArcadeWaiting({ secondsLeft, player1, player2, onCancel }: ArcadeWaitingProps) {
-  const TOTAL = 20;
-  const progress = Math.min(100, ((TOTAL - secondsLeft) / TOTAL) * 100);
+export function ArcadeWaiting({ secondsLeft, totalSeconds, player1, player2, onCancel }: ArcadeWaitingProps) {
+  const total = totalSeconds > 0 ? totalSeconds : 1;
+  const progress = Math.min(100, ((total - secondsLeft) / total) * 100);
   const bothKnown = player1 !== null && player2 !== null;
 
   return (

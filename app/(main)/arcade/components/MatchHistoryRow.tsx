@@ -22,14 +22,14 @@ function getStatusBadge(match: PvpUserMatchItem) {
 
   if (isCompleted) {
     return (
-      <span className="px-2.5 py-1 text-[10px] font-semibold rounded bg-[var(--surface-muted)] text-[var(--text-secondary)] uppercase tracking-wider">
+      <span className="px-2.5 py-1 text-[10px] font-semibold rounded bg-[var(--badge-opened)] text-[var(--badge-opened-text)] uppercase tracking-wider">
         Completed
       </span>
     );
   }
   if (hasOpponent) {
     return (
-      <span className="px-2.5 py-1 text-[10px] font-semibold rounded bg-[var(--badge-opened)] text-[var(--badge-opened-text)] uppercase tracking-wider">
+      <span className="px-2.5 py-1 text-[10px] font-semibold rounded bg-[var(--badge-purple-bg)] text-[var(--badge-purple-text)] uppercase tracking-wider">
         In Progress
       </span>
     );

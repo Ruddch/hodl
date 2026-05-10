@@ -13,6 +13,7 @@ export type MatchScreen =
 export interface UsePvpMatchScreenResult {
   isLoading: boolean;
   secondsLeft: number;
+  totalSeconds: number;
   screen: MatchScreen | null;
   player1: PvpReplayPlayer | null;
   player2: PvpReplayPlayer | null;
@@ -36,23 +37,43 @@ export function usePvpMatchScreen(
   const capturedMinLoadingRef = useRef(0);
   const loadingStartRef = useRef(Date.now());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks the moment player2 first appeared (null = not yet seen)
+  const player2SeenRef = useRef<number | null>(null);
 
+  const initialSeconds = Math.ceil(minLoadingMs / 1000);
   const [timedOut, setTimedOut] = useState(minLoadingMs <= 0);
-  const [secondsLeft, setSecondsLeft] = useState(Math.ceil(minLoadingMs / 1000));
+  const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+  const [totalSeconds, setTotalSeconds] = useState(initialSeconds);
 
   // Reset when matchId changes
   useEffect(() => {
     capturedMinLoadingRef.current = minLoadingMs;
     loadingStartRef.current = Date.now();
+    player2SeenRef.current = null;
     if (timerRef.current) clearTimeout(timerRef.current);
     setTimedOut(minLoadingMs <= 0);
-    setSecondsLeft(Math.ceil(minLoadingMs / 1000));
+    const secs = Math.ceil(minLoadingMs / 1000);
+    setSecondsLeft(secs);
+    setTotalSeconds(secs);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
 
-  // Once data arrives, schedule the "timedOut" transition after remaining minimum time
+  // When player2 appears for the first time while still in the lobby,
+  // extend the timer to 3 s from now and reset the countdown display.
+  useEffect(() => {
+    if (!replayData?.player2 || player2SeenRef.current !== null || timedOut) return;
+    player2SeenRef.current = Date.now();
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setTimedOut(true), 3000);
+    setSecondsLeft(3);
+    setTotalSeconds(3);
+  }, [replayData?.player2, timedOut]);
+
+  // Once data arrives (and player2 not yet found), schedule "timedOut" after remaining base time
   useEffect(() => {
     if (timedOut || queryLoading || !replayData) return;
+    // If player2 already detected, the effect above owns the timer
+    if (player2SeenRef.current !== null) return;
     const minMs = capturedMinLoadingRef.current;
     const elapsed = Date.now() - loadingStartRef.current;
     const remaining = Math.max(0, minMs - elapsed);
@@ -113,6 +134,7 @@ export function usePvpMatchScreen(
   return {
     isLoading,
     secondsLeft,
+    totalSeconds,
     screen,
     player1: replayData?.player1 ?? null,
     player2: replayData?.player2 ?? null,

@@ -8,7 +8,7 @@ import { ArcadeDraft } from "./components/ArcadeDraft";
 import { ArcadeResult } from "./components/ArcadeResult";
 import { usePvpMatchScreen } from "./usePvpMatchScreen";
 
-const LOBBY_DURATION_MS = 20_000;
+const LOBBY_DURATION_MS = 5_000;
 
 function ArcadePageContent() {
   const router = useRouter();
@@ -20,7 +20,7 @@ function ArcadePageContent() {
   const [newGameMatchId, setNewGameMatchId] = useState<number | null>(null);
   const minLoadingMs = matchId !== null && matchId === newGameMatchId ? LOBBY_DURATION_MS : 0;
 
-  const { isLoading, secondsLeft, screen, player1, player2, error, refetch } =
+  const { isLoading, secondsLeft, totalSeconds, screen, player1, player2, error, refetch } =
     usePvpMatchScreen(matchId, minLoadingMs);
 
   // Redirect to landing on unrecoverable error
@@ -44,6 +44,7 @@ function ArcadePageContent() {
     return (
       <ArcadeWaiting
         secondsLeft={secondsLeft}
+        totalSeconds={totalSeconds}
         player1={player1}
         player2={player2}
         onCancel={() => router.replace("/arcade")}
