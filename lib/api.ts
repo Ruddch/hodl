@@ -1017,6 +1017,7 @@ export function useJoinPvp() {
     mutationFn: () => joinPvp(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pvpMatches"] });
+      queryClient.invalidateQueries({ queryKey: ["pvpMatchesInfinite"] });
     },
   });
 }
@@ -1075,6 +1076,7 @@ export function useSubmitPvpDraftPick() {
     onSuccess: (_, { matchId }) => {
       queryClient.invalidateQueries({ queryKey: ["pvpDraftOptions", matchId] });
       queryClient.invalidateQueries({ queryKey: ["pvpMatches"] });
+      queryClient.invalidateQueries({ queryKey: ["pvpMatchesInfinite"] });
     },
   });
 }
