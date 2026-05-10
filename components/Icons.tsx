@@ -223,6 +223,47 @@ export const ForgeIcon: React.FC<{
   </svg>
 );
 
+export const ArcadeIcon: React.FC<{
+  width?: number | string;
+  height?: number | string;
+  className?: string;
+  strokeColor?: string;
+  strokeOpacity?: number;
+}> = ({
+  width = 16,
+  height = 16,
+  className,
+  strokeColor = "var(--nav-item-inactive)",
+  strokeOpacity = 0.5,
+}) => (
+  <svg
+    width={width}
+    height={height}
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      d="M2 5.5C2 4.67 2.67 4 3.5 4h9c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5h-9C2.67 12 2 11.33 2 10.5v-5z"
+      stroke={strokeColor}
+      strokeOpacity={strokeOpacity}
+      strokeWidth="1.33"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6 7H4M5 6v2"
+      stroke={strokeColor}
+      strokeOpacity={strokeOpacity}
+      strokeWidth="1.33"
+      strokeLinecap="round"
+    />
+    <circle cx="10.5" cy="7.5" r="0.75" fill={strokeColor} fillOpacity={strokeOpacity} />
+    <circle cx="12" cy="6.5" r="0.75" fill={strokeColor} fillOpacity={strokeOpacity} />
+  </svg>
+);
+
 export const CopyIcon: React.FC<{
   width?: number | string;
   height?: number | string;

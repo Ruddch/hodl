@@ -51,6 +51,13 @@ import type {
   PrepareCardUpgradeResponse,
   ConfirmCardUpgradeRequest,
   ConfirmCardUpgradeResponse,
+  PvpJoinResponse,
+  PvpWaitingListResponse,
+  PvpUserMatchListResponse,
+  PvpDraftOptionsResponse,
+  PvpDraftPickRequest,
+  PvpDraftPickResponse,
+  PvpReplayResponse,
 } from "./types";
 import { API_BASE_URL } from "./constants";
 
@@ -954,5 +961,120 @@ export function useAlphaTestAccess(walletAddress: string | undefined, enabled: b
     queryKey: ["alphaTestAccess", walletAddress],
     queryFn: () => checkAlphaTestAccess(walletAddress!),
     enabled: !!walletAddress && enabled,
+  });
+}
+
+// ==================== PvP API ====================
+export interface GetPvpActiveParams {
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetPvpMatchesParams {
+  limit?: number;
+  offset?: number;
+}
+
+export async function joinPvp(): Promise<PvpJoinResponse> {
+  return fetchApi("/api/pvp/join", { method: "POST" });
+}
+
+export async function getPvpActiveMatches(params: GetPvpActiveParams = {}): Promise<PvpWaitingListResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.limit !== undefined) searchParams.set("limit", String(params.limit));
+  if (params.offset !== undefined) searchParams.set("offset", String(params.offset));
+  const query = searchParams.toString();
+  return fetchApi(`/api/pvp/active${query ? `?${query}` : ""}`);
+}
+
+export async function getMyPvpMatches(params: GetPvpMatchesParams = {}): Promise<PvpUserMatchListResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.limit !== undefined) searchParams.set("limit", String(params.limit));
+  if (params.offset !== undefined) searchParams.set("offset", String(params.offset));
+  const query = searchParams.toString();
+  return fetchApi(`/api/pvp/matches${query ? `?${query}` : ""}`);
+}
+
+export async function getPvpMatchReplay(matchId: number): Promise<PvpReplayResponse> {
+  return fetchApi(`/api/pvp/matches/${matchId}/replay`);
+}
+
+export async function getPvpDraftOptions(matchId: number, step: number): Promise<PvpDraftOptionsResponse> {
+  return fetchApi(`/api/pvp/matches/${matchId}/draft/options?step=${step}`);
+}
+
+export async function submitPvpDraftPick(matchId: number, data: PvpDraftPickRequest): Promise<PvpDraftPickResponse> {
+  return fetchApi(`/api/pvp/matches/${matchId}/draft/pick`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// PvP Hooks
+export function useJoinPvp() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => joinPvp(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pvpMatches"] });
+    },
+  });
+}
+
+export function usePvpActiveMatches(params: GetPvpActiveParams = {}, options?: { refetchInterval?: number }) {
+  return useQuery({
+    queryKey: ["pvpActive", params],
+    queryFn: () => getPvpActiveMatches(params),
+    ...options,
+  });
+}
+
+export function useMyPvpMatches(params: GetPvpMatchesParams = {}, options?: { refetchInterval?: number }) {
+  return useQuery({
+    queryKey: ["pvpMatches", params],
+    queryFn: () => getMyPvpMatches(params),
+    ...options,
+  });
+}
+
+const PVP_MATCHES_PAGE_SIZE = 20;
+
+export function useMyPvpMatchesInfinite(options?: { refetchInterval?: number }) {
+  return useInfiniteQuery({
+    queryKey: ["pvpMatchesInfinite"],
+    queryFn: ({ pageParam }) =>
+      getMyPvpMatches({ limit: PVP_MATCHES_PAGE_SIZE, offset: (pageParam - 1) * PVP_MATCHES_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, _allPages, lastPageParam) =>
+      lastPage.items.length === PVP_MATCHES_PAGE_SIZE ? lastPageParam + 1 : undefined,
+    ...options,
+  });
+}
+
+export function usePvpMatchReplay(matchId: number | undefined) {
+  return useQuery({
+    queryKey: ["pvpReplay", matchId],
+    queryFn: () => getPvpMatchReplay(matchId!),
+    enabled: !!matchId,
+  });
+}
+
+export function usePvpDraftOptions(matchId: number | undefined, step: number | undefined) {
+  return useQuery({
+    queryKey: ["pvpDraftOptions", matchId, step],
+    queryFn: () => getPvpDraftOptions(matchId!, step!),
+    enabled: !!matchId && step !== undefined,
+  });
+}
+
+export function useSubmitPvpDraftPick() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ matchId, data }: { matchId: number; data: PvpDraftPickRequest }) =>
+      submitPvpDraftPick(matchId, data),
+    onSuccess: (_, { matchId }) => {
+      queryClient.invalidateQueries({ queryKey: ["pvpDraftOptions", matchId] });
+      queryClient.invalidateQueries({ queryKey: ["pvpMatches"] });
+    },
   });
 }

@@ -8,7 +8,7 @@ import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { useTournaments, useAvailablePacks } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { TournamentIcon, LeaderboardIcon, PacksIcon, CoinIcon, ForgeIcon } from "./Icons";
+import { TournamentIcon, LeaderboardIcon, PacksIcon, CoinIcon, ForgeIcon, ArcadeIcon } from "./Icons";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -33,6 +33,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const isTokensActive = pathname === "/tokens" || pathname?.startsWith("/tokens");
   const isPacksActive = pathname === "/packs" || pathname?.startsWith("/packs");
   const isForgeActive = pathname === "/forge" || pathname?.startsWith("/forge");
+  const isArcadeActive = pathname === "/arcade" || pathname?.startsWith("/arcade");
 
   // Цвета для иконок (используем CSS-переменные для поддержки тёмной темы)
   const tournamentIconColor = isTournamentActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
@@ -40,6 +41,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const tokensIconColor = isTokensActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
   const packsIconColor = isPacksActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
   const forgeIconColor = isForgeActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
+  const arcadeIconColor = isArcadeActive ? "var(--nav-item-active-text)" : "var(--nav-item-inactive)";
 
   // Закрываем меню при переходе на другую страницу на мобильных
   useEffect(() => {
@@ -121,6 +123,28 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </Link>
           </li>
           
+          {/* Arcade */}
+          <li>
+            <Link
+              href="/arcade"
+              onClick={onClose}
+              data-ph-capture-attribute-button="nav-arcade"
+              className={`flex items-center gap-[5px] px-2 md:px-4 py-2 h-12 rounded-[30px] transition-colors ${
+                isArcadeActive
+                  ? "bg-[var(--nav-item-active-bg)] text-[var(--nav-item-active-text)]"
+                  : "text-[var(--nav-item-inactive)] hover:text-[var(--nav-item-inactive-hover)]"
+              }`}
+            >
+              <ArcadeIcon
+                width={16}
+                height={16}
+                strokeColor={arcadeIconColor}
+                strokeOpacity={isArcadeActive ? 1 : 0.5}
+              />
+              <span className="text-[16px]">Arcade</span>
+            </Link>
+          </li>
+
           {/* Leaderboard */}
           <li>
             <Link

@@ -787,6 +787,117 @@ export interface AlphaTestCheckResponse {
   added_at: string;
 }
 
+// ==================== PvP ====================
+export interface PvpJoinResponse {
+  match_id: number;
+  role: string;
+  status: string;
+}
+
+export interface PvpWaitingMatchItem {
+  match_id: number;
+  player1_id: number;
+  created_at: string;
+}
+
+export interface PvpWaitingListResponse {
+  items: PvpWaitingMatchItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface PvpUserMatchItem {
+  match_id: number;
+  status: string;
+  player1_id: number;
+  player2_id: number | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface PvpUserMatchListResponse {
+  items: PvpUserMatchItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface PvpOfferedCard {
+  card_id: number;
+  token_symbol: string;
+  token_name: string;
+  weight: number;
+  rendered_image_url: string | null;
+  template_image_url: string;
+  design_type: string;
+}
+
+export interface PvpDraftOptionsResponse {
+  step: number;
+  offered_cards: PvpOfferedCard[];
+}
+
+export interface PvpDraftPickRequest {
+  step: number;
+  card_id: number;
+}
+
+export interface PvpDraftPickResponse {
+  match_id: number;
+  step: number;
+  resolved: boolean;
+}
+
+export interface PvpReplayPlayer {
+  id: number;
+  nickname: string | null;
+  wallet_address: string | null;
+}
+
+export interface PvpDraftStep {
+  user_id: number;
+  step: number;
+  offered_card_ids: number[] | null;
+  chosen_card_id: number | null;
+  chosen_card: PvpOfferedCard | null;
+}
+
+export interface PvpReplayRoundSlot {
+  slot_index: number;
+  player1_card_id: number;
+  player2_card_id: number;
+  player1_weight: number;
+  player2_weight: number;
+  player1_points: number;
+  player2_points: number;
+}
+
+export interface PvpReplayRoundScores {
+  slots: PvpReplayRoundSlot[];
+}
+
+export interface PvpReplayData {
+  match_id: number;
+  status: string;
+  player1: PvpReplayPlayer | null;
+  player2: PvpReplayPlayer | null;
+  winner_user_id: number | null;
+  player1_score: number | null;
+  player2_score: number | null;
+  player1_deck_weight: number | null;
+  player2_deck_weight: number | null;
+  round_scores: PvpReplayRoundScores | null;
+  draft_steps: PvpDraftStep[];
+  created_at: string | null;
+  completed_at: string | null;
+}
+
+export interface PvpReplayResponse {
+  success: boolean;
+  data: PvpReplayData;
+}
+
 // ==================== API Error ====================
 export interface ApiError {
   detail: string | ValidationError[];
