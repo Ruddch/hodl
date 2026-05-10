@@ -10,11 +10,11 @@ import { useJoinPvp, useMyPvpMatchesInfinite } from "@/lib/api";
 import { MatchHistoryRow } from "./MatchHistoryRow";
 
 interface ArcadeLandingProps {
-  onJoined: (matchId: number, role: string) => void;
+  onPlay: (matchId: number) => void;
   onViewMatch: (matchId: number) => void;
 }
 
-export function ArcadeLanding({ onJoined, onViewMatch }: ArcadeLandingProps) {
+export function ArcadeLanding({ onPlay, onViewMatch }: ArcadeLandingProps) {
   const { isAuthenticated } = useAuth();
   const joinMutation = useJoinPvp();
   const {
@@ -57,7 +57,7 @@ export function ArcadeLanding({ onJoined, onViewMatch }: ArcadeLandingProps) {
   const handlePlay = async () => {
     try {
       const result = await joinMutation.mutateAsync();
-      onJoined(result.match_id, result.role);
+      onPlay(result.match_id);
     } catch {
       // error shown via joinMutation.isError
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { BlurCard } from "@/components/BlurCard";
 import { usePvpDraftOptions, useSubmitPvpDraftPick } from "@/lib/api";
@@ -9,26 +9,36 @@ import { CARD_ASPECT_RATIO } from "@/lib/constants";
 
 interface ArcadeDraftProps {
   matchId: number;
-  step: number;
-  picks: PvpOfferedCard[];
-  onNextStep: (nextStep: number, pick: PvpOfferedCard) => void;
-  onComplete: (lastPick: PvpOfferedCard) => void;
+  initialStep: number;
+  initialPicks: PvpOfferedCard[];
+  onComplete: () => void;
 }
 
-function weightColor(weight: number): string {
-  if (weight >= 8) return "#22c55e";
-  if (weight >= 5) return "#eab308";
-  return "#ef4444";
-}
 
 const TOTAL_SLOTS = 5;
 const WEIGHT_LIMIT = 28;
 
-export function ArcadeDraft({ matchId, step, picks, onNextStep, onComplete }: ArcadeDraftProps) {
+export function ArcadeDraft({ matchId, initialStep, initialPicks, onComplete }: ArcadeDraftProps) {
+  const [step, setStep] = useState(initialStep);
+  const [picks, setPicks] = useState<PvpOfferedCard[]>(initialPicks);
   const [isPicking, setIsPicking] = useState(false);
   const [pickedCardId, setPickedCardId] = useState<number | null>(null);
+  const [dealtCount, setDealtCount] = useState(0);
 
   const { data: draftData, isLoading } = usePvpDraftOptions(matchId, step);
+
+  useEffect(() => {
+    if (!draftData) return;
+    setDealtCount(0);
+    const total = draftData.offered_cards.length;
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setDealtCount(i);
+      if (i >= total) clearInterval(id);
+    }, 180);
+    return () => clearInterval(id);
+  }, [draftData]);
   const submitPick = useSubmitPvpDraftPick();
 
   const currentWeight = picks.reduce((sum, c) => sum + c.weight, 0);
@@ -43,11 +53,13 @@ export function ArcadeDraft({ matchId, step, picks, onNextStep, onComplete }: Ar
         data: { step, card_id: card.card_id },
       });
       if (result.resolved || step >= TOTAL_SLOTS) {
-        onComplete(card);
+        setPicks((prev) => [...prev, card]);
+        onComplete();
       } else {
+        setPicks((prev) => [...prev, card]);
+        setStep(step + 1);
         setIsPicking(false);
         setPickedCardId(null);
-        onNextStep(step + 1, card);
       }
     } catch {
       setIsPicking(false);
@@ -100,19 +112,10 @@ export function ArcadeDraft({ matchId, step, picks, onNextStep, onComplete }: Ar
 
           {/* Card grid — centered vertically */}
           <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 pt-4 pb-2 flex flex-col justify-center">
-            {isLoading ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-4">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="rounded-[10px] sm:rounded-[14px] bg-[var(--surface-elevated)] animate-pulse"
-                    style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
-                  />
-                ))}
-              </div>
-            ) : draftData ? (
+            { draftData ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-8 sm:gap-x-4 sm:gap-y-10">
-                {draftData.offered_cards.map((card) => {
+                {draftData.offered_cards.map((card, index) => {
+                    const isDealt = index < dealtCount;
                     const isSelected = pickedCardId === card.card_id;
                   // Gray out if card doesn't fit: either exceeds total limit,
                   // or leaves no weight budget for remaining slots (each needs ≥ 1)
@@ -126,7 +129,7 @@ export function ArcadeDraft({ matchId, step, picks, onNextStep, onComplete }: Ar
                       key={card.card_id}
                       type="button"
                       onClick={() => handlePick(card)}
-                      disabled={isPicking || isOverWeight}
+                      disabled={isPicking || isOverWeight || !isDealt}
                       className={[
                         "relative rounded-[10px] sm:rounded-[14px] overflow-visible transition-all",
                         isSelected
@@ -134,11 +137,17 @@ export function ArcadeDraft({ matchId, step, picks, onNextStep, onComplete }: Ar
                           : isDisabled
                           ? "opacity-40 grayscale cursor-not-allowed"
                           : "cursor-pointer border border-[var(--border-subtle)] hover:ring-2 hover:ring-[var(--primary)] hover:ring-offset-2 ring-offset-[var(--surface)]",
+                        !isDealt ? "pointer-events-none" : "",
                       ].join(" ")}
-                      style={{ aspectRatio: `${CARD_ASPECT_RATIO}` }}
+                      style={{
+                        aspectRatio: `${CARD_ASPECT_RATIO}`,
+                        transform: isDealt ? "translateY(0) rotate(0deg)" : "translateY(140%) rotate(-18deg)",
+                        opacity: isDealt ? 1 : 0,
+                        transition: "transform 380ms cubic-bezier(0.34, 1.4, 0.64, 1), opacity 200ms ease",
+                      }}
                     >
                       {/* Card image */}
-                      <div className="w-full h-full rounded-[10px] sm:rounded-[14px] overflow-hidden">
+                      <div className="w-full h-full rounded-[10px] sm:rounded-[14px]">
                         {card.rendered_image_url || card.template_image_url ? (
                           <Image
                             src={card.rendered_image_url || card.template_image_url}
@@ -148,11 +157,7 @@ export function ArcadeDraft({ matchId, step, picks, onNextStep, onComplete }: Ar
                             sizes="(max-width: 640px) 33vw, 20vw"
                           />
                         ) : (
-                          <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-elevated)] to-[var(--surface-hover)] flex flex-col items-center justify-center p-2">
-                            <span className="text-xs font-bold text-[var(--text-primary)] text-center">
-                              {card.token_symbol}
-                            </span>
-                          </div>
+                          <></>
                         )}
                       </div>
                     </button>

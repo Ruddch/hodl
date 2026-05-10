@@ -1,172 +1,78 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArcadeLanding } from "./components/ArcadeLanding";
 import { ArcadeWaiting } from "./components/ArcadeWaiting";
 import { ArcadeDraft } from "./components/ArcadeDraft";
 import { ArcadeResult } from "./components/ArcadeResult";
-import { useAuth } from "@/lib/auth-context";
-import { getPvpMatchReplay } from "@/lib/api";
-import type { PvpOfferedCard } from "@/lib/types";
+import { usePvpMatchScreen } from "./usePvpMatchScreen";
 
-type ArcadeView =
-  | { screen: "landing" }
-  | { screen: "resolving" }
-  | { screen: "waiting"; matchId: number; role: string }
-  | { screen: "draft"; matchId: number; role: string; step: number; picks: PvpOfferedCard[] }
-  | { screen: "result"; matchId: number; role: string; picks?: PvpOfferedCard[] };
+const LOBBY_DURATION_MS = 20_000;
 
 function ArcadePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isLoading: authLoading } = useAuth();
-  const resolvedRef = useRef(false);
-
   const urlMatchId = searchParams.get("matchId");
+  const matchId = urlMatchId ? Number(urlMatchId) : null;
 
-  const [view, setView] = useState<ArcadeView>(
-    urlMatchId ? { screen: "resolving" } : { screen: "landing" }
-  );
+  // Track which matchId was freshly joined (vs opened from history/reload)
+  const [newGameMatchId, setNewGameMatchId] = useState<number | null>(null);
+  const minLoadingMs = matchId !== null && matchId === newGameMatchId ? LOBBY_DURATION_MS : 0;
 
-  // Resolve matchId from URL to the correct screen
+  const { isLoading, secondsLeft, screen, player1, player2, error, refetch } =
+    usePvpMatchScreen(matchId, minLoadingMs);
+
+  // Redirect to landing on unrecoverable error
   useEffect(() => {
-    if (!urlMatchId || resolvedRef.current) return;
-    if (authLoading) return; // wait for auth before determining user's steps
+    if (error) router.replace("/arcade");
+  }, [error, router]);
 
-    resolvedRef.current = true;
-    const matchId = Number(urlMatchId);
-
-    getPvpMatchReplay(matchId)
-      .then((res) => {
-        const data = res.data;
-        const userId = user?.user_id;
-
-        const role =
-          userId !== undefined
-            ? data.player1.id === userId
-              ? "player1"
-              : "player2"
-            : "unknown";
-
-        // Reconstruct user's completed picks from draft_steps (now includes chosen_card)
-        const mySteps =
-          userId !== undefined
-            ? data.draft_steps
-                .filter((s) => s.user_id === userId && s.chosen_card_id !== null)
-                .sort((a, b) => a.step - b.step)
-            : [];
-
-        const completedSteps = userId !== undefined ? mySteps.length : 5;
-        const picks = mySteps
-          .map((s) => s.chosen_card)
-          .filter((c): c is NonNullable<typeof c> => c !== null);
-
-        if (completedSteps < 5) {
-          setView({ screen: "draft", matchId, role, step: completedSteps + 1, picks });
-        } else {
-          setView({ screen: "result", matchId, role, picks });
-        }
-      })
-      .catch(() => {
-        setView({ screen: "landing" });
-      });
-  }, [urlMatchId, authLoading, user?.user_id]);
-
-  // Reset to landing when the user navigates to /arcade externally (e.g. sidebar click)
-  useEffect(() => {
-    if (urlMatchId === null && view.screen !== "landing" && view.screen !== "resolving") {
-      resolvedRef.current = true;
-      setView({ screen: "landing" });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlMatchId]);
-
-  // Sync matchId to URL whenever view changes
-  useEffect(() => {
-    if (view.screen === "resolving") return;
-    const current = searchParams.get("matchId");
-    if (view.screen === "landing") {
-      if (current) router.replace("/arcade");
-    } else {
-      // If URL was externally cleared (sidebar navigation), don't restore — let the reset effect handle it
-      if (current === null) return;
-      const next = String(view.matchId);
-      if (current !== next) router.replace(`/arcade?matchId=${next}`);
-    }
-  }, [view, searchParams, router]);
-
-  const navigate = (next: ArcadeView) => {
-    resolvedRef.current = true; // don't re-resolve after manual navigation
-    setView(next);
-  };
-
-  // Resolving state — show spinner while determining screen
-  if (view.screen === "resolving") {
+  if (!matchId) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 gap-3">
-        <div className="w-8 h-8 rounded-full border-4 border-purple-400 border-t-transparent animate-spin" />
-        <p className="text-sm text-[var(--text-muted)]">Loading match…</p>
-      </div>
+      <ArcadeLanding
+        onPlay={(newMatchId) => {
+          setNewGameMatchId(newMatchId);
+          router.replace(`/arcade?matchId=${newMatchId}`);
+        }}
+        onViewMatch={(id) => router.replace(`/arcade?matchId=${id}`)}
+      />
     );
   }
 
-  if (view.screen === "waiting") {
+  if (isLoading) {
     return (
       <ArcadeWaiting
-        matchId={view.matchId}
-        onDraftReady={() =>
-          navigate({ screen: "draft", matchId: view.matchId, role: view.role, step: 1, picks: [] })
-        }
-        onCancel={() => navigate({ screen: "landing" })}
+        secondsLeft={secondsLeft}
+        player1={player1}
+        player2={player2}
+        onCancel={() => router.replace("/arcade")}
       />
     );
   }
 
-  if (view.screen === "draft") {
+  if (screen?.screen === "draft") {
     return (
       <ArcadeDraft
-        matchId={view.matchId}
-        step={view.step}
-        picks={view.picks}
-        onNextStep={(nextStep, newPick) =>
-          navigate({
-            screen: "draft",
-            matchId: view.matchId,
-            role: view.role,
-            step: nextStep,
-            picks: [...view.picks, newPick],
-          })
-        }
-        onComplete={(lastPick) =>
-          navigate({
-            screen: "result",
-            matchId: view.matchId,
-            role: view.role,
-            picks: [...view.picks, lastPick],
-          })
-        }
+        matchId={matchId}
+        initialStep={screen.step}
+        initialPicks={screen.initialPicks}
+        onComplete={refetch}
       />
     );
   }
 
-  if (view.screen === "result") {
+  if (screen?.screen === "result") {
     return (
       <ArcadeResult
-        matchId={view.matchId}
-        isPlayer1={view.role === "player1" ? true : view.role === "player2" ? false : undefined}
-        myPicks={view.picks}
-        onPlayAgain={() => navigate({ screen: "landing" })}
+        matchId={matchId}
+        isPlayer1={screen.role === "player1" ? true : screen.role === "player2" ? false : undefined}
+        onPlayAgain={() => router.replace("/arcade")}
       />
     );
   }
 
-  return (
-    <ArcadeLanding
-      onJoined={(matchId, role) => navigate({ screen: "waiting", matchId, role })}
-      onViewMatch={(matchId) => navigate({ screen: "result", matchId, role: "unknown" })}
-    />
-  );
+  return null;
 }
 
 export default function ArcadePage() {
