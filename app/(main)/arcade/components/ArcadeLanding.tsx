@@ -23,7 +23,12 @@ export function ArcadeLanding({ onPlay, onViewMatch }: ArcadeLandingProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch: refetchMatches,
   } = useMyPvpMatchesInfinite();
+
+  useEffect(() => {
+    refetchMatches();
+  }, [refetchMatches]);
 
   const allMatches = useMemo(
     () => matchesData?.pages.flatMap((p) => p.items) ?? [],
