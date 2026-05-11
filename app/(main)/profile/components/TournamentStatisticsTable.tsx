@@ -8,6 +8,7 @@ import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { CardStatsModal } from "@/components/CardStatsModalLazy";
 import { PrizeRewardsDisplay } from "@/components/PrizeRewardsDisplay";
 import type { MyTournamentEntry, MyTournamentCard } from "@/lib/types";
+import { getTournamentDisplayName } from "@/lib/utils/tournaments";
 
 const gridClasses =
   "grid gap-3 md:gap-4 grid-cols-[minmax(0,1.2fr)_minmax(48px,0.5fr)_minmax(80px,1fr)_minmax(70px,0.6fr)_minmax(56px,0.5fr)_minmax(80px,auto)]";
@@ -105,12 +106,6 @@ function getOrdinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
-}
-
-function getTournamentName(entry: MyTournamentEntry): string {
-  const date = new Date(entry.end_date || entry.start_date);
-  const month = date.toLocaleString("en-US", { month: "long" });
-  return `${month.charAt(0).toUpperCase() + month.slice(1)} fire`;
 }
 
 function formatScore(score: number): string {
@@ -363,7 +358,7 @@ export function TournamentStatisticsTable() {
                   href={`/leaderboard?tournamentId=${row.entry.tournament_id}`}
                   className="text-base font-semibold text-[var(--text-primary)] truncate block hover:underline focus:underline focus:outline-none"
                 >
-                  {getTournamentName(row.entry)}
+                  {getTournamentDisplayName(row.entry.tournament_id, row.entry.start_date)}
                 </Link>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <svg width="17" height="8" viewBox="0 0 17 8" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0" aria-hidden>
@@ -445,7 +440,7 @@ export function TournamentStatisticsTable() {
                     href={`/leaderboard?tournamentId=${row.entry.tournament_id}`}
                     className="text-base font-semibold text-[var(--text-primary)] block hover:underline focus:underline focus:outline-none"
                   >
-                    {getTournamentName(row.entry)}
+                    {getTournamentDisplayName(row.entry.tournament_id, row.entry.start_date)}
                   </Link>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <svg width="17" height="8" viewBox="0 0 17 8" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0" aria-hidden>

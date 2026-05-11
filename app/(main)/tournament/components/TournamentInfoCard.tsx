@@ -7,6 +7,10 @@ import { ConnectKitButton } from "connectkit";
 import { useAuth } from "@/lib/auth-context";
 import { SignInButton } from "@/components/SignInButton";
 import type { Tournament } from "@/lib/types";
+import {
+  getTournamentDisplayName,
+  ZEROTOHERO_SPECIAL_TOURNAMENT_ID,
+} from "@/lib/utils/tournaments";
 import { StatusBadge } from "./StatusBadge";
 
 function getTimeRemaining(endDate: string, currentTime?: number) {
@@ -50,12 +54,10 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
       ? getTimeRemaining(tournament.end_date, currentTime)
       : null;
 
-  const tournamentName = useMemo(() => {
-    if (tournament.id === 16) return "ZeroToHero Special";
-    const date = new Date(tournament.start_date);
-    const month = date.toLocaleString("en-US", { month: "long" });
-    return `${month.charAt(0).toUpperCase() + month.slice(1)} fire`;
-  }, [tournament.start_date]);
+  const tournamentName = useMemo(
+    () => getTournamentDisplayName(tournament.id, tournament.start_date),
+    [tournament.id, tournament.start_date],
+  );
 
   const prizePoolDisplay = useMemo(() => {
     if (!tournament.estimated_final_prize_pools) return "—";
@@ -105,13 +107,13 @@ export function TournamentInfoCard({ tournament, onRegisterClick }: TournamentIn
         }}
       />
       {/* Background image справа — на мобилке уже, чтобы данные помещались в левой половине */}
-      <div className="absolute right-0 top-0 bottom-0 w-[35%] sm:w-[50%] overflow-hidden rounded-r-[16px]" style={{ background: tournament.id === 16 ? `#03A9F4` : `var(--tournament-card-accent)` }}>
+      <div className="absolute right-0 top-0 bottom-0 w-[35%] sm:w-[50%] overflow-hidden rounded-r-[16px]" style={{ background: tournament.id === ZEROTOHERO_SPECIAL_TOURNAMENT_ID ? `#03A9F4` : `var(--tournament-card-accent)` }}>
         <div className="absolute inset-0 z-10" style={{ background: `linear-gradient(to left, transparent, transparent 50%, var(--tournament-card-accent))` }} />
         <Image 
-          src={tournament.id === 16 ? "/pb.png" : "https://cdn.hodleague.com/card_templates/tournament_classic_common_20260425_131412.png"}
+          src={tournament.id === ZEROTOHERO_SPECIAL_TOURNAMENT_ID ? "/pb.png" : "https://cdn.hodleague.com/card_templates/tournament_classic_common_20260425_131412.png"}
           alt="Tournament background"
           fill
-          className={tournament.id === 16 ? "object-contain object-center" : "object-cover object-right"}
+          className={tournament.id === ZEROTOHERO_SPECIAL_TOURNAMENT_ID ? "object-contain object-center" : "object-cover object-right"}
         />
       </div>
       {/* Content */}

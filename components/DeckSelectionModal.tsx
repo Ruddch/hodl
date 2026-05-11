@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import type { UserCard, Tournament, MyDeckEntry } from "@/lib/types";
+import { getTournamentDisplayName } from "@/lib/utils/tournaments";
 import { SearchInput } from "@/components/SearchInput";
 import { DeckInventoryVirtualGrid } from "@/components/deck-builder/DeckInventoryVirtualGrid";
 import { DeckPackFooter } from "@/components/deck-builder/DeckPackFooter";
@@ -41,12 +42,10 @@ export function DeckSelectionModal({
     setSelectedCards([]);
   }, []);
 
-  // Название турнира
-  const tournamentName = useMemo(() => {
-    const date = new Date(tournament.start_date);
-    const month = date.toLocaleString("en-US", { month: "long" });
-    return `${month} fire`;
-  }, [tournament.start_date]);
+  const tournamentName = useMemo(
+    () => getTournamentDisplayName(tournament.id, tournament.start_date),
+    [tournament.id, tournament.start_date],
+  );
 
   // Регистрация
   const handleRegister = () => {

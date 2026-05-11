@@ -6,6 +6,7 @@ import { LeaderboardCard, LeaderboardTableSkeleton } from "@/components/Leaderbo
 import { TournamentFilters } from "@/components/tournament";
 import { BlurCard } from "@/components/BlurCard";
 import { useMemo, useState, useEffect, useCallback, Suspense } from "react";
+import { getTournamentDisplayName } from "@/lib/utils/tournaments";
 
 function useDebounce(value: string, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -58,7 +59,7 @@ function LeaderboardPageContent() {
   const isLoading = tournamentsLoading || (leaderboardLoading && !leaderboardData);
 
   const tournamentSubtitle = selectedTournament
-    ? `${new Date(selectedTournament.start_date).toLocaleDateString("en-US", { month: "long" })} fire`
+    ? getTournamentDisplayName(selectedTournament.id, selectedTournament.start_date)
     : undefined;
 
   return (

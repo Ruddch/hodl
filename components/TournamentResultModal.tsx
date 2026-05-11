@@ -8,6 +8,7 @@ import { BlurCard } from "@/components/BlurCard";
 import { PrizeRewardsDisplay } from "@/components/PrizeRewardsDisplay";
 import { flattenDeckPrizes } from "@/lib/prize-rewards";
 import type { MyTournamentEntry } from "@/lib/types";
+import { getTournamentDisplayName } from "@/lib/utils/tournaments";
 
 const STORAGE_KEY_PREFIX = "hodleague_tournament_result_seen_";
 /** Пауза после успешного клейма, чтобы пользователь успел осознать успех */
@@ -21,12 +22,6 @@ function hasUnclaimedRewards(entry: MyTournamentEntry): boolean {
   return (entry.prizes ?? []).some(
     (p) => p.claim_status !== "claimed" && p.claim_status !== null
   );
-}
-
-function getTournamentName(entry: MyTournamentEntry): string {
-  const date = new Date(entry.end_date || entry.start_date);
-  const month = date.toLocaleString("en-US", { month: "long" });
-  return `${month.charAt(0).toUpperCase() + month.slice(1)} fire`;
 }
 
 /** API возвращает отдельную запись на каждую колоду; группируем по tournament_id. */
@@ -141,7 +136,7 @@ export function TournamentResultModal({
     [entries]
   );
   const canClaim = entries.some((e) => hasUnclaimedRewards(e));
-  const tournamentName = getTournamentName(primary);
+  const tournamentName = getTournamentDisplayName(primary.tournament_id, primary.start_date);
 
   const handleClaim = async () => {
     try {
