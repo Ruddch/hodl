@@ -14,6 +14,7 @@ import { CardComparePanel } from "@/components/deck-builder/CardComparePanel";
 import { DeckPackFooter } from "@/components/deck-builder/DeckPackFooter";
 import { DeckInventoryVirtualGrid, type DeckInventorySortMode } from "@/components/deck-builder/DeckInventoryVirtualGrid";
 import type { UserCard } from "@/lib/types";
+import { getTournamentDisplayName } from "@/lib/utils/tournaments";
 
 const DECK_SIZE = 5;
 
@@ -144,11 +145,9 @@ function BuildDeckPageContent() {
   );
 
   const tournamentName = useMemo(() => {
-    if (!tournament?.start_date) return "";
-    const d = new Date(tournament.start_date);
-    const month = d.toLocaleString("en-US", { month: "long" });
-    return `${month} fire`;
-  }, [tournament?.start_date]);
+    if (!tournament?.id || !tournament?.start_date) return "";
+    return getTournamentDisplayName(tournament.id, tournament.start_date);
+  }, [tournament?.id, tournament?.start_date]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
