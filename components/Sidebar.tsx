@@ -9,6 +9,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useTournaments, useAvailablePacks } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { TournamentIcon, LeaderboardIcon, PacksIcon, CoinIcon, ForgeIcon, ArcadeIcon } from "./Icons";
+import { IS_ARCADE_ENABLED } from "@/lib/constants";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const isTokensActive = pathname === "/tokens" || pathname?.startsWith("/tokens");
   const isPacksActive = pathname === "/packs" || pathname?.startsWith("/packs");
   const isForgeActive = pathname === "/forge" || pathname?.startsWith("/forge");
-  const showArcadeNav = process.env.NODE_ENV !== "production";
+  const showArcadeNav = IS_ARCADE_ENABLED;
   const isArcadeActive =
     showArcadeNav && (pathname === "/arcade" || pathname?.startsWith("/arcade"));
 

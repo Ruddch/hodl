@@ -10,6 +10,9 @@ export const IS_AVAX = process.env.NEXT_PUBLIC_ENV === "avax";
 /** UAT / локальная разработка (`npm run dev`, тот же `NEXT_PUBLIC_ENV`, что и для uat.hodleague.com) */
 export const IS_DEVELOPMENT = process.env.NEXT_PUBLIC_ENV === "development";
 
+/** Пункт Arcade в сайдбаре и доступность /arcade — только при `NEXT_PUBLIC_ENV=development` или `avax` */
+export const IS_ARCADE_ENABLED = IS_DEVELOPMENT;
+
 /** Базовый URL API */
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_ENV === "avax"
