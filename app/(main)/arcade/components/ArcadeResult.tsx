@@ -41,7 +41,7 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
         if (cancelledRef.current) return;
         setReplay(res.data);
         setIsLoading(false);
-        if (res.data.status !== "completed") {
+        if (res.data.status !== "completed" && res.data.status !== "cancelled") {
           setTimeout(poll, 30_000);
         }
       } catch {
@@ -67,6 +67,9 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
   }, [matchId]);
 
   const isCompleted = replay?.status === "completed";
+  const isCancelled =
+    replay?.status === "cancelled" || replay?.resolution?.tiebreak === "cancelled";
+  const isResolved = isCompleted || isCancelled;
 
   // Sequential reveal animation when match result loads
   const roundSlotsSnap = replay?.round_scores?.slots ?? [];
@@ -78,7 +81,12 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
       : (isPlayer1Hint ?? true);
 
   useEffect(() => {
-    if (!isCompleted || roundSlotsSnap.length === 0) return;
+    if (!isResolved) return;
+    // Cancelled matches usually have no round slots — reveal banner straight away.
+    if (roundSlotsSnap.length === 0) {
+      const t = setTimeout(() => setRevealComplete(true), 200);
+      return () => clearTimeout(t);
+    }
     const FLIP_DUR = 520;
     const POST_PAUSE = 380;
     const BETWEEN = 80;
@@ -108,7 +116,7 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
 
     return () => timers.forEach(clearTimeout);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCompleted, roundSlotsSnap.length]);
+  }, [isResolved, roundSlotsSnap.length]);
 
   // Derive which player we are: prefer user_id match, fall back to hint
   const isPlayer1 =
@@ -133,8 +141,10 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
 
   const winnerId = replay?.winner_user_id;
   const myPlayerId = user?.user_id ?? (isPlayer1 ? replay?.player1?.id : replay?.player2?.id);
-  const iWon = isCompleted && winnerId !== null && winnerId === myPlayerId;
-  const isDraw = isCompleted && winnerId === null;
+  const iWon = isCompleted && !isCancelled && winnerId !== null && winnerId === myPlayerId;
+  const isDraw = isCompleted && !isCancelled && winnerId === null;
+  const isCoinFlip = isCompleted && replay?.resolution?.tiebreak === "coin_flip";
+  const resolutionSummary = replay?.resolution?.summary_english ?? null;
 
   const roundSlots: PvpReplayRoundSlot[] = replay?.round_scores?.slots ?? [];
 
@@ -169,7 +179,7 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
               <p className="text-sm text-[var(--text-muted)]">Loading result…</p>
             </div>
 
-          ) : !isCompleted ? (
+          ) : !isResolved ? (
             /* ── Waiting for opponent ───────────────────────────────────── */
             <>
               {/* Waiting banner */}
@@ -208,11 +218,11 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
             <>
               {/* Result banner */}
               <div
-                className="flex items-center justify-center gap-4 py-3 px-5 rounded-2xl shrink-0"
+                className="flex flex-col items-center justify-center gap-1 py-3 px-5 rounded-2xl shrink-0"
                 style={{
                   backgroundColor: !revealComplete
                     ? "var(--surface-elevated)"
-                    : isDraw
+                    : isCancelled || isDraw
                     ? "var(--surface-elevated)"
                     : iWon
                     ? "rgba(34, 197, 94, 0.12)"
@@ -220,40 +230,58 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
                   transition: "background-color 0.5s ease",
                 }}
               >
-                {revealComplete && (
-                  <span
-                    className="text-3xl leading-none"
+                <div className="flex items-center justify-center gap-4">
+                  {revealComplete && (
+                    <span
+                      className="text-3xl leading-none"
+                      style={{ animation: "fadeInUp 0.4s ease both" }}
+                    >
+                      {isCancelled ? "⚠️" : isDraw ? "🤝" : iWon ? "🏆" : "😔"}
+                    </span>
+                  )}
+                  {revealComplete && (
+                    <p
+                      className="text-xl font-bold"
+                      style={{
+                        color: isCancelled
+                          ? "var(--text-primary)"
+                          : isDraw
+                          ? "var(--text-primary)"
+                          : iWon
+                          ? "#22c55e"
+                          : "#ef4444",
+                        animation: "fadeInUp 0.4s ease both",
+                      }}
+                    >
+                      {isCancelled ? "Match Cancelled" : isDraw ? "Draw!" : iWon ? "You Win!" : "You Lose"}
+                    </p>
+                  )}
+                  {!isCancelled && (
+                    <p
+                      className="text-3xl font-bold tabular-nums"
+                      style={{
+                        color: !revealComplete
+                          ? "var(--text-primary)"
+                          : isDraw
+                          ? "var(--text-primary)"
+                          : iWon
+                          ? "#22c55e"
+                          : "#ef4444",
+                        transition: "color 0.5s ease",
+                      }}
+                    >
+                      {displayScore.my} – {displayScore.opp}
+                    </p>
+                  )}
+                </div>
+                {revealComplete && resolutionSummary && (isCancelled || isCoinFlip) && (
+                  <p
+                    className="text-xs text-[var(--text-muted)] text-center"
                     style={{ animation: "fadeInUp 0.4s ease both" }}
                   >
-                    {isDraw ? "🤝" : iWon ? "🏆" : "😔"}
-                  </span>
-                )}
-                {revealComplete && (
-                  <p
-                    className="text-xl font-bold"
-                    style={{
-                      color: isDraw ? "var(--text-primary)" : iWon ? "#22c55e" : "#ef4444",
-                      animation: "fadeInUp 0.4s ease both",
-                    }}
-                  >
-                    {isDraw ? "Draw!" : iWon ? "You Win!" : "You Lose"}
+                    {resolutionSummary}
                   </p>
                 )}
-                <p
-                  className="text-3xl font-bold tabular-nums"
-                  style={{
-                    color: !revealComplete
-                      ? "var(--text-primary)"
-                      : isDraw
-                      ? "var(--text-primary)"
-                      : iWon
-                      ? "#22c55e"
-                      : "#ef4444",
-                    transition: "color 0.5s ease",
-                  }}
-                >
-                  {displayScore.my} – {displayScore.opp}
-                </p>
               </div>
 
               {/* Arena */}
@@ -296,7 +324,7 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
               onClick={onPlayAgain}
               className="w-full sm:w-fit px-10 py-3 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-semibold rounded-[15px] transition-colors text-sm"
             >
-              {isCompleted ? "Play Again" : "Back"}
+              {isResolved ? "Play Again" : "Back"}
             </button>
           </div>
 
