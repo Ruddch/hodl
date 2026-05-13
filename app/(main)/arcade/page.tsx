@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { ArcadeLanding } from "./components/ArcadeLanding";
 import { ArcadeWaiting } from "./components/ArcadeWaiting";
 import { ArcadeDraft } from "./components/ArcadeDraft";
@@ -13,6 +14,7 @@ const LOBBY_DURATION_MS = 5_000;
 function ArcadePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const urlMatchId = searchParams.get("matchId");
   const matchId = urlMatchId ? Number(urlMatchId) : null;
 
@@ -22,6 +24,16 @@ function ArcadePageContent() {
 
   const { isLoading, secondsLeft, totalSeconds, screen, player1, player2, error, refetch } =
     usePvpMatchScreen(matchId, minLoadingMs);
+
+  const uid = user?.user_id;
+  const opponentPlayer =
+    uid !== undefined && player1 && player2
+      ? player1.id === uid
+        ? player2
+        : player2.id === uid
+          ? player1
+          : null
+      : null;
 
   // Redirect to landing on unrecoverable error
   useEffect(() => {
@@ -56,6 +68,7 @@ function ArcadePageContent() {
     return (
       <ArcadeDraft
         matchId={matchId}
+        opponentPlayer={opponentPlayer}
         initialStep={screen.step}
         initialPicks={screen.initialPicks}
         onComplete={refetch}

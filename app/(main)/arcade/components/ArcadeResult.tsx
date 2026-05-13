@@ -162,14 +162,13 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
         <div className="flex flex-col gap-5 px-4 sm:px-6 pt-4 md:pt-6 pb-6 md:pb-8 h-full">
 
           {/* Header */}
-          <div className="flex items-center justify-between shrink-0">
+          <div className="flex items-center shrink-0">
             <h2
               className="text-3xl text-[var(--text-primary)] tracking-wide uppercase leading-none"
               style={{ fontFamily: "var(--font-league-gothic), sans-serif" }}
             >
               Token Duel
             </h2>
-            <span className="text-xs text-[var(--text-muted)]">Match #{matchId}</span>
           </div>
 
           {/* Body */}

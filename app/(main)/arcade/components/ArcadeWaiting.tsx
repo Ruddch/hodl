@@ -1,6 +1,7 @@
 "use client";
 
 import { BlurCard } from "@/components/BlurCard";
+import { PvpPlayerAvatar } from "@/components/PvpPlayerAvatar";
 import type { PvpReplayPlayer } from "@/lib/types";
 
 interface ArcadeWaitingProps {
@@ -21,14 +22,13 @@ function PlayerSlot({ player, label }: { player: PvpReplayPlayer | null; label: 
 
   return (
     <div className="flex flex-col items-center gap-3 w-32">
-      <div
-        className={[
-          "w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold",
-          player ? "bg-purple-500/30 text-purple-300" : "bg-[var(--surface-elevated)] animate-pulse",
-        ].join(" ")}
-      >
-        {player && name ? name[0].toUpperCase() : null}
-      </div>
+      {player ? (
+        <div className="ring-2 ring-[var(--border-subtle)] rounded-full">
+          <PvpPlayerAvatar player={player} size={80} />
+        </div>
+      ) : (
+        <div className="w-20 h-20 rounded-full bg-[var(--surface-elevated)] animate-pulse shrink-0" />
+      )}
       <div className="text-center">
         <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-1">{label}</p>
         {!player ? (

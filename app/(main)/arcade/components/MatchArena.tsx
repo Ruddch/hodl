@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Avatar } from "@/components/Avatar";
+import { PvpPlayerAvatar } from "@/components/PvpPlayerAvatar";
 import type { PvpReplayPlayer } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 
@@ -149,7 +149,7 @@ export function MatchArena({
 
       {/* My player info */}
       <div className="flex items-center gap-2 shrink-0" style={{ height: 28 }}>
-        <Avatar walletAddress={myPlayer?.wallet_address} size={26} />
+        <PvpPlayerAvatar player={myPlayer} size={26} />
         <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
           {myPlayer ? formatNickname(myPlayer) : "You"}
         </span>
@@ -244,7 +244,7 @@ export function MatchArena({
           </>
         ) : (
           <>
-            <Avatar walletAddress={oppPlayer?.wallet_address} size={26} />
+            <PvpPlayerAvatar player={oppPlayer} size={26} />
             <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
               {oppPlayer ? formatNickname(oppPlayer) : "Opponent"}
             </span>
