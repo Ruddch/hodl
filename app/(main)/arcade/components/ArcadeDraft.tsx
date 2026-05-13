@@ -136,13 +136,13 @@ export function ArcadeDraft({ matchId, initialStep, initialPicks, onComplete }: 
           </div>
 
           {/* Card grid — centered vertically */}
-          <div className="flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pt-4 pb-2 flex flex-col justify-center ">
+          <div className="flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pt-4 pb-2 flex flex-col justify-start sm:justify-center ">
             {/* During collect animation use frozen cards; otherwise use fresh draftData */}
             {(() => {
               const displayData = frozenCards ?? draftData;
               if (!displayData) return null; // empty screen while loading next step
               return (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-8 sm:gap-x-4 sm:gap-y-10">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-8 ">
                 {displayData.offered_cards.map((card, index) => {
                     const isDealt = index < dealtCount;
                     const isSelected = pickedCardId === card.card_id;
@@ -313,7 +313,6 @@ export function ArcadeDraft({ matchId, initialStep, initialPicks, onComplete }: 
                       }}
                     />
                   </div>
-                  <p className="text-xs text-[var(--text-muted)]">{picks.length} cards selected</p>
                 </div>
               </div>
             </div>
