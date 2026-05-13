@@ -42,12 +42,6 @@ interface CombatSlotColumnProps {
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-function weightResultColor(won: boolean, drew: boolean, isMe: boolean) {
-  if (drew) return "#6b7280";
-  if (won) return isMe ? "#22c55e" : "#ef4444";
-  return isMe ? "#ef4444" : "#22c55e";
-}
-
 const FLASH_GRADIENT =
   "radial-gradient(ellipse at center, rgba(255,255,255,0.95) 0%, rgba(167,139,250,0.7) 35%, rgba(167,139,250,0) 70%)";
 
@@ -375,13 +369,44 @@ export function CombatSlotColumn({
   );
 
   const revealed = result?.visible ?? false;
-  const badgeBg = !revealed || !result
-    ? "var(--surface-elevated)"
-    : result.won
-    ? "rgba(34, 197, 94, 0.10)"
+
+  // Outcome-driven palette.  Numbers use full saturation; gradient lines
+  // use a softened tint so they read as accent, not focal point.
+  const oppWeightColor = !result
+    ? "var(--text-muted)"
     : result.drew
-    ? "var(--surface-elevated)"
-    : "rgba(239, 68, 68, 0.08)";
+      ? "var(--text-muted)"
+      : result.won
+        ? "#ef4444"
+        : "#22c55e";
+  const myWeightColor = !result
+    ? "var(--text-muted)"
+    : result.drew
+      ? "var(--text-muted)"
+      : result.won
+        ? "#22c55e"
+        : "#ef4444";
+  const lineColor = !result
+    ? "rgba(167, 139, 250, 0.40)"
+    : result.drew
+      ? "rgba(167, 139, 250, 0.40)"
+      : result.won
+        ? "rgba(34, 197, 94, 0.45)"
+        : "rgba(239, 68, 68, 0.45)";
+  const centerColor = !result
+    ? "var(--text-muted)"
+    : result.drew
+      ? "var(--text-muted)"
+      : result.won
+        ? "#22c55e"
+        : "#ef4444";
+  const centerSymbol = !result
+    ? ""
+    : result.won
+      ? "✓"
+      : result.drew
+        ? "·"
+        : "✗";
 
   return (
     <div
@@ -402,55 +427,90 @@ export function CombatSlotColumn({
         {oppCard}
       </div>
 
+      {/* Inter-card readout: opp weight  ─ ✓ ─  my weight, with thin
+          outcome-tinted gradient rules on either side. Same height as the
+          old pill badge (h-6) so the arena layout math stays untouched. */}
       <div
-        className="flex items-center h-6 justify-center gap-1.5 py-1.5 rounded-lg shrink-0"
+        className="flex items-center h-6 justify-center shrink-0"
         style={{
           width: cardW,
-          backgroundColor: badgeBg,
-          opacity: revealed ? 1 : 0.3,
+          gap: 6,
+          // Fully hidden until the slot reveal + combat settle (parent sets
+          // `result.visible`). No ghost readout like semi-transparent state.
+          opacity: revealed ? 1 : 0,
           transform: revealed ? "scale(1)" : "scale(0.92)",
           transition:
-            "opacity 0.25s ease, background-color 0.35s ease, transform 0.25s cubic-bezier(0.34, 1.6, 0.64, 1)",
+            "opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.6, 0.64, 1)",
         }}
+        aria-hidden={!revealed}
       >
         {result && (
           <>
-            <span
-              className="font-bold tabular-nums rounded leading-none"
+            <div
+              className="h-px flex-1"
               style={{
-                color: "white",
-                backgroundColor: weightResultColor(result.won, result.drew, false),
-                fontSize: "10px",
-                padding: "2px 5px",
-                borderRadius: 3,
+                background: `linear-gradient(to right, transparent 0%, ${lineColor} 100%)`,
+                minWidth: 8,
+                transition: "background 0.35s ease",
+              }}
+            />
+
+            <span
+              className="tabular-nums leading-none"
+              style={{
+                fontFamily: "var(--font-league-gothic), sans-serif",
+                color: oppWeightColor,
+                fontSize: 17,
+                letterSpacing: "0.04em",
+                minWidth: "0.8em",
+                textAlign: "right",
+                transition: "color 0.35s ease",
               }}
             >
               {result.oppWeight}
             </span>
+
             <span
-              className="text-xs font-bold leading-none"
+              className="leading-none"
               style={{
-                color: result.won
-                  ? "#22c55e"
-                  : result.drew
-                  ? "var(--text-muted)"
-                  : "#ef4444",
+                color: centerColor,
+                fontSize: result.drew ? 14 : 10,
+                fontWeight: 700,
+                width: 12,
+                textAlign: "center",
+                // The center dot for draws sits a touch above the baseline
+                // of latin glyphs; nudge it down so it visually aligns with
+                // the weight digits.
+                transform: result.drew ? "translateY(-0.2em)" : "none",
+                transition: "color 0.35s ease",
               }}
             >
-              {result.won ? "✓" : result.drew ? "=" : "✗"}
+              {centerSymbol}
             </span>
+
             <span
-              className="font-bold tabular-nums rounded leading-none"
+              className="tabular-nums leading-none"
               style={{
-                color: "white",
-                backgroundColor: weightResultColor(result.won, result.drew, true),
-                fontSize: "10px",
-                padding: "2px 5px",
-                borderRadius: 3,
+                fontFamily: "var(--font-league-gothic), sans-serif",
+                color: myWeightColor,
+                fontSize: 17,
+                letterSpacing: "0.04em",
+                minWidth: "0.8em",
+                textAlign: "left",
+                transition: "color 0.35s ease",
               }}
             >
               {result.myWeight}
             </span>
+
+            <div
+              className="h-px flex-1"
+              style={{
+                background: `linear-gradient(to left, transparent 0%, ${lineColor} 100%)`,
+                minWidth: 8,
+                transition: "background 0.35s ease",
+              }}
+            />
           </>
         )}
       </div>

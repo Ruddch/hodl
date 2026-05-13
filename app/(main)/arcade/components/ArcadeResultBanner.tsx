@@ -93,7 +93,7 @@ function ScoreDigit({
 }: {
   value: number;
   color: string;
-  /** Subtle text-glow only when this side currently "wins". */
+  /** Subtle text-glow when this digit is the highlighted (outcome) side. */
   highlight: boolean;
 }) {
   const [animKey, setAnimKey] = useState(0);
@@ -104,7 +104,10 @@ function ScoreDigit({
       firstRef.current = false;
       return;
     }
-    setAnimKey((k) => k + 1);
+    const id = requestAnimationFrame(() => {
+      setAnimKey((k) => k + 1);
+    });
+    return () => cancelAnimationFrame(id);
   }, [value]);
 
   return (
@@ -142,22 +145,20 @@ export function ArcadeResultBanner({
 
   const isVictory = status.kind === "victory";
   const isDefeat = status.kind === "defeat";
-  const isDraw = status.kind === "draw";
   const isCancelled = status.kind === "cancelled";
 
-  // Score colours. Winner side glows green, loser stays neutral white-ish.
-  // During reveal/coin-flip both sides are neutral.
+  // Score colours: only the local player's number takes outcome colour
+  // (green win / red loss). Opponent stays neutral. Pending / coin-flip /
+  // draw: both neutral.
   const myColor = isVictory
     ? GREEN
     : isDefeat
-      ? "var(--text-primary)"
+      ? RED
       : "var(--text-primary)";
-  const oppColor = isDefeat
-    ? GREEN
-    : "var(--text-primary)";
+  const oppColor = "var(--text-primary)";
 
-  const myHighlight = isVictory;
-  const oppHighlight = isDefeat;
+  const myHighlight = isVictory || isDefeat;
+  const oppHighlight = false;
 
   // Cancelled matches don't really have a meaningful score → hide it.
   const showScore = !isCancelled;
