@@ -9,6 +9,7 @@ import { MatchArena, type ArenaSlot } from "./MatchArena";
 import type { CombatOutcome } from "./CombatSlotColumn";
 import {
   COMBAT_ANIMATION,
+  getCoinFlipStartMs,
   getCombatTotalMs,
   getRevealTotalMs,
   getSlotCombatEndMs,
@@ -37,6 +38,7 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
   const [combatTriggers, setCombatTriggers] = useState<number[]>([]);
   const [visibleResults, setVisibleResults] = useState<Set<number>>(new Set());
   const [displayScore, setDisplayScore] = useState({ my: 0, opp: 0 });
+  const [coinFlipPlay, setCoinFlipPlay] = useState(false);
   const [revealComplete, setRevealComplete] = useState(false);
 
   useEffect(() => {
@@ -74,6 +76,7 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
     setCombatTriggers([]);
     setVisibleResults(new Set());
     setDisplayScore({ my: 0, opp: 0 });
+    setCoinFlipPlay(false);
     setRevealComplete(false);
   }, [matchId]);
 
@@ -82,14 +85,27 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
     replay?.status === "cancelled" || replay?.resolution?.tiebreak === "cancelled";
   const isResolved = isCompleted || isCancelled;
 
-  // Sequential reveal animation when match result loads
-  const roundSlotsSnap = replay?.round_scores?.slots ?? [];
-  const isPlayer1Snap =
+  // Derive which player we are: prefer user_id match, fall back to hint
+  const isPlayer1 =
     replay !== null
       ? user?.user_id !== undefined
         ? replay.player1?.id === user.user_id
         : (isPlayer1Hint ?? true)
       : (isPlayer1Hint ?? true);
+
+  const myPlayer = isPlayer1 ? replay?.player1 : replay?.player2;
+  const oppPlayer = isPlayer1 ? replay?.player2 : replay?.player1;
+
+  const winnerId = replay?.winner_user_id;
+  const myPlayerId = user?.user_id ?? (isPlayer1 ? replay?.player1?.id : replay?.player2?.id);
+  const iWon = isCompleted && !isCancelled && winnerId != null && winnerId === myPlayerId;
+  const isDraw = isCompleted && !isCancelled && winnerId === null;
+  const isCoinFlip = isCompleted && replay?.resolution?.tiebreak === "coin_flip";
+  const needsCoinFlip = !!isCoinFlip && !isCancelled && winnerId != null;
+  const resolutionSummary = replay?.resolution?.summary_english ?? null;
+
+  // Sequential reveal animation when match result loads
+  const roundSlotsSnap = replay?.round_scores?.slots ?? [];
 
   useEffect(() => {
     if (!isResolved) return;
@@ -128,31 +144,29 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
       const badgeAt = settledAt - Math.round(combatTotal * 0.15);
       timers.push(setTimeout(() => {
         setVisibleResults(prev => new Set([...prev, i]));
-        const myPts = isPlayer1Snap ? slot.player1_points : slot.player2_points;
-        const oppPts = isPlayer1Snap ? slot.player2_points : slot.player1_points;
+        const myPts = isPlayer1 ? slot.player1_points : slot.player2_points;
+        const oppPts = isPlayer1 ? slot.player2_points : slot.player1_points;
         setDisplayScore(prev => ({ my: prev.my + myPts, opp: prev.opp + oppPts }));
       }, badgeAt));
     });
 
-    timers.push(setTimeout(
-      () => setRevealComplete(true),
-      getRevealTotalMs(roundSlotsSnap.length, cfg),
-    ));
+    if (needsCoinFlip) {
+      // Banner stays neutral while the coin spins; overlay's onComplete
+      // promotes revealComplete itself.
+      timers.push(setTimeout(
+        () => setCoinFlipPlay(true),
+        getCoinFlipStartMs(roundSlotsSnap.length, cfg),
+      ));
+    } else {
+      timers.push(setTimeout(
+        () => setRevealComplete(true),
+        getRevealTotalMs(roundSlotsSnap.length, cfg),
+      ));
+    }
 
     return () => timers.forEach(clearTimeout);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isResolved, roundSlotsSnap.length]);
-
-  // Derive which player we are: prefer user_id match, fall back to hint
-  const isPlayer1 =
-    replay !== null
-      ? user?.user_id !== undefined
-        ? replay.player1?.id === user.user_id
-        : (isPlayer1Hint ?? true)
-      : (isPlayer1Hint ?? true);
-
-  const myPlayer = isPlayer1 ? replay?.player1 : replay?.player2;
-  const oppPlayer = isPlayer1 ? replay?.player2 : replay?.player1;
+  }, [isResolved, roundSlotsSnap.length, needsCoinFlip]);
 
   // Reconstruct picks from draft_steps if not passed as prop
   const myUserId = user?.user_id ?? myPlayer?.id;
@@ -163,13 +177,6 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
         .map((s) => s.chosen_card!)
     : [];
   const effectivePicks = myPicks && myPicks.length > 0 ? myPicks : picksFromReplay;
-
-  const winnerId = replay?.winner_user_id;
-  const myPlayerId = user?.user_id ?? (isPlayer1 ? replay?.player1?.id : replay?.player2?.id);
-  const iWon = isCompleted && !isCancelled && winnerId !== null && winnerId === myPlayerId;
-  const isDraw = isCompleted && !isCancelled && winnerId === null;
-  const isCoinFlip = isCompleted && replay?.resolution?.tiebreak === "coin_flip";
-  const resolutionSummary = replay?.resolution?.summary_english ?? null;
 
   const roundSlots: PvpReplayRoundSlot[] = replay?.round_scores?.slots ?? [];
 
@@ -312,6 +319,15 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
               <MatchArena
                 myPlayer={myPlayer}
                 oppPlayer={oppPlayer}
+                coinFlip={
+                  needsCoinFlip
+                    ? {
+                        play: coinFlipPlay,
+                        winnerSide: iWon ? "my" : "opp",
+                        onComplete: () => setRevealComplete(true),
+                      }
+                    : null
+                }
                 slots={roundSlots.map((slot, i) => {
                   const myCardId = isPlayer1 ? slot.player1_card_id : slot.player2_card_id;
                   const oppCardId = isPlayer1 ? slot.player2_card_id : slot.player1_card_id;

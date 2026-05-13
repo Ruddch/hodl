@@ -7,6 +7,7 @@ import type { PvpReplayPlayer } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 import { COMBAT_ANIMATION } from "../combat/combatAnimationConfig";
 import { CombatSlotColumn, type CombatOutcome } from "./CombatSlotColumn";
+import { CoinFlipOverlay, type CoinFlipWinnerSide } from "./CoinFlipOverlay";
 
 export interface ArenaSlot {
   myImgUrl?: string | null;
@@ -30,6 +31,12 @@ export interface ArenaSlot {
   combatOutcome?: CombatOutcome;
 }
 
+export interface CoinFlipProps {
+  play: boolean;
+  winnerSide: CoinFlipWinnerSide;
+  onComplete: () => void;
+}
+
 interface MatchArenaProps {
   myPlayer: PvpReplayPlayer | null | undefined;
   oppPlayer: PvpReplayPlayer | null | undefined;
@@ -38,6 +45,8 @@ interface MatchArenaProps {
   slots: ArenaSlot[];
   /** Fallback slot count while data loads */
   slotCount?: number;
+  /** Coin-flip overlay config; `null` when not applicable. */
+  coinFlip?: CoinFlipProps | null;
 }
 
 function formatNickname(player: PvpReplayPlayer): string {
@@ -53,6 +62,7 @@ export function MatchArena({
   oppPlayerLoading = false,
   slots,
   slotCount = 5,
+  coinFlip = null,
 }: MatchArenaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const arenaRef = useRef<HTMLDivElement>(null);
@@ -137,27 +147,52 @@ export function MatchArena({
       {/* Combat columns */}
       <div
         ref={arenaRef}
-        className="flex gap-2 shrink-0 justify-center"
+        className="relative flex gap-2 shrink-0 justify-center"
         style={{ willChange: "transform" }}
       >
-        {displaySlots.map((slot, i) => (
-          <CombatSlotColumn
-            key={i}
-            cardW={CARD_W}
-            cardH={cardH}
-            slot={{
-              oppImgUrl: slot.oppImgUrl,
-              oppSymbol: slot.oppSymbol,
-              myImgUrl: slot.myImgUrl,
-              mySymbol: slot.mySymbol,
-            }}
-            isOppFlipped={slot.isOppFlipped}
-            result={slot.result}
-            combatTrigger={slot.combatTrigger ?? 0}
-            combatOutcome={slot.combatOutcome ?? null}
+        {/* NOTE: deliberately no `filter: blur(...)` here. A blur over the
+            full card row creates an expensive composite surface that is
+            repainted every frame while the coin spins/shakes alongside it
+            (~2 fps in practice). Plain `opacity` is GPU-cheap and reads as
+            "dimmed background" well enough. */}
+        <div
+          className="flex gap-2 shrink-0 justify-center"
+          style={{
+            opacity: coinFlip?.play ? 0.35 : 1,
+            transition: "opacity 0.25s ease",
+          }}
+        >
+          {displaySlots.map((slot, i) => (
+            <CombatSlotColumn
+              key={i}
+              cardW={CARD_W}
+              cardH={cardH}
+              slot={{
+                oppImgUrl: slot.oppImgUrl,
+                oppSymbol: slot.oppSymbol,
+                myImgUrl: slot.myImgUrl,
+                mySymbol: slot.mySymbol,
+              }}
+              isOppFlipped={slot.isOppFlipped}
+              result={slot.result}
+              combatTrigger={slot.combatTrigger ?? 0}
+              combatOutcome={slot.combatOutcome ?? null}
+              onImpact={handleImpact}
+            />
+          ))}
+        </div>
+
+        {coinFlip && (
+          <CoinFlipOverlay
+            play={coinFlip.play}
+            winnerSide={coinFlip.winnerSide}
+            myPlayer={myPlayer}
+            oppPlayer={oppPlayer}
             onImpact={handleImpact}
+            onComplete={coinFlip.onComplete}
+            isMd={isMd}
           />
-        ))}
+        )}
       </div>
 
       {/* My player info */}

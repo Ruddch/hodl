@@ -65,11 +65,35 @@ export interface CombatTimelineConfig {
   bannerTailMs: number;
 }
 
+export interface CombatCoinFlipConfig {
+  /** Delay after the last slot settles before the coin enters. */
+  preDelayMs: number;
+  /** Coin entrance (fade + scale-in). */
+  entranceMs: number;
+  /** Main spin phase, ends roughly aligned with the start of the landing flip. */
+  spinMs: number;
+  /** Number of full 360° rotations performed during spinMs. */
+  fullRotations: number;
+  /** Final decel into the winning face. */
+  landMs: number;
+  /** Hold on the winning face (with flash + screen shake). */
+  postHoldMs: number;
+  /** Fade-out / scale-down before unmount. */
+  exitMs: number;
+  /** Arena screen-shake amplitude on coin landing. */
+  screenShakePx: number;
+  screenShakeMs: number;
+  diameterMobile: number;
+  diameterDesktop: number;
+}
+
 export interface CombatEasings {
   anticipate: CubicBezier;
   strike: CubicBezier;
   recoil: CubicBezier;
   settle: CubicBezier;
+  /** Fast start, strong decel — used for the coin-flip spin. */
+  spin: CubicBezier;
 }
 
 export interface CombatAnimationConfig {
@@ -77,6 +101,7 @@ export interface CombatAnimationConfig {
   strike: CombatStrikeConfig;
   draw: CombatDrawConfig;
   timeline: CombatTimelineConfig;
+  coinFlip: CombatCoinFlipConfig;
   easings: CombatEasings;
   /** When true, prefers-reduced-motion shortcuts the combat to a fast fade. */
   respectReducedMotion: boolean;
@@ -123,6 +148,21 @@ export const COMBAT_ANIMATION: CombatAnimationConfig = {
     cancelledBannerDelayMs: 200,
     bannerTailMs: 380,
   },
+  coinFlip: {
+    preDelayMs: 300,
+    entranceMs: 280,
+    spinMs: 1500,
+    fullRotations: 7,
+    landMs: 320,
+    // Hold long enough for the user to register WHICH face landed before
+    // the coin exits. Anything below ~800ms feels like a flash.
+    postHoldMs: 1100,
+    exitMs: 260,
+    screenShakePx: 7,
+    screenShakeMs: 260,
+    diameterMobile: 110,
+    diameterDesktop: 150,
+  },
   easings: {
     // Smooth wind-up
     anticipate: [0.4, 0.0, 0.6, 1.0],
@@ -132,6 +172,8 @@ export const COMBAT_ANIMATION: CombatAnimationConfig = {
     recoil: [0.2, 0.8, 0.4, 1.0],
     // Soft settle back to neutral
     settle: [0.25, 0.1, 0.25, 1.0],
+    // Fast attack, long smooth decel (feels like a real tossed coin).
+    spin: [0.16, 1.0, 0.3, 1.0],
   },
   respectReducedMotion: true,
 };
@@ -177,8 +219,36 @@ export function getSlotCombatStartMs(
   return getSlotFlipStartMs(i, cfg) + cfg.reveal.flipMs + cfg.reveal.postRevealPauseMs;
 }
 
-/** Total time to fully reveal `n` slots. */
-export function getRevealTotalMs(n: number, cfg: CombatAnimationConfig = COMBAT_ANIMATION): number {
+export interface RevealTotalOptions {
+  /** Add the coin-flip overlay duration to the total reveal window. */
+  withCoinFlip?: boolean;
+}
+
+/** Total time to fully reveal `n` slots (plus optional coin-flip). */
+export function getRevealTotalMs(
+  n: number,
+  cfg: CombatAnimationConfig = COMBAT_ANIMATION,
+  opts: RevealTotalOptions = {},
+): number {
   if (n <= 0) return 0;
-  return getSlotCombatEndMs(n - 1, cfg) + cfg.timeline.bannerTailMs;
+  const slotsTail = getSlotCombatEndMs(n - 1, cfg) + cfg.timeline.bannerTailMs;
+  if (opts.withCoinFlip) return slotsTail + getCoinFlipTotalMs(cfg);
+  return slotsTail;
+}
+
+/** Total runtime of the coin-flip overlay sequence. */
+export function getCoinFlipTotalMs(
+  cfg: CombatAnimationConfig = COMBAT_ANIMATION,
+): number {
+  const c = cfg.coinFlip;
+  return c.preDelayMs + c.entranceMs + c.spinMs + c.landMs + c.postHoldMs + c.exitMs;
+}
+
+/** Absolute timestamp (from "resolved") when the coin overlay should be triggered. */
+export function getCoinFlipStartMs(
+  n: number,
+  cfg: CombatAnimationConfig = COMBAT_ANIMATION,
+): number {
+  if (n <= 0) return cfg.coinFlip.preDelayMs;
+  return getSlotCombatEndMs(n - 1, cfg) + cfg.coinFlip.preDelayMs;
 }
