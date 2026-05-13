@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { BlurCard } from "@/components/BlurCard";
 import { getPvpMatchReplay } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -57,6 +58,7 @@ function getBannerStatus(args: {
 
 
 export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPlayAgain }: ArcadeResultProps) {
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [replay, setReplay] = useState<PvpReplayData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -132,6 +134,12 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
   const isCoinFlip = isCompleted && replay?.resolution?.tiebreak === "coin_flip";
   const needsCoinFlip = !!isCoinFlip && !isCancelled && winnerId != null;
   const resolutionSummary = replay?.resolution?.summary_english ?? null;
+
+  useEffect(() => {
+    if (!iWon) return;
+    queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+  }, [iWon, matchId, queryClient]);
 
   // Sequential reveal animation when match result loads
   const roundSlotsSnap = replay?.round_scores?.slots ?? [];

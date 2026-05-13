@@ -4,9 +4,11 @@ import { useRef, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useVirtualizer, measureElement } from "@tanstack/react-virtual";
 import { BlurCard } from "@/components/BlurCard";
+import { DustIcon } from "@/components/Icons";
 import { SignInButton } from "@/components/SignInButton";
 import { useAuth } from "@/lib/auth-context";
 import { useJoinPvp, useMyPvpMatchesInfinite } from "@/lib/api";
+import { PVP_ARCADE_ENTRY_DUST } from "@/lib/constants";
 import { MatchHistoryRow } from "./MatchHistoryRow";
 
 interface ArcadeLandingProps {
@@ -157,7 +159,15 @@ export function ArcadeLanding({ onPlay, onViewMatch }: ArcadeLandingProps) {
                 disabled={joinMutation.isPending}
                 className="w-full sm:w-fit px-10 py-3 bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-[15px] transition-colors text-base"
               >
-                {joinMutation.isPending ? "Joining…" : "Play Now"}
+                {joinMutation.isPending ? (
+                  "Joining…"
+                ) : (
+                  <span className="inline-flex items-center justify-center gap-1 whitespace-nowrap">
+                    <span>Play for</span>
+                    <span className="tabular-nums">{PVP_ARCADE_ENTRY_DUST}</span>
+                    <DustIcon className="h-[1.1em] w-[1.1em] shrink-0" />
+                  </span>
+                )}
               </button>
             ) : (
               <div className="w-full sm:w-fit">

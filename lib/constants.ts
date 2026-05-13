@@ -13,6 +13,9 @@ export const IS_DEVELOPMENT = process.env.NEXT_PUBLIC_ENV === "development";
 /** Пункт Arcade в сайдбаре и доступность /arcade — только при `NEXT_PUBLIC_ENV=development` или `avax` */
 export const IS_ARCADE_ENABLED = IS_DEVELOPMENT;
 
+/** Стоимость входа в PvP-аркаду (dust), должна совпадать с бэкендом */
+export const PVP_ARCADE_ENTRY_DUST = 20;
+
 /** Базовый URL API */
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_ENV === "avax"

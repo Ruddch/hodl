@@ -1004,6 +1004,8 @@ export function useJoinPvp() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pvpMatches"] });
       queryClient.invalidateQueries({ queryKey: ["pvpMatchesInfinite"] });
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
 }
