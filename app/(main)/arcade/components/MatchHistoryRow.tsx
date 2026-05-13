@@ -177,7 +177,7 @@ export function MatchHistoryRow({ match, onClick }: MatchHistoryRowProps) {
               >
                 {headline.label}
               </span>
-              {showSecondaryPill ? (
+              {showSecondaryPill && false ? (
                 <SecondaryPill>{match.opponent ? "Live" : "Queue"}</SecondaryPill>
               ) : null}
             </div>
