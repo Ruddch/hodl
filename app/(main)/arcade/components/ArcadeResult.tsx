@@ -6,6 +6,15 @@ import { getPvpMatchReplay } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { PvpReplayData, PvpOfferedCard, PvpReplayRoundSlot } from "@/lib/types";
 import { MatchArena, type ArenaSlot } from "./MatchArena";
+import type { CombatOutcome } from "./CombatSlotColumn";
+import {
+  COMBAT_ANIMATION,
+  getCombatTotalMs,
+  getRevealTotalMs,
+  getSlotCombatEndMs,
+  getSlotCombatStartMs,
+  getSlotFlipStartMs,
+} from "../combat/combatAnimationConfig";
 
 interface ArcadeResultProps {
   matchId: number;
@@ -25,6 +34,7 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
 
   // Reveal animation state
   const [flippedSlots, setFlippedSlots] = useState<Set<number>>(new Set());
+  const [combatTriggers, setCombatTriggers] = useState<number[]>([]);
   const [visibleResults, setVisibleResults] = useState<Set<number>>(new Set());
   const [displayScore, setDisplayScore] = useState({ my: 0, opp: 0 });
   const [revealComplete, setRevealComplete] = useState(false);
@@ -61,6 +71,7 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
   // Reset animation when navigating to a different match
   useEffect(() => {
     setFlippedSlots(new Set());
+    setCombatTriggers([]);
     setVisibleResults(new Set());
     setDisplayScore({ my: 0, opp: 0 });
     setRevealComplete(false);
@@ -82,36 +93,50 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
 
   useEffect(() => {
     if (!isResolved) return;
-    // Cancelled matches usually have no round slots — reveal banner straight away.
     if (roundSlotsSnap.length === 0) {
-      const t = setTimeout(() => setRevealComplete(true), 200);
+      const t = setTimeout(
+        () => setRevealComplete(true),
+        COMBAT_ANIMATION.timeline.cancelledBannerDelayMs,
+      );
       return () => clearTimeout(t);
     }
-    const FLIP_DUR = 520;
-    const POST_PAUSE = 380;
-    const BETWEEN = 80;
-    const INITIAL_DELAY = 500;
+
     const timers: ReturnType<typeof setTimeout>[] = [];
+    const cfg = COMBAT_ANIMATION;
+    const combatTotal = getCombatTotalMs(cfg);
 
     roundSlotsSnap.forEach((slot, i) => {
-      const base = INITIAL_DELAY + i * (FLIP_DUR + POST_PAUSE + BETWEEN);
-      // flip the opp card
+      const flipAt = getSlotFlipStartMs(i, cfg);
+      const combatAt = getSlotCombatStartMs(i, cfg);
+      const settledAt = getSlotCombatEndMs(i, cfg);
+
       timers.push(setTimeout(() => {
         setFlippedSlots(prev => new Set([...prev, i]));
-      }, base));
-      // show result + update score
+      }, flipAt));
+
+      timers.push(setTimeout(() => {
+        setCombatTriggers(prev => {
+          const next = [...prev];
+          while (next.length <= i) next.push(0);
+          next[i] = (next[i] || 0) + 1;
+          return next;
+        });
+      }, combatAt));
+
+      // Show weight badges + update score slightly before the slot fully
+      // settles so the badge "pops in" right as the recoil ends.
+      const badgeAt = settledAt - Math.round(combatTotal * 0.15);
       timers.push(setTimeout(() => {
         setVisibleResults(prev => new Set([...prev, i]));
         const myPts = isPlayer1Snap ? slot.player1_points : slot.player2_points;
         const oppPts = isPlayer1Snap ? slot.player2_points : slot.player1_points;
         setDisplayScore(prev => ({ my: prev.my + myPts, opp: prev.opp + oppPts }));
-      }, base + FLIP_DUR));
+      }, badgeAt));
     });
 
-    // Reveal final banner after last result
     timers.push(setTimeout(
       () => setRevealComplete(true),
-      INITIAL_DELAY + roundSlotsSnap.length * (FLIP_DUR + POST_PAUSE + BETWEEN) + 450,
+      getRevealTotalMs(roundSlotsSnap.length, cfg),
     ));
 
     return () => timers.forEach(clearTimeout);
@@ -298,6 +323,11 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
                   const oppWeight = isPlayer1 ? slot.player2_weight : slot.player1_weight;
                   const won = myPoints > oppPoints;
                   const drew = myPoints === oppPoints;
+                  const outcome: CombatOutcome = drew
+                    ? "draw"
+                    : won
+                    ? "my_win"
+                    : "opp_win";
                   return {
                     myImgUrl: myCard?.rendered_image_url || myCard?.template_image_url,
                     mySymbol: myCard?.token_symbol,
@@ -311,6 +341,8 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
                       drew,
                       visible: visibleResults.has(i),
                     },
+                    combatTrigger: combatTriggers[i] ?? 0,
+                    combatOutcome: outcome,
                   } satisfies ArenaSlot;
                 })}
               />
