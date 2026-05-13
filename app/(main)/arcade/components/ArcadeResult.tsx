@@ -28,18 +28,24 @@ interface ArcadeResultProps {
 }
 
 /**
- * Derive the banner's narrative state from the reveal/coin-flip flags.
- * - During reveal: "pending" (just animated scores, no label).
- * - During coin-flip spin: "coin_flip" (neutral label, score frozen).
- * - After reveal completes: the actual outcome.
+ * Derive the banner's narrative state across every match phase.
+ * - "loading": initial replay fetch.
+ * - "waiting": opponent hasn't finished their draft.
+ * - "pending": reveal animation in progress (scores tick up).
+ * - "coin_flip": coin spinning — score frozen, label neutral.
+ * - terminal: cancelled / draw / victory / defeat.
  */
 function getBannerStatus(args: {
+  isLoading: boolean;
+  isResolved: boolean;
   revealComplete: boolean;
   coinFlipPlay: boolean;
   isCancelled: boolean;
   isDraw: boolean;
   iWon: boolean;
 }): ArcadeResultStatus {
+  if (args.isLoading) return { kind: "loading" };
+  if (!args.isResolved) return { kind: "waiting" };
   if (!args.revealComplete) {
     if (args.coinFlipPlay) return { kind: "coin_flip" };
     return { kind: "pending" };
@@ -211,22 +217,53 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
     }
   });
 
+  const bannerStatus = getBannerStatus({
+    isLoading,
+    isResolved,
+    revealComplete,
+    coinFlipPlay,
+    isCancelled,
+    isDraw,
+    iWon,
+  });
+
+  // Caption under the score:
+  // - resolved match: optional resolution summary (cancellation / coin flip).
+  // - waiting: friendly hint that the user can come back later.
+  const bannerCaption: string | null = (() => {
+    if (bannerStatus.kind === "waiting") {
+      return "You can leave and come back later.";
+    }
+    if (
+      (bannerStatus.kind === "cancelled" || bannerStatus.kind === "coin_flip") &&
+      resolutionSummary &&
+      revealComplete
+    ) {
+      return resolutionSummary;
+    }
+    return null;
+  })();
+
+  const banner = (
+    <ArcadeResultBanner
+      myScore={displayScore.my}
+      oppScore={displayScore.opp}
+      status={bannerStatus}
+      caption={bannerCaption}
+    />
+  );
+
   return (
     <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0 h-full">
       <BlurCard backgroundColor="rgba(167, 139, 250, 1)" className="flex flex-col flex-1 min-h-0">
         <div className="flex flex-col gap-5 px-4 sm:px-6 pt-4 md:pt-6 pb-6 md:pb-8 h-full">
 
-          {/* Header — title + (on desktop) result banner share one row.
-              The title sits at the TOP of the row, aligned with the VICTORY /
-              DEFEAT label (the banner's first row). The score grows downward
-              underneath. The banner is rendered absolutely so the score stays
-              centered relative to the whole card, not to the space after the
-              title. */}
-          <div
-            className={`relative flex items-start shrink-0 ${
-              isResolved ? "md:min-h-[92px]" : ""
-            }`}
-          >
+          {/* Header — title + (on desktop) the banner share one row.
+              The title sits at the TOP of the row, aligned with the banner's
+              status label. The score (or placeholder) grows downward. The
+              banner is rendered absolutely so it stays centered relative to
+              the whole card, not to the space after the title. */}
+          <div className="relative flex items-start shrink-0 md:min-h-[92px]">
             <h2
               className="text-3xl text-[var(--text-primary)] tracking-wide uppercase leading-none relative z-10"
               style={{ fontFamily: "var(--font-league-gothic), sans-serif" }}
@@ -234,141 +271,83 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
               Token Duel
             </h2>
 
-            {isResolved && (
-              <div className="hidden md:flex md:absolute md:inset-x-0 md:top-0 md:justify-center md:pointer-events-none">
-                <ArcadeResultBanner
-                  myScore={displayScore.my}
-                  oppScore={displayScore.opp}
-                  status={getBannerStatus({
-                    revealComplete,
-                    coinFlipPlay,
-                    isCancelled,
-                    isDraw,
-                    iWon,
-                  })}
-                  caption={
-                    revealComplete && resolutionSummary && (isCancelled || isCoinFlip)
-                      ? resolutionSummary
-                      : null
-                  }
-                />
-              </div>
-            )}
+            <div className="hidden md:flex md:absolute md:inset-x-0 md:top-0 md:justify-center md:pointer-events-none">
+              {banner}
+            </div>
           </div>
 
-          {/* Body */}
-          {isLoading ? (
-            <div className="flex flex-col items-center gap-4 py-16">
-              <div className="w-10 h-10 rounded-full border-4 border-purple-400 border-t-transparent animate-spin" />
-              <p className="text-sm text-[var(--text-muted)]">Loading result…</p>
-            </div>
+          {/* Mobile-only banner. Desktop banner lives inside the header row
+              above so it shares a line with the title. */}
+          <div className="md:hidden">{banner}</div>
 
-          ) : !isResolved ? (
-            /* ── Waiting for opponent ───────────────────────────────────── */
-            <>
-              {/* Waiting banner */}
-              <div className="flex items-center gap-3 px-4 rounded-2xl bg-[var(--surface-elevated)] shrink-0" style={{ height: 60 }}>
-                <div className="w-4 h-4 rounded-full border-[3px] border-purple-400 border-t-transparent animate-spin shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">
-                    Waiting for opponent to finish…
-                  </p>
-                  <p className="text-xs text-[var(--text-muted)] leading-tight">
-                    You can leave and come back later.
-                  </p>
-                </div>
-              </div>
-
-              {/* Arena — my cards face-up, opp cards face-down */}
-              <MatchArena
-                myPlayer={myPlayer}
-                oppPlayer={null}
-                oppPlayerLoading
-                slotCount={5}
-                slots={Array.from({ length: 5 }, (_, i) => {
-                  const card = effectivePicks[i];
-                  return {
-                    myImgUrl: card?.rendered_image_url || card?.template_image_url || null,
-                    mySymbol: card?.token_symbol,
-                    oppImgUrl: null,
-                    isOppFlipped: false,
-                  } satisfies ArenaSlot;
-                })}
-              />
-            </>
-
+          {/* Body — arena is always rendered. Its slot count / face-down
+              state varies per phase, but the layout footprint stays the same
+              so transitions between loading → waiting → result are seamless. */}
+          {isLoading || !isResolved ? (
+            /* ── Loading / waiting: my cards face-up, opp face-down ──── */
+            <MatchArena
+              myPlayer={myPlayer}
+              oppPlayer={null}
+              oppPlayerLoading
+              slotCount={5}
+              slots={Array.from({ length: 5 }, (_, i) => {
+                const card = effectivePicks[i];
+                return {
+                  myImgUrl: card?.rendered_image_url || card?.template_image_url || null,
+                  mySymbol: card?.token_symbol,
+                  oppImgUrl: null,
+                  isOppFlipped: false,
+                } satisfies ArenaSlot;
+              })}
+            />
           ) : (
-            /* ── Match completed ────────────────────────────────────────── */
-            <>
-              {/* Mobile-only result banner. Desktop banner lives inside the
-                  header row above so it shares a line with the title. */}
-              <div className="md:hidden">
-                <ArcadeResultBanner
-                  myScore={displayScore.my}
-                  oppScore={displayScore.opp}
-                  status={getBannerStatus({
-                    revealComplete,
-                    coinFlipPlay,
-                    isCancelled,
-                    isDraw,
-                    iWon,
-                  })}
-                  caption={
-                    revealComplete && resolutionSummary && (isCancelled || isCoinFlip)
-                      ? resolutionSummary
-                      : null
-                  }
-                />
-              </div>
-
-              {/* Arena */}
-              <MatchArena
-                myPlayer={myPlayer}
-                oppPlayer={oppPlayer}
-                coinFlip={
-                  needsCoinFlip
-                    ? {
-                        play: coinFlipPlay,
-                        winnerSide: iWon ? "my" : "opp",
-                        onComplete: () => setRevealComplete(true),
-                      }
-                    : null
-                }
-                slots={roundSlots.map((slot, i) => {
-                  const myCardId = isPlayer1 ? slot.player1_card_id : slot.player2_card_id;
-                  const oppCardId = isPlayer1 ? slot.player2_card_id : slot.player1_card_id;
-                  const myCard = cardMap.get(myCardId);
-                  const oppCard = cardMap.get(oppCardId);
-                  const myPoints = isPlayer1 ? slot.player1_points : slot.player2_points;
-                  const oppPoints = isPlayer1 ? slot.player2_points : slot.player1_points;
-                  const myWeight = isPlayer1 ? slot.player1_weight : slot.player2_weight;
-                  const oppWeight = isPlayer1 ? slot.player2_weight : slot.player1_weight;
-                  const won = myPoints > oppPoints;
-                  const drew = myPoints === oppPoints;
-                  const outcome: CombatOutcome = drew
-                    ? "draw"
-                    : won
-                    ? "my_win"
-                    : "opp_win";
-                  return {
-                    myImgUrl: myCard?.rendered_image_url || myCard?.template_image_url,
-                    mySymbol: myCard?.token_symbol,
-                    oppImgUrl: oppCard?.rendered_image_url || oppCard?.template_image_url,
-                    oppSymbol: oppCard?.token_symbol,
-                    isOppFlipped: flippedSlots.has(i),
-                    result: {
-                      myWeight,
-                      oppWeight,
-                      won,
-                      drew,
-                      visible: visibleResults.has(i),
-                    },
-                    combatTrigger: combatTriggers[i] ?? 0,
-                    combatOutcome: outcome,
-                  } satisfies ArenaSlot;
-                })}
-              />
-            </>
+            /* ── Match completed ──────────────────────────────────────── */
+            <MatchArena
+              myPlayer={myPlayer}
+              oppPlayer={oppPlayer}
+              coinFlip={
+                needsCoinFlip
+                  ? {
+                      play: coinFlipPlay,
+                      winnerSide: iWon ? "my" : "opp",
+                      onComplete: () => setRevealComplete(true),
+                    }
+                  : null
+              }
+              slots={roundSlots.map((slot, i) => {
+                const myCardId = isPlayer1 ? slot.player1_card_id : slot.player2_card_id;
+                const oppCardId = isPlayer1 ? slot.player2_card_id : slot.player1_card_id;
+                const myCard = cardMap.get(myCardId);
+                const oppCard = cardMap.get(oppCardId);
+                const myPoints = isPlayer1 ? slot.player1_points : slot.player2_points;
+                const oppPoints = isPlayer1 ? slot.player2_points : slot.player1_points;
+                const myWeight = isPlayer1 ? slot.player1_weight : slot.player2_weight;
+                const oppWeight = isPlayer1 ? slot.player2_weight : slot.player1_weight;
+                const won = myPoints > oppPoints;
+                const drew = myPoints === oppPoints;
+                const outcome: CombatOutcome = drew
+                  ? "draw"
+                  : won
+                  ? "my_win"
+                  : "opp_win";
+                return {
+                  myImgUrl: myCard?.rendered_image_url || myCard?.template_image_url,
+                  mySymbol: myCard?.token_symbol,
+                  oppImgUrl: oppCard?.rendered_image_url || oppCard?.template_image_url,
+                  oppSymbol: oppCard?.token_symbol,
+                  isOppFlipped: flippedSlots.has(i),
+                  result: {
+                    myWeight,
+                    oppWeight,
+                    won,
+                    drew,
+                    visible: visibleResults.has(i),
+                  },
+                  combatTrigger: combatTriggers[i] ?? 0,
+                  combatOutcome: outcome,
+                } satisfies ArenaSlot;
+              })}
+            />
           )}
 
           {/* Action button */}

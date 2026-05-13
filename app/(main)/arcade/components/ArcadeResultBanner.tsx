@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 export type ArcadeResultStatus =
+  | { kind: "loading" } // replay data not loaded yet
+  | { kind: "waiting" } // opponent hasn't finished their draft
   | { kind: "pending" } // reveal still running — show only score
   | { kind: "victory" }
   | { kind: "defeat" }
@@ -33,6 +35,8 @@ interface StatusVisual {
   lineColor: string;
   /** Whether the status row should be visible at all. */
   show: boolean;
+  /** Show small spinner next to the label (waiting / loading states). */
+  withSpinner?: boolean;
 }
 
 function getVisual(status: ArcadeResultStatus): StatusVisual {
@@ -71,6 +75,22 @@ function getVisual(status: ArcadeResultStatus): StatusVisual {
         color: "var(--text-muted)",
         lineColor: "rgba(167, 139, 250, 0.55)",
         show: true,
+      };
+    case "waiting":
+      return {
+        label: "Waiting for opponent",
+        color: "var(--text-muted)",
+        lineColor: "rgba(167, 139, 250, 0.45)",
+        show: true,
+        withSpinner: true,
+      };
+    case "loading":
+      return {
+        label: "Loading match",
+        color: "var(--text-muted)",
+        lineColor: "rgba(167, 139, 250, 0.35)",
+        show: true,
+        withSpinner: true,
       };
     default:
       return {
@@ -160,7 +180,10 @@ export function ArcadeResultBanner({
   const myHighlight = isVictory || isDefeat;
   const oppHighlight = false;
 
-  // Cancelled matches don't really have a meaningful score → hide it.
+  // Cancelled matches don't have meaningful points → keep the slot but
+  // hide the score with a fixed-height placeholder so layout stays stable.
+  // Loading / waiting render a real "0 – 0" so the eventual tick-up of the
+  // first slot reads as a natural change rather than a new element popping in.
   const showScore = !isCancelled;
 
   return (
@@ -181,22 +204,41 @@ export function ArcadeResultBanner({
           }}
         />
 
-        <p
-          className="text-[11px] md:text-sm uppercase leading-none whitespace-nowrap"
+        <div
+          className="flex items-center gap-2 shrink-0"
           style={{
-            fontFamily: CONDENSED_FONT,
-            letterSpacing: "0.4em",
-            // Pad-right so optical centre matches once tracking adds whitespace.
-            paddingLeft: "0.4em",
-            color: visual.color,
             opacity: visual.show ? 1 : 0,
             transform: visual.show ? "translateY(0)" : "translateY(4px)",
-            transition: "opacity 0.4s ease, transform 0.4s ease, color 0.4s ease",
-            minHeight: "1em",
+            transition: "opacity 0.4s ease, transform 0.4s ease",
           }}
         >
-          {visual.label || "\u00A0"}
-        </p>
+          {visual.withSpinner && (
+            <div
+              className="rounded-full border-[2px] border-t-transparent animate-spin shrink-0"
+              style={{
+                width: 12,
+                height: 12,
+                borderColor: "rgba(167, 139, 250, 0.85)",
+                borderTopColor: "transparent",
+              }}
+              aria-hidden
+            />
+          )}
+          <p
+            className="text-[11px] md:text-sm uppercase leading-none whitespace-nowrap"
+            style={{
+              fontFamily: CONDENSED_FONT,
+              letterSpacing: "0.4em",
+              // Pad-right so optical centre matches once tracking adds whitespace.
+              paddingLeft: "0.4em",
+              color: visual.color,
+              transition: "color 0.4s ease",
+              minHeight: "1em",
+            }}
+          >
+            {visual.label || "\u00A0"}
+          </p>
+        </div>
 
         <div
           className="h-px flex-1 max-w-[140px] md:max-w-[260px]"
