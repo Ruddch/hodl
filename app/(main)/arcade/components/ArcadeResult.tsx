@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import type { PvpReplayData, PvpOfferedCard, PvpReplayRoundSlot } from "@/lib/types";
 import { MatchArena, type ArenaSlot } from "./MatchArena";
 import type { CombatOutcome } from "./CombatSlotColumn";
+import { ArcadeResultBanner, type ArcadeResultStatus } from "./ArcadeResultBanner";
 import {
   COMBAT_ANIMATION,
   getCoinFlipStartMs,
@@ -24,6 +25,28 @@ interface ArcadeResultProps {
   /** Picks made during the draft — shown while waiting for opponent */
   myPicks?: PvpOfferedCard[];
   onPlayAgain: () => void;
+}
+
+/**
+ * Derive the banner's narrative state from the reveal/coin-flip flags.
+ * - During reveal: "pending" (just animated scores, no label).
+ * - During coin-flip spin: "coin_flip" (neutral label, score frozen).
+ * - After reveal completes: the actual outcome.
+ */
+function getBannerStatus(args: {
+  revealComplete: boolean;
+  coinFlipPlay: boolean;
+  isCancelled: boolean;
+  isDraw: boolean;
+  iWon: boolean;
+}): ArcadeResultStatus {
+  if (!args.revealComplete) {
+    if (args.coinFlipPlay) return { kind: "coin_flip" };
+    return { kind: "pending" };
+  }
+  if (args.isCancelled) return { kind: "cancelled" };
+  if (args.isDraw) return { kind: "draw" };
+  return args.iWon ? { kind: "victory" } : { kind: "defeat" };
 }
 
 
@@ -193,14 +216,44 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
       <BlurCard backgroundColor="rgba(167, 139, 250, 1)" className="flex flex-col flex-1 min-h-0">
         <div className="flex flex-col gap-5 px-4 sm:px-6 pt-4 md:pt-6 pb-6 md:pb-8 h-full">
 
-          {/* Header */}
-          <div className="flex items-center shrink-0">
+          {/* Header — title + (on desktop) result banner share one row.
+              The title sits at the TOP of the row, aligned with the VICTORY /
+              DEFEAT label (the banner's first row). The score grows downward
+              underneath. The banner is rendered absolutely so the score stays
+              centered relative to the whole card, not to the space after the
+              title. */}
+          <div
+            className={`relative flex items-start shrink-0 ${
+              isResolved ? "md:min-h-[92px]" : ""
+            }`}
+          >
             <h2
-              className="text-3xl text-[var(--text-primary)] tracking-wide uppercase leading-none"
+              className="text-3xl text-[var(--text-primary)] tracking-wide uppercase leading-none relative z-10"
               style={{ fontFamily: "var(--font-league-gothic), sans-serif" }}
             >
               Token Duel
             </h2>
+
+            {isResolved && (
+              <div className="hidden md:flex md:absolute md:inset-x-0 md:top-0 md:justify-center md:pointer-events-none">
+                <ArcadeResultBanner
+                  myScore={displayScore.my}
+                  oppScore={displayScore.opp}
+                  status={getBannerStatus({
+                    revealComplete,
+                    coinFlipPlay,
+                    isCancelled,
+                    isDraw,
+                    iWon,
+                  })}
+                  caption={
+                    revealComplete && resolutionSummary && (isCancelled || isCoinFlip)
+                      ? resolutionSummary
+                      : null
+                  }
+                />
+              </div>
+            )}
           </div>
 
           {/* Body */}
@@ -247,72 +300,25 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
           ) : (
             /* ── Match completed ────────────────────────────────────────── */
             <>
-              {/* Result banner */}
-              <div
-                className="flex flex-col items-center justify-center gap-1 py-3 px-5 rounded-2xl shrink-0"
-                style={{
-                  backgroundColor: !revealComplete
-                    ? "var(--surface-elevated)"
-                    : isCancelled || isDraw
-                    ? "var(--surface-elevated)"
-                    : iWon
-                    ? "rgba(34, 197, 94, 0.12)"
-                    : "rgba(239, 68, 68, 0.08)",
-                  transition: "background-color 0.5s ease",
-                }}
-              >
-                <div className="flex items-center justify-center gap-4">
-                  {revealComplete && (
-                    <span
-                      className="text-3xl leading-none"
-                      style={{ animation: "fadeInUp 0.4s ease both" }}
-                    >
-                      {isCancelled ? "⚠️" : isDraw ? "🤝" : iWon ? "🏆" : "😔"}
-                    </span>
-                  )}
-                  {revealComplete && (
-                    <p
-                      className="text-xl font-bold"
-                      style={{
-                        color: isCancelled
-                          ? "var(--text-primary)"
-                          : isDraw
-                          ? "var(--text-primary)"
-                          : iWon
-                          ? "#22c55e"
-                          : "#ef4444",
-                        animation: "fadeInUp 0.4s ease both",
-                      }}
-                    >
-                      {isCancelled ? "Match Cancelled" : isDraw ? "Draw!" : iWon ? "You Win!" : "You Lose"}
-                    </p>
-                  )}
-                  {!isCancelled && (
-                    <p
-                      className="text-3xl font-bold tabular-nums"
-                      style={{
-                        color: !revealComplete
-                          ? "var(--text-primary)"
-                          : isDraw
-                          ? "var(--text-primary)"
-                          : iWon
-                          ? "#22c55e"
-                          : "#ef4444",
-                        transition: "color 0.5s ease",
-                      }}
-                    >
-                      {displayScore.my} – {displayScore.opp}
-                    </p>
-                  )}
-                </div>
-                {revealComplete && resolutionSummary && (isCancelled || isCoinFlip) && (
-                  <p
-                    className="text-xs text-[var(--text-muted)] text-center"
-                    style={{ animation: "fadeInUp 0.4s ease both" }}
-                  >
-                    {resolutionSummary}
-                  </p>
-                )}
+              {/* Mobile-only result banner. Desktop banner lives inside the
+                  header row above so it shares a line with the title. */}
+              <div className="md:hidden">
+                <ArcadeResultBanner
+                  myScore={displayScore.my}
+                  oppScore={displayScore.opp}
+                  status={getBannerStatus({
+                    revealComplete,
+                    coinFlipPlay,
+                    isCancelled,
+                    isDraw,
+                    iWon,
+                  })}
+                  caption={
+                    revealComplete && resolutionSummary && (isCancelled || isCoinFlip)
+                      ? resolutionSummary
+                      : null
+                  }
+                />
               </div>
 
               {/* Arena */}
