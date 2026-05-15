@@ -1,6 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { DustIcon } from "@/components/Icons";
+import {
+  PVP_ARCADE_LOSS_DUST,
+  PVP_ARCADE_WIN_DUST,
+} from "@/lib/constants";
 import type { PvpUserMatchItem } from "@/lib/types";
 
 interface MatchHistoryRowProps {
@@ -150,6 +155,27 @@ function bottomSubtitle(match: PvpUserMatchItem): string {
   return `vs ${getOpponentLabel(match)}`;
 }
 
+function DustReward({ match }: { match: PvpUserMatchItem }) {
+  if (!isTerminalStatus(match.status)) return null;
+  if (match.outcome === "win") {
+    return (
+      <span className="inline-flex items-center gap-0.5 text-xs font-semibold tabular-nums text-emerald-400">
+        +{PVP_ARCADE_WIN_DUST}
+        <DustIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      </span>
+    );
+  }
+  if (match.outcome === "loss") {
+    return (
+      <span className="inline-flex items-center gap-0.5 text-xs font-semibold tabular-nums text-red-400">
+        -{PVP_ARCADE_LOSS_DUST}
+        <DustIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      </span>
+    );
+  }
+  return null;
+}
+
 export function MatchHistoryRow({ match, onClick }: MatchHistoryRowProps) {
   const headline = getHeadline(match);
   const terminal = isTerminalStatus(match.status);
@@ -177,6 +203,7 @@ export function MatchHistoryRow({ match, onClick }: MatchHistoryRowProps) {
               >
                 {headline.label}
               </span>
+              <DustReward match={match} />
               {showSecondaryPill && false ? (
                 <SecondaryPill>{match.opponent ? "Live" : "Queue"}</SecondaryPill>
               ) : null}

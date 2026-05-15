@@ -16,6 +16,12 @@ export const IS_ARCADE_ENABLED = IS_DEVELOPMENT;
 /** Стоимость входа в PvP-аркаду (dust), должна совпадать с бэкендом */
 export const PVP_ARCADE_ENTRY_DUST = 20;
 
+/** Награда за победу в PvP-аркаде (dust), должна совпадать с бэкендом */
+export const PVP_ARCADE_WIN_DUST = 36;
+
+/** Потеря пыли при поражении в PvP-аркаде (dust), должна совпадать с бэкендом */
+export const PVP_ARCADE_LOSS_DUST = 20;
+
 /** Базовый URL API */
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_ENV === "avax"
