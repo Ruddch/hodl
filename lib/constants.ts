@@ -10,8 +10,8 @@ export const IS_AVAX = process.env.NEXT_PUBLIC_ENV === "avax";
 /** UAT / локальная разработка (`npm run dev`, тот же `NEXT_PUBLIC_ENV`, что и для uat.hodleague.com) */
 export const IS_DEVELOPMENT = process.env.NEXT_PUBLIC_ENV === "development";
 
-/** Пункт Arcade в сайдбаре — только при `NEXT_PUBLIC_ENV=development` */
-export const IS_ARCADE_ENABLED = IS_DEVELOPMENT;
+/** Пункт Arcade в сайдбаре (UAT + production; не avax) */
+export const IS_ARCADE_ENABLED = true;
 
 /** Стоимость входа в PvP-аркаду (dust), должна совпадать с бэкендом */
 export const PVP_ARCADE_ENTRY_DUST = 20;
