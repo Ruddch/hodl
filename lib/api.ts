@@ -52,7 +52,6 @@ import type {
   ConfirmCardUpgradeRequest,
   ConfirmCardUpgradeResponse,
   PvpJoinResponse,
-  PvpWaitingListResponse,
   PvpUserMatchListResponse,
   PvpDraftOptionsResponse,
   PvpDraftPickRequest,
@@ -965,11 +964,6 @@ export function useAlphaTestAccess(walletAddress: string | undefined, enabled: b
 }
 
 // ==================== PvP API ====================
-export interface GetPvpActiveParams {
-  limit?: number;
-  offset?: number;
-}
-
 export interface GetPvpMatchesParams {
   limit?: number;
   offset?: number;
@@ -977,14 +971,6 @@ export interface GetPvpMatchesParams {
 
 export async function joinPvp(): Promise<PvpJoinResponse> {
   return fetchApi("/api/pvp/join", { method: "POST" });
-}
-
-export async function getPvpActiveMatches(params: GetPvpActiveParams = {}): Promise<PvpWaitingListResponse> {
-  const searchParams = new URLSearchParams();
-  if (params.limit !== undefined) searchParams.set("limit", String(params.limit));
-  if (params.offset !== undefined) searchParams.set("offset", String(params.offset));
-  const query = searchParams.toString();
-  return fetchApi(`/api/pvp/active${query ? `?${query}` : ""}`);
 }
 
 export async function getMyPvpMatches(params: GetPvpMatchesParams = {}): Promise<PvpUserMatchListResponse> {
@@ -1018,15 +1004,9 @@ export function useJoinPvp() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pvpMatches"] });
       queryClient.invalidateQueries({ queryKey: ["pvpMatchesInfinite"] });
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
-  });
-}
-
-export function usePvpActiveMatches(params: GetPvpActiveParams = {}, options?: { refetchInterval?: number }) {
-  return useQuery({
-    queryKey: ["pvpActive", params],
-    queryFn: () => getPvpActiveMatches(params),
-    ...options,
   });
 }
 

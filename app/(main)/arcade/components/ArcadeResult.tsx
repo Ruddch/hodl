@@ -1,11 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { BlurCard } from "@/components/BlurCard";
 import { getPvpMatchReplay } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { PvpReplayData, PvpOfferedCard, PvpReplayRoundSlot } from "@/lib/types";
 import { MatchArena, type ArenaSlot } from "./MatchArena";
+import type { CombatOutcome } from "./CombatSlotColumn";
+import { ArcadeResultBanner, type ArcadeResultStatus } from "./ArcadeResultBanner";
+import {
+  COMBAT_ANIMATION,
+  getCoinFlipStartMs,
+  getCombatTotalMs,
+  getRevealTotalMs,
+  getSlotCombatEndMs,
+  getSlotCombatStartMs,
+  getSlotFlipStartMs,
+} from "../combat/combatAnimationConfig";
 
 interface ArcadeResultProps {
   matchId: number;
@@ -16,8 +28,37 @@ interface ArcadeResultProps {
   onPlayAgain: () => void;
 }
 
+/**
+ * Derive the banner's narrative state across every match phase.
+ * - "loading": initial replay fetch.
+ * - "waiting": opponent hasn't finished their draft.
+ * - "pending": reveal animation in progress (scores tick up).
+ * - "coin_flip": coin spinning — score frozen, label neutral.
+ * - terminal: cancelled / draw / victory / defeat.
+ */
+function getBannerStatus(args: {
+  isLoading: boolean;
+  isResolved: boolean;
+  revealComplete: boolean;
+  coinFlipPlay: boolean;
+  isCancelled: boolean;
+  isDraw: boolean;
+  iWon: boolean;
+}): ArcadeResultStatus {
+  if (args.isLoading) return { kind: "loading" };
+  if (!args.isResolved) return { kind: "waiting" };
+  if (!args.revealComplete) {
+    if (args.coinFlipPlay) return { kind: "coin_flip" };
+    return { kind: "pending" };
+  }
+  if (args.isCancelled) return { kind: "cancelled" };
+  if (args.isDraw) return { kind: "draw" };
+  return args.iWon ? { kind: "victory" } : { kind: "defeat" };
+}
+
 
 export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPlayAgain }: ArcadeResultProps) {
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [replay, setReplay] = useState<PvpReplayData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,8 +66,10 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
 
   // Reveal animation state
   const [flippedSlots, setFlippedSlots] = useState<Set<number>>(new Set());
+  const [combatTriggers, setCombatTriggers] = useState<number[]>([]);
   const [visibleResults, setVisibleResults] = useState<Set<number>>(new Set());
   const [displayScore, setDisplayScore] = useState({ my: 0, opp: 0 });
+  const [coinFlipPlay, setCoinFlipPlay] = useState(false);
   const [revealComplete, setRevealComplete] = useState(false);
 
   useEffect(() => {
@@ -41,7 +84,7 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
         if (cancelledRef.current) return;
         setReplay(res.data);
         setIsLoading(false);
-        if (res.data.status !== "completed") {
+        if (res.data.status !== "completed" && res.data.status !== "cancelled") {
           setTimeout(poll, 30_000);
         }
       } catch {
@@ -61,54 +104,17 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
   // Reset animation when navigating to a different match
   useEffect(() => {
     setFlippedSlots(new Set());
+    setCombatTriggers([]);
     setVisibleResults(new Set());
     setDisplayScore({ my: 0, opp: 0 });
+    setCoinFlipPlay(false);
     setRevealComplete(false);
   }, [matchId]);
 
   const isCompleted = replay?.status === "completed";
-
-  // Sequential reveal animation when match result loads
-  const roundSlotsSnap = replay?.round_scores?.slots ?? [];
-  const isPlayer1Snap =
-    replay !== null
-      ? user?.user_id !== undefined
-        ? replay.player1?.id === user.user_id
-        : (isPlayer1Hint ?? true)
-      : (isPlayer1Hint ?? true);
-
-  useEffect(() => {
-    if (!isCompleted || roundSlotsSnap.length === 0) return;
-    const FLIP_DUR = 520;
-    const POST_PAUSE = 380;
-    const BETWEEN = 80;
-    const INITIAL_DELAY = 500;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    roundSlotsSnap.forEach((slot, i) => {
-      const base = INITIAL_DELAY + i * (FLIP_DUR + POST_PAUSE + BETWEEN);
-      // flip the opp card
-      timers.push(setTimeout(() => {
-        setFlippedSlots(prev => new Set([...prev, i]));
-      }, base));
-      // show result + update score
-      timers.push(setTimeout(() => {
-        setVisibleResults(prev => new Set([...prev, i]));
-        const myPts = isPlayer1Snap ? slot.player1_points : slot.player2_points;
-        const oppPts = isPlayer1Snap ? slot.player2_points : slot.player1_points;
-        setDisplayScore(prev => ({ my: prev.my + myPts, opp: prev.opp + oppPts }));
-      }, base + FLIP_DUR));
-    });
-
-    // Reveal final banner after last result
-    timers.push(setTimeout(
-      () => setRevealComplete(true),
-      INITIAL_DELAY + roundSlotsSnap.length * (FLIP_DUR + POST_PAUSE + BETWEEN) + 450,
-    ));
-
-    return () => timers.forEach(clearTimeout);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCompleted, roundSlotsSnap.length]);
+  const isCancelled =
+    replay?.status === "cancelled" || replay?.resolution?.tiebreak === "cancelled";
+  const isResolved = isCompleted || isCancelled;
 
   // Derive which player we are: prefer user_id match, fall back to hint
   const isPlayer1 =
@@ -121,6 +127,84 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
   const myPlayer = isPlayer1 ? replay?.player1 : replay?.player2;
   const oppPlayer = isPlayer1 ? replay?.player2 : replay?.player1;
 
+  const winnerId = replay?.winner_user_id;
+  const myPlayerId = user?.user_id ?? (isPlayer1 ? replay?.player1?.id : replay?.player2?.id);
+  const iWon = isCompleted && !isCancelled && winnerId != null && winnerId === myPlayerId;
+  const isDraw = isCompleted && !isCancelled && winnerId === null;
+  const isCoinFlip = isCompleted && replay?.resolution?.tiebreak === "coin_flip";
+  const needsCoinFlip = !!isCoinFlip && !isCancelled && winnerId != null;
+  const resolutionSummary = replay?.resolution?.summary_english ?? null;
+
+  useEffect(() => {
+    if (!iWon) return;
+    queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+  }, [iWon, matchId, queryClient]);
+
+  // Sequential reveal animation when match result loads
+  const roundSlotsSnap = replay?.round_scores?.slots ?? [];
+
+  useEffect(() => {
+    if (!isResolved) return;
+    if (roundSlotsSnap.length === 0) {
+      const t = setTimeout(
+        () => setRevealComplete(true),
+        COMBAT_ANIMATION.timeline.cancelledBannerDelayMs,
+      );
+      return () => clearTimeout(t);
+    }
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const cfg = COMBAT_ANIMATION;
+    const combatTotal = getCombatTotalMs(cfg);
+
+    roundSlotsSnap.forEach((slot, i) => {
+      const flipAt = getSlotFlipStartMs(i, cfg);
+      const combatAt = getSlotCombatStartMs(i, cfg);
+      const settledAt = getSlotCombatEndMs(i, cfg);
+
+      timers.push(setTimeout(() => {
+        setFlippedSlots(prev => new Set([...prev, i]));
+      }, flipAt));
+
+      timers.push(setTimeout(() => {
+        setCombatTriggers(prev => {
+          const next = [...prev];
+          while (next.length <= i) next.push(0);
+          next[i] = (next[i] || 0) + 1;
+          return next;
+        });
+      }, combatAt));
+
+      // Show weight badges + update score slightly before the slot fully
+      // settles so the badge "pops in" right as the recoil ends.
+      const badgeAt = settledAt - Math.round(combatTotal * 0.15);
+      timers.push(setTimeout(() => {
+        setVisibleResults(prev => new Set([...prev, i]));
+        const myPts = isPlayer1 ? slot.player1_points : slot.player2_points;
+        const oppPts = isPlayer1 ? slot.player2_points : slot.player1_points;
+        setDisplayScore(prev => ({ my: prev.my + myPts, opp: prev.opp + oppPts }));
+      }, badgeAt));
+    });
+
+    if (needsCoinFlip) {
+      // Banner stays neutral while the coin spins; overlay's onComplete
+      // promotes revealComplete itself.
+      timers.push(setTimeout(
+        () => setCoinFlipPlay(true),
+        getCoinFlipStartMs(roundSlotsSnap.length, cfg),
+      ));
+    } else {
+      timers.push(setTimeout(
+        () => setRevealComplete(true),
+        getRevealTotalMs(roundSlotsSnap.length, cfg),
+      ));
+    }
+
+    return () => timers.forEach(clearTimeout);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResolved, roundSlotsSnap.length, needsCoinFlip]);
+
   // Reconstruct picks from draft_steps if not passed as prop
   const myUserId = user?.user_id ?? myPlayer?.id;
   const picksFromReplay: PvpOfferedCard[] = replay
@@ -130,11 +214,6 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
         .map((s) => s.chosen_card!)
     : [];
   const effectivePicks = myPicks && myPicks.length > 0 ? myPicks : picksFromReplay;
-
-  const winnerId = replay?.winner_user_id;
-  const myPlayerId = user?.user_id ?? (isPlayer1 ? replay?.player1?.id : replay?.player2?.id);
-  const iWon = isCompleted && winnerId !== null && winnerId === myPlayerId;
-  const isDraw = isCompleted && winnerId === null;
 
   const roundSlots: PvpReplayRoundSlot[] = replay?.round_scores?.slots ?? [];
 
@@ -146,148 +225,137 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
     }
   });
 
+  const bannerStatus = getBannerStatus({
+    isLoading,
+    isResolved,
+    revealComplete,
+    coinFlipPlay,
+    isCancelled,
+    isDraw,
+    iWon,
+  });
+
+  // Caption under the score:
+  // - resolved match: optional resolution summary (cancellation / coin flip).
+  // - waiting: friendly hint that the user can come back later.
+  const bannerCaption: string | null = (() => {
+    if (bannerStatus.kind === "waiting") {
+      return "You can leave and come back later.";
+    }
+    if (
+      (bannerStatus.kind === "cancelled" || bannerStatus.kind === "coin_flip") &&
+      resolutionSummary &&
+      revealComplete
+    ) {
+      return resolutionSummary;
+    }
+    return null;
+  })();
+
+  const banner = (
+    <ArcadeResultBanner
+      myScore={displayScore.my}
+      oppScore={displayScore.opp}
+      status={bannerStatus}
+      caption={bannerCaption}
+    />
+  );
+
   return (
     <div className="w-full max-w-8xl mx-auto flex flex-col min-w-0 h-full">
       <BlurCard backgroundColor="rgba(167, 139, 250, 1)" className="flex flex-col flex-1 min-h-0">
         <div className="flex flex-col gap-5 px-4 sm:px-6 pt-4 md:pt-6 pb-6 md:pb-8 h-full">
 
-          {/* Header */}
-          <div className="flex items-center justify-between shrink-0">
+          {/* Header — title + (on desktop) the banner share one row.
+              The title sits at the TOP of the row, aligned with the banner's
+              status label. The score (or placeholder) grows downward. The
+              banner is rendered absolutely so it stays centered relative to
+              the whole card, not to the space after the title. */}
+          <div className="relative flex items-start shrink-0 md:min-h-[92px]">
             <h2
-              className="text-3xl text-[var(--text-primary)] tracking-wide uppercase leading-none"
+              className="text-3xl text-[var(--text-primary)] tracking-wide uppercase leading-none relative z-10"
               style={{ fontFamily: "var(--font-league-gothic), sans-serif" }}
             >
               Token Duel
             </h2>
-            <span className="text-xs text-[var(--text-muted)]">Match #{matchId}</span>
+
+            <div className="hidden md:flex md:absolute md:inset-x-0 md:top-0 md:justify-center md:pointer-events-none">
+              {banner}
+            </div>
           </div>
 
-          {/* Body */}
-          {isLoading ? (
-            <div className="flex flex-col items-center gap-4 py-16">
-              <div className="w-10 h-10 rounded-full border-4 border-purple-400 border-t-transparent animate-spin" />
-              <p className="text-sm text-[var(--text-muted)]">Loading result…</p>
-            </div>
+          {/* Mobile-only banner. Desktop banner lives inside the header row
+              above so it shares a line with the title. */}
+          <div className="md:hidden">{banner}</div>
 
-          ) : !isCompleted ? (
-            /* ── Waiting for opponent ───────────────────────────────────── */
-            <>
-              {/* Waiting banner */}
-              <div className="flex items-center gap-3 px-4 rounded-2xl bg-[var(--surface-elevated)] shrink-0" style={{ height: 60 }}>
-                <div className="w-4 h-4 rounded-full border-[3px] border-purple-400 border-t-transparent animate-spin shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">
-                    Waiting for opponent to finish…
-                  </p>
-                  <p className="text-xs text-[var(--text-muted)] leading-tight">
-                    You can leave and come back later.
-                  </p>
-                </div>
-              </div>
-
-              {/* Arena — my cards face-up, opp cards face-down */}
-              <MatchArena
-                myPlayer={myPlayer}
-                oppPlayer={null}
-                oppPlayerLoading
-                slotCount={5}
-                slots={Array.from({ length: 5 }, (_, i) => {
-                  const card = effectivePicks[i];
-                  return {
-                    myImgUrl: card?.rendered_image_url || card?.template_image_url || null,
-                    mySymbol: card?.token_symbol,
-                    oppImgUrl: null,
-                    isOppFlipped: false,
-                  } satisfies ArenaSlot;
-                })}
-              />
-            </>
-
+          {/* Body — arena is always rendered. Its slot count / face-down
+              state varies per phase, but the layout footprint stays the same
+              so transitions between loading → waiting → result are seamless. */}
+          {isLoading || !isResolved ? (
+            /* ── Loading / waiting: my cards face-up, opp face-down ──── */
+            <MatchArena
+              myPlayer={myPlayer}
+              oppPlayer={null}
+              oppPlayerLoading
+              slotCount={5}
+              slots={Array.from({ length: 5 }, (_, i) => {
+                const card = effectivePicks[i];
+                return {
+                  myImgUrl: card?.rendered_image_url || card?.template_image_url || null,
+                  mySymbol: card?.token_symbol,
+                  oppImgUrl: null,
+                  isOppFlipped: false,
+                } satisfies ArenaSlot;
+              })}
+            />
           ) : (
-            /* ── Match completed ────────────────────────────────────────── */
-            <>
-              {/* Result banner */}
-              <div
-                className="flex items-center justify-center gap-4 py-3 px-5 rounded-2xl shrink-0"
-                style={{
-                  backgroundColor: !revealComplete
-                    ? "var(--surface-elevated)"
-                    : isDraw
-                    ? "var(--surface-elevated)"
-                    : iWon
-                    ? "rgba(34, 197, 94, 0.12)"
-                    : "rgba(239, 68, 68, 0.08)",
-                  transition: "background-color 0.5s ease",
-                }}
-              >
-                {revealComplete && (
-                  <span
-                    className="text-3xl leading-none"
-                    style={{ animation: "fadeInUp 0.4s ease both" }}
-                  >
-                    {isDraw ? "🤝" : iWon ? "🏆" : "😔"}
-                  </span>
-                )}
-                {revealComplete && (
-                  <p
-                    className="text-xl font-bold"
-                    style={{
-                      color: isDraw ? "var(--text-primary)" : iWon ? "#22c55e" : "#ef4444",
-                      animation: "fadeInUp 0.4s ease both",
-                    }}
-                  >
-                    {isDraw ? "Draw!" : iWon ? "You Win!" : "You Lose"}
-                  </p>
-                )}
-                <p
-                  className="text-3xl font-bold tabular-nums"
-                  style={{
-                    color: !revealComplete
-                      ? "var(--text-primary)"
-                      : isDraw
-                      ? "var(--text-primary)"
-                      : iWon
-                      ? "#22c55e"
-                      : "#ef4444",
-                    transition: "color 0.5s ease",
-                  }}
-                >
-                  {displayScore.my} – {displayScore.opp}
-                </p>
-              </div>
-
-              {/* Arena */}
-              <MatchArena
-                myPlayer={myPlayer}
-                oppPlayer={oppPlayer}
-                slots={roundSlots.map((slot, i) => {
-                  const myCardId = isPlayer1 ? slot.player1_card_id : slot.player2_card_id;
-                  const oppCardId = isPlayer1 ? slot.player2_card_id : slot.player1_card_id;
-                  const myCard = cardMap.get(myCardId);
-                  const oppCard = cardMap.get(oppCardId);
-                  const myPoints = isPlayer1 ? slot.player1_points : slot.player2_points;
-                  const oppPoints = isPlayer1 ? slot.player2_points : slot.player1_points;
-                  const myWeight = isPlayer1 ? slot.player1_weight : slot.player2_weight;
-                  const oppWeight = isPlayer1 ? slot.player2_weight : slot.player1_weight;
-                  const won = myPoints > oppPoints;
-                  const drew = myPoints === oppPoints;
-                  return {
-                    myImgUrl: myCard?.rendered_image_url || myCard?.template_image_url,
-                    mySymbol: myCard?.token_symbol,
-                    oppImgUrl: oppCard?.rendered_image_url || oppCard?.template_image_url,
-                    oppSymbol: oppCard?.token_symbol,
-                    isOppFlipped: flippedSlots.has(i),
-                    result: {
-                      myWeight,
-                      oppWeight,
-                      won,
-                      drew,
-                      visible: visibleResults.has(i),
-                    },
-                  } satisfies ArenaSlot;
-                })}
-              />
-            </>
+            /* ── Match completed ──────────────────────────────────────── */
+            <MatchArena
+              myPlayer={myPlayer}
+              oppPlayer={oppPlayer}
+              coinFlip={
+                needsCoinFlip
+                  ? {
+                      play: coinFlipPlay,
+                      winnerSide: iWon ? "my" : "opp",
+                      onComplete: () => setRevealComplete(true),
+                    }
+                  : null
+              }
+              slots={roundSlots.map((slot, i) => {
+                const myCardId = isPlayer1 ? slot.player1_card_id : slot.player2_card_id;
+                const oppCardId = isPlayer1 ? slot.player2_card_id : slot.player1_card_id;
+                const myCard = cardMap.get(myCardId);
+                const oppCard = cardMap.get(oppCardId);
+                const myPoints = isPlayer1 ? slot.player1_points : slot.player2_points;
+                const oppPoints = isPlayer1 ? slot.player2_points : slot.player1_points;
+                const myWeight = isPlayer1 ? slot.player1_weight : slot.player2_weight;
+                const oppWeight = isPlayer1 ? slot.player2_weight : slot.player1_weight;
+                const won = myPoints > oppPoints;
+                const drew = myPoints === oppPoints;
+                const outcome: CombatOutcome = drew
+                  ? "draw"
+                  : won
+                  ? "my_win"
+                  : "opp_win";
+                return {
+                  myImgUrl: myCard?.rendered_image_url || myCard?.template_image_url,
+                  mySymbol: myCard?.token_symbol,
+                  oppImgUrl: oppCard?.rendered_image_url || oppCard?.template_image_url,
+                  oppSymbol: oppCard?.token_symbol,
+                  isOppFlipped: flippedSlots.has(i),
+                  result: {
+                    myWeight,
+                    oppWeight,
+                    won,
+                    drew,
+                    visible: visibleResults.has(i),
+                  },
+                  combatTrigger: combatTriggers[i] ?? 0,
+                  combatOutcome: outcome,
+                } satisfies ArenaSlot;
+              })}
+            />
           )}
 
           {/* Action button */}
@@ -296,7 +364,7 @@ export function ArcadeResult({ matchId, isPlayer1: isPlayer1Hint, myPicks, onPla
               onClick={onPlayAgain}
               className="w-full sm:w-fit px-10 py-3 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-semibold rounded-[15px] transition-colors text-sm"
             >
-              {isCompleted ? "Play Again" : "Back"}
+              {isResolved ? "Play Again" : "Back"}
             </button>
           </div>
 

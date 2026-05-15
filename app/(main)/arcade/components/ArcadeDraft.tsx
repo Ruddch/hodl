@@ -3,12 +3,16 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { BlurCard } from "@/components/BlurCard";
+import { PvpPlayerAvatar } from "@/components/PvpPlayerAvatar";
 import { usePvpDraftOptions, useSubmitPvpDraftPick } from "@/lib/api";
-import type { PvpOfferedCard } from "@/lib/types";
+import type { PvpOfferedCard, PvpReplayPlayer } from "@/lib/types";
+import { getPvpOpponentDisplayName } from "@/lib/pvp-opponent-label";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
 
 interface ArcadeDraftProps {
   matchId: number;
+  /** Other participant in the match (from replay); null until both players are known. */
+  opponentPlayer: PvpReplayPlayer | null;
   initialStep: number;
   initialPicks: PvpOfferedCard[];
   onComplete: () => void;
@@ -18,7 +22,13 @@ interface ArcadeDraftProps {
 const TOTAL_SLOTS = 5;
 const WEIGHT_LIMIT = 28;
 
-export function ArcadeDraft({ matchId, initialStep, initialPicks, onComplete }: ArcadeDraftProps) {
+export function ArcadeDraft({
+  matchId,
+  opponentPlayer,
+  initialStep,
+  initialPicks,
+  onComplete,
+}: ArcadeDraftProps) {
   const [step, setStep] = useState(initialStep);
   const [picks, setPicks] = useState<PvpOfferedCard[]>(initialPicks);
   const [isPicking, setIsPicking] = useState(false);
@@ -106,7 +116,23 @@ export function ArcadeDraft({ matchId, initialStep, initialPicks, onComplete }: 
               >
                 Token Duel
               </h2>
-              <span className="text-xs text-[var(--text-muted)]">Match #{matchId}</span>
+            <div className="flex items-center gap-1.5 min-w-0 justify-end shrink-0 max-w-[55%] sm:max-w-[42%]">
+              {opponentPlayer ? (
+                <>
+                  <span className="text-xs text-[var(--text-muted)] shrink-0">vs</span>
+                  <PvpPlayerAvatar
+                    player={opponentPlayer}
+                    size={24}
+                    className="shrink-0 ring-1 ring-[var(--border-subtle)]"
+                  />
+                  <span className="text-xs text-[var(--text-muted)] truncate min-w-0">
+                    {getPvpOpponentDisplayName(opponentPlayer)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs text-[var(--text-muted)] truncate">Waiting for opponent</span>
+              )}
+            </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -136,13 +162,13 @@ export function ArcadeDraft({ matchId, initialStep, initialPicks, onComplete }: 
           </div>
 
           {/* Card grid — centered vertically */}
-          <div className="flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pt-4 pb-2 flex flex-col justify-center ">
+          <div className="flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pt-4 pb-2 flex flex-col justify-start sm:justify-center ">
             {/* During collect animation use frozen cards; otherwise use fresh draftData */}
             {(() => {
               const displayData = frozenCards ?? draftData;
               if (!displayData) return null; // empty screen while loading next step
               return (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-8 sm:gap-x-4 sm:gap-y-10">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-8 ">
                 {displayData.offered_cards.map((card, index) => {
                     const isDealt = index < dealtCount;
                     const isSelected = pickedCardId === card.card_id;
@@ -313,7 +339,6 @@ export function ArcadeDraft({ matchId, initialStep, initialPicks, onComplete }: 
                       }}
                     />
                   </div>
-                  <p className="text-xs text-[var(--text-muted)]">{picks.length} cards selected</p>
                 </div>
               </div>
             </div>

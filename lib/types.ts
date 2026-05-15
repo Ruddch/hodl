@@ -794,24 +794,41 @@ export interface PvpJoinResponse {
   status: string;
 }
 
-export interface PvpWaitingMatchItem {
-  match_id: number;
-  player1_id: number;
-  created_at: string;
+export type PvpRole = "player1" | "player2";
+
+export type PvpOutcome = "win" | "loss" | "draw" | "cancelled";
+
+export type PvpTiebreak = "score" | "coin_flip" | "draw" | "cancelled";
+
+export interface PvpListOpponent {
+  id: number;
+  nickname: string | null;
 }
 
-export interface PvpWaitingListResponse {
-  items: PvpWaitingMatchItem[];
-  total: number;
-  limit: number;
-  offset: number;
+export interface PvpListScores {
+  mine: number | null;
+  opponent: number | null;
+}
+
+export interface PvpListDeckWeights {
+  mine: number | null;
+  opponent: number | null;
+}
+
+export interface PvpListResolution {
+  tiebreak: PvpTiebreak;
+  summary_english: string;
 }
 
 export interface PvpUserMatchItem {
   match_id: number;
   status: string;
-  player1_id: number;
-  player2_id: number | null;
+  role: PvpRole;
+  opponent: PvpListOpponent | null;
+  scores: PvpListScores;
+  deck_weights: PvpListDeckWeights;
+  outcome: PvpOutcome | null;
+  resolution: PvpListResolution | null;
   created_at: string;
   completed_at: string | null;
 }
@@ -877,6 +894,11 @@ export interface PvpReplayRoundScores {
   slots: PvpReplayRoundSlot[];
 }
 
+export interface PvpReplayResolution {
+  tiebreak: PvpTiebreak;
+  summary_english: string;
+}
+
 export interface PvpReplayData {
   match_id: number;
   status: string;
@@ -889,6 +911,7 @@ export interface PvpReplayData {
   player2_deck_weight: number | null;
   round_scores: PvpReplayRoundScores | null;
   draft_steps: PvpDraftStep[];
+  resolution: PvpReplayResolution | null;
   created_at: string | null;
   completed_at: string | null;
 }

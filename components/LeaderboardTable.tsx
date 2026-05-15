@@ -7,7 +7,7 @@ import { useVirtualizer, measureElement } from "@tanstack/react-virtual";
 import type { LeaderboardEntry } from "@/lib/types";
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
-import { Avatar } from "./Avatar";
+import { PlayerAvatar } from "./PlayerAvatar";
 import { PrizeRewardsDisplay } from "./PrizeRewardsDisplay";
 
 // Функции форматирования
@@ -73,19 +73,6 @@ function PositionBadge({
       </div>
     </>
   );
-}
-
-// Компонент аватарки
-function PlayerAvatar({ 
-  walletAddress, 
-  userId, 
-  avatarUrl 
-}: { 
-  walletAddress: string | null | undefined; 
-  userId: number;
-  avatarUrl?: string | null;
-}) {
-  return <Avatar walletAddress={walletAddress} fallbackSeed={userId} size={40} avatarUrl={avatarUrl} />;
 }
 
 // Компонент карт — overlap в таблице; spread в моб. карточке (без наложения)

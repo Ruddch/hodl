@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { Avatar } from "@/components/Avatar";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { animate, useReducedMotion } from "motion/react";
+import { PvpPlayerAvatar } from "@/components/PvpPlayerAvatar";
 import type { PvpReplayPlayer } from "@/lib/types";
 import { CARD_ASPECT_RATIO } from "@/lib/constants";
+import { COMBAT_ANIMATION } from "../combat/combatAnimationConfig";
+import { CombatSlotColumn, type CombatOutcome } from "./CombatSlotColumn";
+import { CoinFlipOverlay, type CoinFlipWinnerSide } from "./CoinFlipOverlay";
 
 export interface ArenaSlot {
   myImgUrl?: string | null;
@@ -22,6 +25,16 @@ export interface ArenaSlot {
     /** fade-in trigger */
     visible: boolean;
   };
+  /** Increment to start combat sequence for this slot. */
+  combatTrigger?: number;
+  /** Outcome from the slot's perspective of the local player. */
+  combatOutcome?: CombatOutcome;
+}
+
+export interface CoinFlipProps {
+  play: boolean;
+  winnerSide: CoinFlipWinnerSide;
+  onComplete: () => void;
 }
 
 interface MatchArenaProps {
@@ -32,6 +45,8 @@ interface MatchArenaProps {
   slots: ArenaSlot[];
   /** Fallback slot count while data loads */
   slotCount?: number;
+  /** Coin-flip overlay config; `null` when not applicable. */
+  coinFlip?: CoinFlipProps | null;
 }
 
 function formatNickname(player: PvpReplayPlayer): string {
@@ -41,24 +56,32 @@ function formatNickname(player: PvpReplayPlayer): string {
   return `User #${player.id}`;
 }
 
-function weightResultColor(won: boolean, drew: boolean, isMe: boolean) {
-  if (drew) return "#6b7280";
-  if (won) return isMe ? "#22c55e" : "#ef4444";
-  return isMe ? "#ef4444" : "#22c55e";
-}
-
 export function MatchArena({
   myPlayer,
   oppPlayer,
   oppPlayerLoading = false,
   slots,
   slotCount = 5,
+  coinFlip = null,
 }: MatchArenaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const arenaRef = useRef<HTMLDivElement>(null);
   const [cardH, setCardH] = useState(120);
+  const [isMd, setIsMd] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   const n = slots.length || slotCount;
   const GAP = 8;
+  const INFO_H = isMd ? 40 : 28;
+  const AVATAR_SIZE = isMd ? 36 : 26;
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => setIsMd(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -66,8 +89,8 @@ export function MatchArena({
     const compute = () => {
       const W = el.clientWidth;
       const H = el.clientHeight;
-      // overhead: 2 info rows (28px) + VS row (36px) + 4 gaps
-      const overhead = 28 * 2 + 36 + GAP * 4;
+      // overhead: 2 info rows + VS row (24px h-6) + 4 gaps (2 outer + 2 inner)
+      const overhead = INFO_H * 2 + 24 + GAP * 4;
       const availH = (H - overhead) / 2;
       const cardWbyW = (W - GAP * (n - 1)) / n;
       const cardHbyW = cardWbyW / CARD_ASPECT_RATIO;
@@ -77,68 +100,21 @@ export function MatchArena({
     ro.observe(el);
     compute();
     return () => ro.disconnect();
-  }, [n]);
+  }, [n, INFO_H]);
 
   const CARD_W = Math.round(cardH * CARD_ASPECT_RATIO);
 
-  const myCardEl = (imgUrl?: string | null, symbol?: string) => (
-    <div
-      className="relative rounded-[8px] overflow-hidden border border-[var(--border-subtle)] shrink-0"
-      style={{ width: CARD_W, height: cardH }}
-    >
-      {imgUrl ? (
-        <Image src={imgUrl} alt={symbol ?? ""} fill className="object-cover" sizes="20vw" />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-[var(--surface-elevated)]">
-          <span className="text-[9px] font-bold text-[var(--text-muted)]">{symbol ?? "?"}</span>
-        </div>
-      )}
-    </div>
-  );
-
-  const oppCardEl = (imgUrl?: string | null, symbol?: string, isFlipped = false) => (
-    <div className="shrink-0" style={{ width: CARD_W, height: cardH, perspective: 1000 }}>
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          position: "relative",
-          transformStyle: "preserve-3d",
-          transition: "transform 520ms cubic-bezier(0.34, 1.1, 0.64, 1)",
-          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-          borderRadius: 8,
-        }}
-      >
-        {/* Back — рубашка */}
-        <div
-          style={{
-            position: "absolute", inset: 0, borderRadius: 8, overflow: "hidden",
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden",
-          }}
-        >
-          <Image src="/card1.png" alt="card back" fill className="object-cover" sizes="20vw" />
-        </div>
-        {/* Front — лицо карты */}
-        <div
-          style={{
-            position: "absolute", inset: 0, borderRadius: 8, overflow: "hidden",
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden",
-            transform: "rotateY(180deg)",
-          }}
-        >
-          {imgUrl ? (
-            <Image src={imgUrl} alt={symbol ?? ""} fill className="object-cover" sizes="20vw" />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-[var(--surface-elevated)]">
-              <span className="text-[9px] font-bold text-[var(--text-muted)]">{symbol ?? "?"}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  const handleImpact = useCallback(() => {
+    if (!arenaRef.current) return;
+    if (COMBAT_ANIMATION.respectReducedMotion && prefersReducedMotion) return;
+    const px = COMBAT_ANIMATION.strike.screenShakePx;
+    const dur = COMBAT_ANIMATION.strike.screenShakeMs / 1000;
+    animate(
+      arenaRef.current,
+      { x: [0, -px, px, -px * 0.5, px * 0.5, 0] },
+      { duration: dur, ease: "easeOut" },
+    );
+  }, [prefersReducedMotion]);
 
   const displaySlots: ArenaSlot[] = slots.length > 0
     ? slots
@@ -147,110 +123,85 @@ export function MatchArena({
   return (
     <div ref={containerRef} className="flex flex-col gap-2 flex-1 min-h-0">
 
-      {/* My player info */}
-      <div className="flex items-center gap-2 shrink-0" style={{ height: 28 }}>
-        <Avatar walletAddress={myPlayer?.wallet_address} size={26} />
-        <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
-          {myPlayer ? formatNickname(myPlayer) : "You"}
-        </span>
-        <span className="text-[10px] text-[var(--text-muted)]">· You</span>
-      </div>
-
-      {/* My cards row */}
-      <div className="flex gap-2 shrink-0 justify-center">
-        {displaySlots.map((slot, i) => (
-          <div key={i}>
-            {myCardEl(slot.myImgUrl, slot.mySymbol)}
-          </div>
-        ))}
-      </div>
-
-      {/* VS / results divider */}
-      <div className="flex gap-2 shrink-0 justify-center">
-        {displaySlots.map((slot, i) => {
-          const r = slot.result;
-          const revealed = r?.visible ?? false;
-          return (
-            <div
-              key={i}
-              className="flex items-center h-6 justify-center gap-1.5 py-1.5 rounded-lg shrink-0"
-              style={{
-                width: CARD_W,
-                backgroundColor: !revealed || !r
-                  ? "var(--surface-elevated)"
-                  : r.won
-                  ? "rgba(34, 197, 94, 0.10)"
-                  : r.drew
-                  ? "var(--surface-elevated)"
-                  : "rgba(239, 68, 68, 0.08)",
-                opacity: revealed ? 1 : 0.3,
-                transition: "opacity 0.35s ease, background-color 0.35s ease",
-              }}
-            >
-              {r && (
-                <>
-                  <span
-                    className="font-bold tabular-nums rounded leading-none"
-                    style={{
-                      color: "white",
-                      backgroundColor: weightResultColor(r.won, r.drew, true),
-                      fontSize: "10px",
-                      padding: "2px 5px",
-                      borderRadius: 3,
-                    }}
-                  >
-                    {r.myWeight}
-                  </span>
-                  <span
-                    className="text-xs font-bold leading-none"
-                    style={{ color: r.won ? "#22c55e" : r.drew ? "var(--text-muted)" : "#ef4444" }}
-                  >
-                    {r.won ? "✓" : r.drew ? "=" : "✗"}
-                  </span>
-                  <span
-                    className="font-bold tabular-nums rounded leading-none"
-                    style={{
-                      color: "white",
-                      backgroundColor: weightResultColor(r.won, r.drew, false),
-                      fontSize: "10px",
-                      padding: "2px 5px",
-                      borderRadius: 3,
-                    }}
-                  >
-                    {r.oppWeight}
-                  </span>
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Opp cards row */}
-      <div className="flex gap-2 shrink-0 justify-center">
-        {displaySlots.map((slot, i) => (
-          <div key={i}>
-            {oppCardEl(slot.oppImgUrl, slot.oppSymbol, slot.isOppFlipped)}
-          </div>
-        ))}
-      </div>
-
       {/* Opponent info */}
-      <div className="flex items-center gap-2 shrink-0" style={{ height: 28 }}>
+      <div className="flex items-center gap-2 md:gap-3 shrink-0" style={{ height: INFO_H }}>
         {oppPlayerLoading ? (
           <>
-            <div className="w-[26px] h-[26px] rounded-full bg-[var(--surface-elevated)] animate-pulse shrink-0" />
-            <div className="h-3 w-28 rounded bg-[var(--surface-elevated)] animate-pulse" />
+            <div
+              className="rounded-full bg-[var(--surface-elevated)] animate-pulse shrink-0"
+              style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
+            />
+            <div className="h-3 md:h-4 w-28 md:w-40 rounded bg-[var(--surface-elevated)] animate-pulse" />
           </>
         ) : (
           <>
-            <Avatar walletAddress={oppPlayer?.wallet_address} size={26} />
-            <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
+            <PvpPlayerAvatar player={oppPlayer} size={AVATAR_SIZE} />
+            <span className="text-xs md:text-base font-semibold text-[var(--text-primary)] truncate">
               {oppPlayer ? formatNickname(oppPlayer) : "Opponent"}
             </span>
-            <span className="text-[10px] text-[var(--text-muted)]">· Opponent</span>
+            <span className="text-[10px] md:text-xs text-[var(--text-muted)]">· Opponent</span>
           </>
         )}
+      </div>
+
+      {/* Combat columns */}
+      <div
+        ref={arenaRef}
+        className="relative flex gap-2 shrink-0 justify-center"
+        style={{ willChange: "transform" }}
+      >
+        {/* NOTE: deliberately no `filter: blur(...)` here. A blur over the
+            full card row creates an expensive composite surface that is
+            repainted every frame while the coin spins/shakes alongside it
+            (~2 fps in practice). Plain `opacity` is GPU-cheap and reads as
+            "dimmed background" well enough. */}
+        <div
+          className="flex gap-2 shrink-0 justify-center"
+          style={{
+            opacity: coinFlip?.play ? 0.35 : 1,
+            transition: "opacity 0.25s ease",
+          }}
+        >
+          {displaySlots.map((slot, i) => (
+            <CombatSlotColumn
+              key={i}
+              cardW={CARD_W}
+              cardH={cardH}
+              slot={{
+                oppImgUrl: slot.oppImgUrl,
+                oppSymbol: slot.oppSymbol,
+                myImgUrl: slot.myImgUrl,
+                mySymbol: slot.mySymbol,
+              }}
+              isOppFlipped={slot.isOppFlipped}
+              result={slot.result}
+              combatTrigger={slot.combatTrigger ?? 0}
+              combatOutcome={slot.combatOutcome ?? null}
+              onImpact={handleImpact}
+            />
+          ))}
+        </div>
+
+        {coinFlip && (
+          <CoinFlipOverlay
+            play={coinFlip.play}
+            winnerSide={coinFlip.winnerSide}
+            myPlayer={myPlayer}
+            oppPlayer={oppPlayer}
+            onImpact={handleImpact}
+            onComplete={coinFlip.onComplete}
+            isMd={isMd}
+          />
+        )}
+      </div>
+
+      {/* My player info */}
+      <div className="flex items-center gap-2 md:gap-3 shrink-0" style={{ height: INFO_H }}>
+        <PvpPlayerAvatar player={myPlayer} size={AVATAR_SIZE} />
+        <span className="text-xs md:text-base font-semibold text-[var(--text-primary)] truncate">
+          {myPlayer ? formatNickname(myPlayer) : "You"}
+        </span>
+        <span className="text-[10px] md:text-xs text-[var(--text-muted)]">· You</span>
       </div>
 
     </div>
