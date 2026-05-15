@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { BlurCard } from "@/components/BlurCard";
 import { PvpPlayerAvatar } from "@/components/PvpPlayerAvatar";
@@ -21,6 +21,18 @@ interface ArcadeDraftProps {
 
 const TOTAL_SLOTS = 5;
 const WEIGHT_LIMIT = 28;
+const MOBILE_GRID_COLS = 3;
+const MOBILE_GRID_GAP = 8;
+const MIN_MOBILE_CARD_H = 60;
+
+function cardDimensions(isSm: boolean, mobileCardH: number): Pick<
+  React.CSSProperties,
+  "width" | "height" | "aspectRatio"
+> {
+  if (isSm) return { aspectRatio: `${CARD_ASPECT_RATIO}` };
+  const mobileCardW = Math.round(mobileCardH * CARD_ASPECT_RATIO);
+  return { width: mobileCardW, height: mobileCardH };
+}
 
 export function ArcadeDraft({
   matchId,
@@ -41,6 +53,65 @@ export function ArcadeDraft({
 
   const { data: draftData } = usePvpDraftOptions(matchId, step);
   const submitPick = useSubmitPvpDraftPick();
+
+  const gridAreaRef = useRef<HTMLDivElement>(null);
+  const deckSlotsRef = useRef<HTMLDivElement>(null);
+  const [mobileCardH, setMobileCardH] = useState(120);
+  const [isSm, setIsSm] = useState(false);
+
+  const displayData = frozenCards ?? draftData;
+  const offeredCount = displayData?.offered_cards.length ?? 0;
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const apply = () => setIsSm(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    if (isSm) return;
+    const gridEl = gridAreaRef.current;
+    if (!gridEl || offeredCount === 0) return;
+
+    const compute = () => {
+      const rowCount = Math.ceil(offeredCount / MOBILE_GRID_COLS);
+      const slotsEl = deckSlotsRef.current;
+      // Floating slots overlap the grid (mb-[-15px] on mobile)
+      const deckReserve = slotsEl
+        ? Math.max(0, slotsEl.offsetHeight - 15 + 8)
+        : 72;
+      const H_PAD = 32; // px-4 left + right
+      const PT = 16; // pt-4
+      const PB = 8; // pb-2
+
+      const W = gridEl.clientWidth - H_PAD;
+      const H = gridEl.clientHeight - PT - PB - deckReserve;
+
+      const cardWbyW =
+        (W - MOBILE_GRID_GAP * (MOBILE_GRID_COLS - 1)) / MOBILE_GRID_COLS;
+      const cardHbyW = cardWbyW / CARD_ASPECT_RATIO;
+      const availHPerRow =
+        rowCount > 0
+          ? (H - MOBILE_GRID_GAP * (rowCount - 1)) / rowCount
+          : H;
+
+      setMobileCardH(
+        Math.max(
+          MIN_MOBILE_CARD_H,
+          Math.floor(Math.min(cardHbyW, availHPerRow)),
+        ),
+      );
+    };
+
+    const ro = new ResizeObserver(compute);
+    ro.observe(gridEl);
+    const slotsEl = deckSlotsRef.current;
+    if (slotsEl) ro.observe(slotsEl);
+    compute();
+    return () => ro.disconnect();
+  }, [isSm, offeredCount]);
 
   // Start deal animation only when collect animation is done AND new data has arrived
   useEffect(() => {
@@ -162,13 +233,12 @@ export function ArcadeDraft({
           </div>
 
           {/* Card grid — centered vertically */}
-          <div className="flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pt-4 pb-2 flex flex-col justify-start sm:justify-center ">
-            {/* During collect animation use frozen cards; otherwise use fresh draftData */}
-            {(() => {
-              const displayData = frozenCards ?? draftData;
-              if (!displayData) return null; // empty screen while loading next step
-              return (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-8 ">
+          <div
+            ref={gridAreaRef}
+            className="flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pt-4 pb-2 flex flex-col justify-start sm:justify-center"
+          >
+            {displayData ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-8 justify-items-center sm:justify-items-stretch">
                 {displayData.offered_cards.map((card, index) => {
                     const isDealt = index < dealtCount;
                     const isSelected = pickedCardId === card.card_id;
@@ -183,12 +253,13 @@ export function ArcadeDraft({
                   const isOverWeight =
                     currentWeight + card.weight + remainingSlots > WEIGHT_LIMIT;
                   const isDisabled = (isPicking && !isSelected) || isOverWeight;
+                  const dims = cardDimensions(isSm, mobileCardH);
 
                   // Button handles position + opacity animation
                   let buttonStyle: React.CSSProperties;
                   if (isCollecting && isSelected) {
                     buttonStyle = {
-                      aspectRatio: `${CARD_ASPECT_RATIO}`,
+                      ...dims,
                       transform: "scale(0.85) translateY(380%)",
                       opacity: 1,
                       transition: "transform 500ms cubic-bezier(0.4, 0, 1, 1)",
@@ -196,14 +267,14 @@ export function ArcadeDraft({
                     };
                   } else if (isCollecting) {
                     buttonStyle = {
-                      aspectRatio: `${CARD_ASPECT_RATIO}`,
+                      ...dims,
                       // Slide + fade out (no rotateY here — that's on the inner wrapper)
                       animation: `card-collect-slide 520ms ease-in ${collectDelay}ms both`,
                       perspective: "600px",
                     };
                   } else {
                     buttonStyle = {
-                      aspectRatio: `${CARD_ASPECT_RATIO}`,
+                      ...dims,
                       transform: isDealt ? "translateY(0) rotate(0deg)" : "translateY(140%) rotate(-18deg)",
                       opacity: isDealt ? 1 : 0,
                       transition: "transform 380ms cubic-bezier(0.34, 1.4, 0.64, 1), opacity 200ms ease",
@@ -274,14 +345,16 @@ export function ArcadeDraft({
                   );
                 })}
               </div>
-              );
-            })()}
+            ) : null}
           </div>
 
           {/* Footer — picks floating above, weight bar below */}
           <div className="relative shrink-0">
             {/* Floating card slots — same pattern as DeckPackFooter */}
-            <div className="absolute left-3 sm:left-6 right-3 sm:right-auto bottom-full mb-[-15px] sm:mb-[-60px] flex items-end gap-[5px] md:gap-[13px] z-10 pb-1 pointer-events-none">
+            <div
+              ref={deckSlotsRef}
+              className="absolute left-3 sm:left-6 right-3 sm:right-auto bottom-full mb-[-15px] sm:mb-[-60px] flex items-end gap-[5px] md:gap-[13px] z-10 pb-1 pointer-events-none"
+            >
               {Array.from({ length: TOTAL_SLOTS }).map((_, index) => {
                 const card = picks[index];
                 return (
