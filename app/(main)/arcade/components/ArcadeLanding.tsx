@@ -135,7 +135,7 @@ export function ArcadeLanding({ onPlay, onViewMatch }: ArcadeLandingProps) {
             </div>
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--surface-elevated)]">
               <span className="text-base">🎴</span>
-              <span className="text-xs font-medium text-[var(--text-secondary)]">5 slots · 5 picks</span>
+              <span className="text-xs font-medium text-[var(--text-secondary)]">5 picks</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--surface-elevated)]">
               <span className="text-base">⚡</span>
@@ -145,9 +145,10 @@ export function ArcadeLanding({ onPlay, onViewMatch }: ArcadeLandingProps) {
 
           {/* Rules */}
           <div className="flex flex-col gap-1.5 text-sm text-[var(--text-secondary)]">
-            <p>· Each round offers 5 random tokens with weights 1–10</p>
-            <p>· Total weight of your set cannot exceed 28</p>
-            <p>· Higher weight wins the slot — most slots wins the match</p>
+            <p>· Draft 5 tokens, up to 28 weight</p>
+            <p>· Higher weight wins each slot</p>
+            <p>· Most slots wins the match</p>
+            <p>· Weight 1 beats weight 10</p>
             <p>· Tie on 2.5 vs 2.5 is decided by coin flip</p>
           </div>
 
