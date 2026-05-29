@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMyProfile, useUserProfile, useLogout } from "@/lib/api";
+import { useMyProfile, useUserProfile, useLogout, useRewardWallets } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useUnviewedCards } from "@/lib/unviewed-cards-context";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,11 @@ import { useAccount } from "wagmi";
 import { ProfileBanner } from "./components/ProfileBanner";
 import { UserAvatar } from "./components/UserAvatar";
 import { StatsCards } from "./components/StatsCards";
+import { RewardWalletsModal } from "./components/RewardWalletsModal";
+import {
+  RewardWalletsDesktopTrigger,
+  RewardWalletsMobileBar,
+} from "./components/RewardWalletsTrigger";
 import { CardsSection } from "./components/CardsSection";
 import { Onboarding } from "@/components/OnboardingLazy";
 import { usePageOnboarding } from "@/lib/useOnboarding";
@@ -22,6 +27,7 @@ function ProfilePageContent() {
   const { isAuthenticated } = useAuth();
   const { clearUnviewedCards } = useUnviewedCards();
   const [activeTab, setActiveTab] = useState<"cards" | "tournaments">("cards");
+  const [rewardWalletsOpen, setRewardWalletsOpen] = useState(false);
   const logout = useLogout();
   const router = useRouter();
 
@@ -33,8 +39,12 @@ function ProfilePageContent() {
     true
   );
   const { data: myProfile, isLoading: myLoading } = useMyProfile(true, isAuthenticated && !isViewingOther);
+  const { data: rewardWalletsData } = useRewardWallets(isAuthenticated && !isViewingOther);
 
   const profile = isViewingOther ? otherProfile : myProfile;
+  const rewardWalletTotal = rewardWalletsData?.total ?? rewardWalletsData?.wallets?.length ?? 0;
+  const rewardWalletMax = rewardWalletsData?.max_wallets ?? 5;
+  const openRewardWallets = () => setRewardWalletsOpen(true);
   const isLoading = isViewingOther ? otherLoading : myLoading;
 
   useEffect(() => {
@@ -96,7 +106,29 @@ function ProfilePageContent() {
             />
 
             {/* Аватар и имя пользователя */}
-            <UserAvatar profile={profile} showProfileMenu />
+            <UserAvatar
+              profile={profile}
+              showProfileMenu
+              rewardWalletsTrigger={
+                <RewardWalletsDesktopTrigger
+                  onClick={openRewardWallets}
+                  total={rewardWalletTotal}
+                  max={rewardWalletMax}
+                />
+              }
+            />
+
+            <RewardWalletsMobileBar
+              onClick={openRewardWallets}
+              total={rewardWalletTotal}
+              max={rewardWalletMax}
+            />
+
+            <RewardWalletsModal
+              open={rewardWalletsOpen}
+              onClose={() => setRewardWalletsOpen(false)}
+              primaryWallet={profile.wallet_address}
+            />
 
             {/* Карточки статистики */}
             <StatsCards profile={profile} />

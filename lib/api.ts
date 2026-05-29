@@ -25,6 +25,12 @@ import type {
   AuthResponse,
   UserProfileResponse,
   UpdateNicknameRequest,
+  RewardWalletsResponse,
+  AddRewardWalletsRequest,
+  UpdateRewardWalletsRequest,
+  DeleteRewardWalletsRequest,
+  RewardWalletsMutationResponse,
+  DeleteRewardWalletsResponse,
   MyTournamentsResponse,
   CardCatalogResponse,
   CardDetailResponse,
@@ -328,6 +334,37 @@ export async function getMyTournaments(): Promise<MyTournamentsResponse> {
 export async function updateMyNickname(data: UpdateNicknameRequest): Promise<UserProfileResponse> {
   return fetchApi("/api/users/me/nickname", {
     method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getRewardWallets(): Promise<RewardWalletsResponse> {
+  return fetchApi("/api/users/me/reward-wallets");
+}
+
+export async function addRewardWallets(
+  data: AddRewardWalletsRequest
+): Promise<RewardWalletsMutationResponse> {
+  return fetchApi("/api/users/me/reward-wallets", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateRewardWallets(
+  data: UpdateRewardWalletsRequest
+): Promise<RewardWalletsMutationResponse> {
+  return fetchApi("/api/users/me/reward-wallets", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteRewardWallets(
+  data: DeleteRewardWalletsRequest
+): Promise<DeleteRewardWalletsResponse> {
+  return fetchApi("/api/users/me/reward-wallets", {
+    method: "DELETE",
     body: JSON.stringify(data),
   });
 }
@@ -779,6 +816,49 @@ export function useUpdateMyNickname() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myProfile"] });
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    },
+  });
+}
+
+export function useRewardWallets(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ["rewardWallets"],
+    queryFn: getRewardWallets,
+    enabled,
+  });
+}
+
+export function useAddRewardWallet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (walletAddress: string) =>
+      addRewardWallets({ wallet_addresses: [walletAddress] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rewardWallets"] });
+    },
+  });
+}
+
+export function useUpdateRewardWallet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (update: { id: number; wallet_address: string }) =>
+      updateRewardWallets({ updates: [update] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rewardWallets"] });
+    },
+  });
+}
+
+export function useDeleteRewardWallet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (walletId: number) => deleteRewardWallets({ wallet_ids: [walletId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rewardWallets"] });
     },
   });
 }

@@ -764,6 +764,44 @@ export interface UpdateNicknameRequest {
   nickname: string;
 }
 
+export interface RewardWalletItem {
+  id: number;
+  wallet_address: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RewardWalletsResponse {
+  success?: boolean;
+  wallets: RewardWalletItem[];
+  total: number;
+  max_wallets?: number;
+}
+
+export interface AddRewardWalletsRequest {
+  wallet_addresses: string[];
+}
+
+export interface UpdateRewardWalletsRequest {
+  updates: { id: number; wallet_address: string }[];
+}
+
+export interface DeleteRewardWalletsRequest {
+  wallet_ids: number[];
+}
+
+export interface RewardWalletsMutationResponse {
+  success?: boolean;
+  wallets: RewardWalletItem[];
+  message: string;
+}
+
+export interface DeleteRewardWalletsResponse {
+  success?: boolean;
+  deleted_count: number;
+  message: string;
+}
+
 export interface UserProfileResponse {
   user_id: number;
   wallet_address: string;

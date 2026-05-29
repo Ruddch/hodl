@@ -7,12 +7,15 @@ import { BlurCard } from "@/components/BlurCard";
 import { CopyIcon, CheckIcon } from "@/components/Icons";
 import { useUpdateMyNickname } from "@/lib/api";
 import { sanitizeNicknameInput, validateNickname } from "@/lib/nickname";
+import type { ReactNode } from "react";
 
 interface UserAvatarProps {
   profile: UserProfileResponse;
   showReferralLink?: boolean;
   /** Меню «⋯» (редактирование имени) — только для своего профиля */
   showProfileMenu?: boolean;
+  /** Desktop-кнопка additional wallets (md+) */
+  rewardWalletsTrigger?: ReactNode;
 }
 
 function PencilIcon({ className }: { className?: string }) {
@@ -51,7 +54,12 @@ function MoreVerticalIcon({ className }: { className?: string }) {
   );
 }
 
-export function UserAvatar({ profile, showReferralLink = true, showProfileMenu = false }: UserAvatarProps) {
+export function UserAvatar({
+  profile,
+  showReferralLink = true,
+  showProfileMenu = false,
+  rewardWalletsTrigger,
+}: UserAvatarProps) {
   const [copied, setCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -114,73 +122,74 @@ export function UserAvatar({ profile, showReferralLink = true, showProfileMenu =
 
   return (
     <div className="relative z-10 ml-4 mr-4 flex items-end gap-2 md:gap-4 -mt-12 mb-4 sm:mb-8 w-full max-w-[calc(100%-16px)] min-w-0">
-      {/* Аватар */}
-      <Avatar 
-        walletAddress={profile.wallet_address} 
-        size={96} 
+      <Avatar
+        walletAddress={profile.wallet_address}
+        size={96}
         border={true}
         borderColor="var(--profile-avatar-border)"
         avatarUrl={profile.avatar_url}
       />
-      
-      {/* Имя и реферальная ссылка */}
-      <div className="flex flex-row items-center gap-0 flex-wrap min-w-0 flex-1">
-        <div className="flex items-center gap-0 min-w-0 max-w-full mr-2">
-          <h1
-            className="text-xl mr-1 md:text-2xl font-semibold text-[var(--text-primary)] truncate min-w-0"
-            title={displayName}
-          >
-            {displayName}
-          </h1>
-          {showProfileMenu && (
-            <div className="relative shrink-0" ref={menuRef}>
-              <button
-                type="button"
-                onClick={() => setMenuOpen((o) => !o)}
-                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
-                aria-expanded={menuOpen}
-                aria-haspopup="menu"
-                aria-label="Profile actions"
-                data-ph-capture-attribute-button="profile-actions-menu"
-              >
-                <MoreVerticalIcon />
-              </button>
-              {menuOpen && (
-                <div
-                  role="menu"
-                  className="absolute overflow-hidden top-full left-auto right-0 mt-1 z-[60] w-max min-w-[min(200px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg md:left-0 md:right-auto"
+
+      <div className="flex flex-row items-center gap-0 flex-wrap min-w-0 flex-1 md:flex-nowrap">
+        <div className="flex flex-row items-center gap-0 flex-wrap min-w-0">
+          <div className="flex items-center gap-0 min-w-0 max-w-full mr-2">
+            <h1
+              className="text-xl mr-1 md:text-2xl font-semibold text-[var(--text-primary)] truncate min-w-0"
+              title={displayName}
+            >
+              {displayName}
+            </h1>
+            {showProfileMenu && (
+              <div className="relative shrink-0" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((o) => !o)}
+                  className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+                  aria-expanded={menuOpen}
+                  aria-haspopup="menu"
+                  aria-label="Profile actions"
+                  data-ph-capture-attribute-button="profile-actions-menu"
                 >
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={openEditNickname}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
-                    data-ph-capture-attribute-button="profile-edit-username"
+                  <MoreVerticalIcon />
+                </button>
+                {menuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute overflow-hidden top-full left-auto right-0 mt-1 z-[60] w-max min-w-[min(200px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg md:left-0 md:right-auto"
                   >
-                    <PencilIcon className="text-[var(--text-muted)] shrink-0" />
-                    Edit username
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={openEditNickname}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+                      data-ph-capture-attribute-button="profile-edit-username"
+                    >
+                      <PencilIcon className="text-[var(--text-muted)] shrink-0" />
+                      Edit username
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          {showReferralLink && profile.referral_link && (
+            <button
+              type="button"
+              onClick={handleCopyRefLink}
+              data-ph-capture-attribute-button="copy-referral-link"
+              title="Copy ref link"
+              className="flex cursor-pointer items-center gap-1 md:gap-2 px-0 py-0 md:px-2 md:py-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
+            >
+              <span>{copied ? "Copied!" : "Referral link"}</span>
+              {copied ? (
+                <CheckIcon width={16} height={16} className="text-green-600 shrink-0" />
+              ) : (
+                <CopyIcon width={16} height={16} className="shrink-0" />
               )}
-            </div>
+            </button>
           )}
         </div>
-        {showReferralLink && profile.referral_link && (
-          <button
-            type="button"
-            onClick={handleCopyRefLink}
-            data-ph-capture-attribute-button="copy-referral-link"
-            title="Copy ref link"
-            className="flex cursor-pointer items-center gap-1 md:gap-2 px-0 py-0 md:px-2 md:py-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
-          >
-            <span>{copied ? "Copied!" : "Referral link"}</span>
-            {copied ? (
-              <CheckIcon width={16} height={16} className="text-green-600 shrink-0" />
-            ) : (
-              <CopyIcon width={16} height={16} className="shrink-0" />
-            )}
-          </button>
-        )}
+        {rewardWalletsTrigger}
       </div>
 
       {editOpen && (
