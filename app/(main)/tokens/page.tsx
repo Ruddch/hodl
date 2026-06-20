@@ -171,7 +171,7 @@ function TokenCard({ token, rank }: { token: TokenWithRate; rank: number }) {
         <div>
           <span className="block text-xs text-[var(--text-muted)] mb-0.5">Market Cap</span>
           <span className="text-sm md:text-base text-[var(--text-secondary)]">
-            {currentPrice ? formatMarketCap(currentPrice.market_cap) : "—"}
+            {currentPrice?.market_cap != null ? formatMarketCap(currentPrice.market_cap) : "—"}
           </span>
         </div>
       </div>

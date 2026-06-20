@@ -76,7 +76,7 @@ export interface TokenWithRate {
   updated_at: string;
   current_price: {
     price: number;
-    market_cap: number;
+    market_cap: number | null;
     change_24h: number;
     price_timestamp: string;
   } | null;
